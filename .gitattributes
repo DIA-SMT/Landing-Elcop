@@ -1,0 +1,14 @@
+# Normaliza los finales de línea: en el repositorio siempre LF, sin importar
+# desde qué sistema operativo se trabaje. Sin esto, alguien en Windows y
+# alguien en Mac se pisan archivos enteros en cada commit.
+* text=auto eol=lf
+
+# Binarios: que git no intente convertir nada.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

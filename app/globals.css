@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  /* Alineado con los tokens `municipal` / `brandYellow` de tailwind.config.ts. */
+  --brand-blue: #0166ff;
+  --brand-sky: #2db0ff;
+  --brand-yellow: #f4dc00;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* La familia sale de fontFamily.sans en tailwind.config.ts, que apunta a la
+   variable que publica next/font. No declarar acá una font-family propia ni
+   una clase .font-display: `font-display` ya existe como utilidad de Tailwind
+   y tener las dos definiciones vuelve impredecible cuál gana. */
+body { margin: 0; background: #f8fbff; color: #12221d; @apply font-sans; }
+
+button, input, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+
+@layer components {
+  .page-shell { @apply mx-auto w-full max-w-[1240px] px-5 md:px-8; }
+
+  /* Botones: alto mínimo de 44px, que es el objetivo táctil cómodo, y anillo
+     de foco visible para quien navega con teclado. */
+  .icon-button { @apply place-items-center rounded-xl size-10 text-slate-500 transition hover:bg-slate-100 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-municipal-500 focus-visible:ring-offset-2; }
+  .primary-button { @apply inline-flex min-h-11 items-center gap-2 rounded-xl bg-municipal-700 px-5 text-sm font-bold text-white shadow-sm transition ease-out hover:-translate-y-0.5 hover:bg-municipal-900 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-municipal-500 focus-visible:ring-offset-2; }
+  .secondary-button { @apply inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-600 shadow-sm transition ease-out hover:border-municipal-500/40 hover:text-municipal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-municipal-500 focus-visible:ring-offset-2; }
+  .compact { @apply min-h-10 px-4 text-xs; }
+
+  .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-municipal-500/15 bg-white/70 px-3 py-1.5 text-micro font-extrabold uppercase tracking-[.13em] text-municipal-700 shadow-sm; }
+  .stat-card { @apply flex items-center gap-4 rounded-2xl border border-black/5 bg-white p-5 shadow-card; }
+
+  .section-block { @apply page-shell mt-20 scroll-mt-24; }
+  .section-heading { @apply mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end; }
+  .section-heading h2 { @apply mt-1 font-display text-2xl font-extrabold tracking-tight text-ink md:text-3xl; }
+  .section-heading p { @apply mt-2 text-sm text-slate-500; }
+  .section-kicker { @apply text-micro font-extrabold uppercase tracking-[.18em] text-municipal-600; }
+
+  .filter-input { @apply flex h-11 items-center gap-2 rounded-xl bg-slate-50 px-3 text-slate-400 ring-1 ring-inset ring-slate-100 focus-within:ring-municipal-500; }
+  .filter-input input { @apply w-full bg-transparent text-xs text-ink outline-none placeholder:text-slate-400; }
+  .filter-select { @apply h-11 rounded-xl border-0 bg-slate-50 px-3 text-xs font-semibold text-slate-600 outline-none ring-1 ring-inset ring-slate-100 focus:ring-municipal-500; }
+
+  .empty-state { @apply rounded-[24px] border border-dashed border-slate-200 bg-white px-6 py-16 text-center; }
+  .empty-state > span { @apply mx-auto grid size-12 place-items-center rounded-2xl bg-slate-50 text-slate-400; }
+  .empty-state h3 { @apply mt-4 font-display text-base font-bold text-ink; }
+  .empty-state p { @apply mt-1 text-sm text-slate-400; }
+
+  .detail-title { @apply text-xs font-extrabold uppercase tracking-wider text-slate-400; }
+  /* Label estándar de sub-sección. Respeta el piso de 10px: no volver a
+     text-[8px] / text-[9px] ad hoc. */
+  .micro-label { @apply text-micro font-extrabold uppercase tracking-wider text-slate-400; }
+  /* Badge de estado con contraste AA: fondo neutro y punto de color, en vez de
+     texto blanco sobre el color crudo (el amarillo y el celeste de la paleta no
+     llegan a 4.5:1). */
+  .badge-soft { @apply inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-micro font-extrabold uppercase text-slate-700; }
+  .badge-soft > i { @apply size-2 shrink-0 rounded-full; }
+}
+
+@media (max-width: 640px) {
+  .section-block { margin-top: 4rem; }
+}
+
+/* Placeholder de carga con barrido de brillo. Usa el keyframe `shimmer`. */
+.skeleton { @apply relative overflow-hidden bg-slate-200/70; }
+.skeleton::after { @apply absolute inset-0 -translate-x-full; content: ""; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: shimmer 1.6s infinite; }
+
+/* Respeto global de la preferencia de movimiento reducido: anula animaciones,
+   transiciones y el scroll suave para quien lo pidió a nivel sistema. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Extensiones propias de la landing de ELCOP.
+   Sólo lo que el sistema municipal no cubre: controles de formulario largo
+   (los `.filter-*` están pensados para filtros, no para un formulario de
+   postulación) y el patrón de revelado al hacer scroll.
+   --------------------------------------------------------------------------- */
+@layer components {
+  /* Correcciones de contraste sobre dos clases del sistema municipal.
+     Medidas sobre esta página contra su fondo real:
+       .micro-label   slate-400 sobre blanco = 2.56:1
+       .section-kicker municipal-600 sobre blanco = 3.18:1
+     Las dos quedan por debajo del mínimo de 4.5:1, y son labels de 10px, que
+     es justo donde más se nota. Se suben de tono acá y no se toca la escala de
+     color: los tokens siguen siendo los del sistema.
+     Conviene arreglarlo también en el sistema compartido. */
+  .micro-label { @apply text-slate-500; }
+  .detail-title { @apply text-slate-500; }
+  .section-kicker { @apply text-municipal-900; }
+
+  /* Campo de formulario: 44px de alto mínimo, foco visible y estado de error
+     con borde + anillo propio (el color solo no alcanza como señal). */
+  .form-field { @apply flex flex-col gap-1.5; }
+  .form-label { @apply text-xs font-bold text-slate-600; }
+  .form-control {
+    @apply min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink shadow-sm outline-none transition
+           placeholder:text-slate-400
+           focus-visible:border-municipal-500 focus-visible:ring-2 focus-visible:ring-municipal-500 focus-visible:ring-offset-1;
+  }
+  .form-control[aria-invalid="true"] { @apply border-red-500 ring-1 ring-red-500/30; }
+  .form-error { @apply flex items-start gap-1.5 text-tiny font-semibold text-red-700; }
+  .form-hint { @apply text-tiny text-slate-500; }
+}
+
+/* Salida del menú móvil. La entrada usa el keyframe `scale-in` del sistema;
+   para la salida hace falta el recorrido inverso, que el sistema no trae.
+   Se anima con `animation` y no con `transition` a propósito: una transición
+   necesita que el estado inicial llegue a pintarse, y eso obliga a esperar un
+   cuadro que en una pestaña en segundo plano puede no llegar nunca. */
+@keyframes menu-salida {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to { opacity: 0; transform: translate3d(0, -8px, 0); }
+}
+.menu-movil-saliendo { animation: menu-salida 150ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Revelado al entrar en viewport. Sólo `opacity` y `transform`, que no
+   obligan al navegador a recalcular la maqueta. La preferencia de movimiento
+   reducido la resuelve el bloque global de arriba, y además el componente
+   monta ya revelado si el usuario la tiene activa. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1), transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal[data-visible="true"] { opacity: 1; transform: translate3d(0, 0, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+}

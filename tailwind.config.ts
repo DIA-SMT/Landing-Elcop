@@ -1,0 +1,60 @@
+import type { Config } from "tailwindcss";
+
+/**
+ * Sistema de diseño municipal de San Miguel de Tucumán.
+ * Fuente de verdad de los tokens; `globals.css` construye encima de esto.
+ */
+const config: Config = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./content/**/*.{js,ts,jsx,tsx,mdx}"
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        // Las variables las publica next/font desde app/layout.tsx.
+        // Inter para interfaz densa, Poppins para títulos y números grandes.
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        display: ["var(--font-poppins)", "var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"]
+      },
+      colors: {
+        ink: "#12221d",
+        // Escala completa a propósito: usar un tono inexistente no da error,
+        // Tailwind genera una clase vacía y el elemento queda sin color.
+        municipal: { 50: "#eef7ff", 100: "#d8eeff", 200: "#b6e0ff", 300: "#8bd0ff", 400: "#59c0ff", 500: "#2DB0FF", 600: "#148fdc", 700: "#0166FF", 900: "#123d77" },
+        brandYellow: "#F4DC00",
+        sand: "#f5f4ef"
+      },
+      boxShadow: { card: "0 1px 2px rgba(18,34,29,.04), 0 14px 40px rgba(18,34,29,.06)" },
+      fontSize: {
+        // Piso tipográfico: nada por debajo de 10px. `micro` para metadatos y
+        // labels chicos, `tiny` para texto secundario denso.
+        micro: ["10px", { lineHeight: "14px" }],
+        tiny: ["11px", { lineHeight: "16px" }]
+      },
+      transitionDuration: { fast: "150ms", DEFAULT: "250ms", slow: "400ms" },
+      transitionTimingFunction: {
+        // `out` para entradas (arranca rápido, frena suave), `spring` con un
+        // leve overshoot para superficies que "aparecen".
+        out: "cubic-bezier(0.22, 1, 0.36, 1)",
+        spring: "cubic-bezier(0.34, 1.4, 0.64, 1)"
+      },
+      keyframes: {
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "scale-in": { from: { opacity: "0", transform: "translate3d(0,8px,0) scale(.97)" }, to: { opacity: "1", transform: "translate3d(0,0,0) scale(1)" } },
+        "slide-in-right": { from: { opacity: "0", transform: "translate3d(24px,0,0)" }, to: { opacity: "1", transform: "translate3d(0,0,0)" } },
+        "slide-in-left": { from: { opacity: "0", transform: "translate3d(-24px,0,0)" }, to: { opacity: "1", transform: "translate3d(0,0,0)" } },
+        shimmer: { "100%": { transform: "translateX(100%)" } }
+      },
+      animation: {
+        "fade-in": "fade-in 250ms cubic-bezier(0.22,1,0.36,1) both",
+        "scale-in": "scale-in 250ms cubic-bezier(0.34,1.4,0.64,1) both",
+        "slide-in-right": "slide-in-right 300ms cubic-bezier(0.22,1,0.36,1) both",
+        "slide-in-left": "slide-in-left 300ms cubic-bezier(0.22,1,0.36,1) both"
+      }
+    }
+  },
+  plugins: []
+};
+export default config;
