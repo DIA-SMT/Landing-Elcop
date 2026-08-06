@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 
+import { FranjaInstitucional } from "@/components/layout/FranjaInstitucional";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ESCUELA } from "@/content/elcop";
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Saltar al contenido
         </a>
+        <FranjaInstitucional />
         <Header />
         <main id="contenido">{children}</main>
         <Footer />

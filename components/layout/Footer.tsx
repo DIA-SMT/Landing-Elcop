@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { CONTACTO, CO_BRANDING, ESCUELA, NAVEGACION, REDES } from "@/content/elcop";
+import { CONTACTO, CO_BRANDING, DESARROLLO, ESCUELA, NAVEGACION, REDES } from "@/content/elcop";
 
 export function Footer() {
   const anio = new Date().getFullYear();
@@ -25,7 +25,8 @@ export function Footer() {
               Universidad del Norte Santo Tomás de Aquino.
             </p>
 
-            <ul className="mt-7 flex flex-wrap items-center gap-4">
+            <h2 className="micro-label mt-8">Una iniciativa de</h2>
+            <ul className="mt-3 flex flex-wrap items-center gap-4">
               {CO_BRANDING.map((marca) => (
                 <li key={marca.nombre}>
                   <a
@@ -149,15 +150,59 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-black/5 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-tiny text-slate-500">
-            © {anio} {ESCUELA.nombre}. {ESCUELA.socios}.
-          </p>
-          <p className="text-tiny text-slate-500">
-            Sitio en construcción: hay contenidos provisorios marcados como tales.
-          </p>
+        <div className="mt-12 flex flex-col gap-6 border-t border-black/5 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-tiny text-slate-500">
+              © {anio} {ESCUELA.nombre}. {ESCUELA.socios}.
+            </p>
+            <p className="mt-1 text-tiny text-slate-500">
+              Sitio en construcción: hay contenidos provisorios marcados como tales.
+            </p>
+          </div>
+
+          <CreditoDesarrollo />
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * Crédito de quien construyó el sitio.
+ *
+ * Va más discreto que el co-branding de SMT y UNSTA de arriba: son jerarquías
+ * distintas. El logo ya dice "Dirección de IA", así que el nombre completo
+ * viaja en el texto alternativo y no se repite escrito al lado.
+ */
+function CreditoDesarrollo() {
+  const contenido = (
+    <>
+      <span className="text-tiny text-slate-500">{DESARROLLO.etiqueta}</span>
+      <Image
+        src={DESARROLLO.logo.src}
+        alt={`${DESARROLLO.nombre} — ${DESARROLLO.organismo}`}
+        width={DESARROLLO.logo.ancho}
+        height={DESARROLLO.logo.alto}
+        sizes="140px"
+        className="h-9 w-auto"
+      />
+    </>
+  );
+
+  // Todavía no sabemos si la Dirección tiene página propia: mientras no la
+  // haya, el crédito no es un enlace en vez de llevar a ningún lado.
+  if (!DESARROLLO.href) {
+    return <p className="flex shrink-0 items-center gap-3">{contenido}</p>;
+  }
+
+  return (
+    <a
+      href={DESARROLLO.href}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="inline-flex shrink-0 items-center gap-3 rounded-xl transition ease-out hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-municipal-500 focus-visible:ring-offset-2"
+    >
+      {contenido}
+    </a>
   );
 }

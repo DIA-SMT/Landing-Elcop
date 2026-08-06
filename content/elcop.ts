@@ -111,6 +111,39 @@ export const ESCUELA = {
   cohorte: "Cohorte 2026"
 } as const;
 
+/**
+ * Franja institucional que corre arriba de todo, por encima del header.
+ *
+ * Es el patrón habitual de los sitios de gobierno: deja claro de qué
+ * institución depende la iniciativa sin competir con la marca de ELCOP, que
+ * sigue siendo la que manda en el header.
+ *
+ * El logo va en su versión blanca porque el fondo es `municipal-900`.
+ */
+export const FRANJA_INSTITUCIONAL = {
+  institucion: "Municipalidad de San Miguel de Tucumán",
+  // En pantallas angostas no entra el nombre completo.
+  institucionCorta: "Municipalidad de SMT",
+  logo: { src: "/logo-ciudad-smt-blanco.png", ancho: 507, alto: 206 },
+  sitio: { etiqueta: "smt.gob.ar", href: "https://smt.gob.ar" }
+} as const;
+
+/**
+ * Crédito de desarrollo, al pie de todo.
+ *
+ * Va deliberadamente más discreto que el co-branding de SMT y UNSTA: ellas son
+ * las instituciones que respaldan la Escuela, la Dirección es quien construyó
+ * el sitio. No es la misma jerarquía.
+ */
+export const DESARROLLO = {
+  etiqueta: "Creado por",
+  nombre: "Dirección de Inteligencia Artificial",
+  organismo: "Municipalidad de San Miguel de Tucumán",
+  logo: { src: "/logo-direccion-ia.png", ancho: 526, alto: 220 },
+  // TODO: confirmar si la Dirección tiene una página propia a la que enlazar.
+  href: null as string | null
+} as const;
+
 export const NAVEGACION: ItemNavegacion[] = [
   { etiqueta: "Inicio", href: "/#inicio", tipo: "ancla" },
   { etiqueta: "Institucional", href: "/#institucional", tipo: "ancla" },
