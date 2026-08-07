@@ -1,5 +1,8 @@
 # Landing pública de ELCOP
 
+> **¿Retomando el proyecto?** Empezá por [`CONTEXTO.md`](CONTEXTO.md): dónde
+> quedamos, qué se decidió y por qué, y qué está bloqueado.
+
 Sitio público de la **Escuela de Liderazgo y Comunicación Política**, iniciativa
 conjunta de la Municipalidad de San Miguel de Tucumán y la Universidad del
 Norte Santo Tomás de Aquino (UNSTA).
