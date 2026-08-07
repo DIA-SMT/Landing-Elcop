@@ -100,7 +100,7 @@ export default async function PaginaPortal({
 
   let enlaceDeIngreso: string | null = null;
   try {
-    enlaceDeIngreso = urlDeIngreso("/portal");
+    enlaceDeIngreso = urlDeIngreso();
   } catch {
     // Falta configurar la URL de CIDITUC. Se avisa en vez de romper la página.
     enlaceDeIngreso = null;

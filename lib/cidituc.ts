@@ -195,12 +195,24 @@ export async function verificarTokenCidituc(
   }
 }
 
-/** A dónde mandamos a la persona para que inicie sesión. */
-export function urlDeIngreso(volverA = "/portal"): string {
+/**
+ * A dónde mandamos a la persona para que inicie sesión.
+ *
+ * `next` es un identificador de aplicación, no una URL: CIDITUC tiene una
+ * cadena de condiciones en `src/routes/PrivateRoute.jsx` que mapea cada valor
+ * conocido a una URL de vuelta fija. Si el valor no está en esa lista, cae en
+ * el caso por defecto y la persona termina en el derivador de CIDITUC en vez de
+ * volver acá.
+ *
+ * Por eso tampoco se manda a dónde volver dentro del sitio: CIDITUC reenvía
+ * únicamente el parámetro `auth` y descarta cualquier otro.
+ */
+export function urlDeIngreso(): string {
   const base = process.env.NEXT_PUBLIC_CIDITUC_LOGIN_URL;
   if (!base) throw new Error("Falta NEXT_PUBLIC_CIDITUC_LOGIN_URL.");
-  // CIDITUC usa HashRouter, así que la query va después del hash y no se puede
+  const identificador = process.env.NEXT_PUBLIC_CIDITUC_APP_ID ?? "elcop";
+  // CIDITUC usa HashRouter: la query va después del hash, así que no se puede
   // armar con URLSearchParams sobre la URL completa.
   const separador = base.includes("?") ? "&" : "?";
-  return `${base}${separador}next=elcop&ruta=${encodeURIComponent(volverA)}`;
+  return `${base}${separador}next=${encodeURIComponent(identificador)}`;
 }
