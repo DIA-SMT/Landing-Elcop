@@ -24,6 +24,12 @@ export function Header() {
 
   const panelRef = useRef<HTMLDivElement>(null);
   const botonMenuRef = useRef<HTMLButtonElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  /* Dónde arranca el panel del menú. No es un valor fijo: arriba del header
+     hay una franja institucional que no acompaña el scroll, así que el borde
+     inferior del header vale 116px al entrar y 72px una vez que se scrolleó. */
+  const [topeDelPanel, setTopeDelPanel] = useState(72);
 
   /* Sombra del header apenas se despega del tope de la página. */
   useEffect(() => {
@@ -59,6 +65,9 @@ export function Header() {
   }, [enHome]);
 
   const abrirMenu = useCallback(() => {
+    // Se mide en el click, antes de renderizar, para que el panel no aparezca
+    // un cuadro en la posición equivocada.
+    setTopeDelPanel(headerRef.current?.getBoundingClientRect().bottom ?? 72);
     setCerrando(false);
     setMenuAbierto(true);
   }, []);
@@ -80,12 +89,18 @@ export function Header() {
     const alPresionar = (evento: KeyboardEvent) => {
       if (evento.key === "Escape") cerrarMenu();
     };
+    // Si gira el teléfono con el menú abierto, el header cambia de alto.
+    const alRedimensionar = () =>
+      setTopeDelPanel(headerRef.current?.getBoundingClientRect().bottom ?? 72);
+
     document.addEventListener("keydown", alPresionar);
+    window.addEventListener("resize", alRedimensionar);
     panelRef.current?.focus();
 
     return () => {
       document.body.style.overflow = overflowPrevio;
       document.removeEventListener("keydown", alPresionar);
+      window.removeEventListener("resize", alRedimensionar);
     };
   }, [menuAbierto, cerrarMenu]);
 
@@ -112,6 +127,7 @@ export function Header() {
 
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-50 border-b bg-white transition ease-out ${
         conSombra ? "border-black/5 shadow-card" : "border-transparent"
       }`}
@@ -202,7 +218,8 @@ export function Header() {
           aria-modal="true"
           aria-label="Menú de navegación"
           onAnimationEnd={() => setCerrando(false)}
-          className={`fixed inset-0 top-[72px] z-40 bg-white outline-none lg:hidden ${
+          style={{ top: topeDelPanel }}
+          className={`fixed inset-x-0 bottom-0 z-40 bg-white outline-none lg:hidden ${
             cerrando ? "menu-movil-saliendo" : "animate-scale-in"
           }`}
         >

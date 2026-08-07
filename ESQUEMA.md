@@ -1,9 +1,18 @@
 # Esquema de contenido
 
 Diseño de las colecciones del CMS, derivado de los tipos que ya están en
-[`content/elcop.ts`](content/elcop.ts). Es **diseño, no implementación**: no
-depende de que estén resueltos los bloqueantes de la Fase 0 del
-[`PLAN.md`](PLAN.md), y sirve igual si al final el CMS no es Payload.
+[`content/elcop.ts`](content/elcop.ts).
+
+> **El esquema ya está escrito como código en [`cms/`](cms/).** Este documento
+> explica el porqué de cada decisión; los archivos de `cms/` son la traducción
+> a configuración de Payload, y compilan.
+>
+> **Todavía no están conectados**: no hay `payload.config.ts` ni base de datos.
+> Conectarlos hoy rompería el sitio, que funciona sin base. Cuando se resuelva
+> la Fase 0 del [`PLAN.md`](PLAN.md), armar la configuración es importar
+> `colecciones` y `globales` de [`cms/index.ts`](cms/index.ts).
+>
+> El Portal del Becario también está modelado — ver §8.
 
 La regla que ordena todo: **el tipo de TypeScript que ya existe es el contrato.**
 Si una colección devuelve exactamente la forma que hoy tiene el módulo de
@@ -279,6 +288,107 @@ no se puedan leer. Por eso el campo `cuerpo` de §3.6, y una ruta nueva
 Es alcance que no estaba pedido, así que lo dejo anotado y no lo doy por
 aprobado. Pero conviene decidirlo antes de migrar y no después, porque cambia el
 esquema.
+
+---
+
+## 8. El Portal del Becario
+
+Las cinco secciones del prototipo —Dashboard, Mis Clases, Mentorías, Proyecto
+Final y Mi Beca— se apoyan en siete colecciones.
+
+| Sección del portal | Colecciones |
+|---|---|
+| Dashboard | Ninguna propia: se calcula |
+| Mis Clases | `encuentros`, `materiales`, `asistencias` |
+| Mentorías | `sesiones-mentoria`, `consultas` |
+| Proyecto Final | `entregas` |
+| Mi Beca | `actas` |
+
+### El Dashboard no guarda nada
+
+El porcentaje de asistencia, la condición de regularidad y el "3 consultas
+pendientes" se calculan a partir de las otras colecciones. Guardarlos sería
+tener dos versiones del mismo número, y la segunda siempre termina desfasada.
+
+### El calendario es el cimiento
+
+`encuentros` es la pieza que faltaba en el plan original. Sin clases con fecha
+no hay "próxima sesión", no hay "clases recientes" y, sobre todo, la asistencia
+no tiene de qué colgarse.
+
+La jerarquía tiene tres niveles: **eje → módulo → encuentro**. El nivel
+intermedio salió de la revisión del prototipo, que ya lo tenía.
+
+### Las masterclass son encuentros marcados
+
+Un encuentro con `esMasterclass` en verdadero apunta a su ficha en
+`referentes`, que es la misma que se muestra en el sitio público. Así la
+masterclass se carga una sola vez: la clase vive en el calendario y el
+disertante en su ficha, sin duplicar ninguno de los dos.
+
+### Cómo se calcula el 75%
+
+Sólo cuentan los encuentros **presenciales** y **no cancelados**. Los virtuales
+existen en el calendario pero no suman ni restan. Que el estado cancelado salga
+del denominador no es un detalle: si una clase se cae, no puede jugar en contra
+de la regularidad de nadie.
+
+### El QR necesita rotar
+
+Un código fijo no mide nada — el primero que llega le saca una foto y la manda
+al grupo. El esquema guarda dos cosas: la **semilla** de la que se derivan
+códigos que cambian cada 30 segundos, y la **ventana** en la que el
+autoregistro está abierto. La rotación en sí es lógica de la aplicación.
+
+`asistencias.origen` deja el rastro de si la marcó el becario con el QR o la
+cargó la coordinación a mano. El día que alguien reclame una asistencia, es lo
+primero que se va a mirar.
+
+### Un rol nuevo: docente
+
+Los disertantes suben su propio material, así que necesitan cuenta. Su acceso
+está acotado a lo que subieron ellos: `materiales.subidoPor` es lo que filtra.
+Se filtra por quién subió y no por el encuentro porque una regla de acceso sólo
+puede consultar campos de su propia colección.
+
+### Materiales: por eje y opcionalmente por encuentro
+
+Cubre los dos casos reales: el material de una clase puntual y la bibliografía
+del módulo, que no pertenece a ningún encuentro. `visibleDesde` permite subirlo
+antes y publicarlo después, sin depender de que alguien se acuerde en el
+momento justo.
+
+### El proyecto final no es un archivo
+
+`entregas` es un formulario estructurado: problema, diagnóstico, propuesta,
+presupuesto y viabilidad. Los campos salen del prototipo, donde tienen pinta de
+venir de la rúbrica real.
+
+La razón no es de formulario: si esto es una competencia, tener ochenta
+proyectos en campos comparables permite ordenarlos y evaluarlos. Con ochenta
+PDF sueltos, cada uno es una caja negra. El archivo queda igual como adjunto
+opcional, para planos o la presentación de la defensa.
+
+### Consultas: una sola colección para los dos modos
+
+Con `sesion` cargada es una duda enviada antes de una mentoría; vacía, es una
+consulta del canal abierto. Separarlas en dos colecciones obligaría a mirar en
+dos lugares para responder lo mismo.
+
+`sesiones-mentoria.cierreDeConsultas` es lo que hace funcionar el "antes de la
+sesión" del documento: pasada esa hora la lista queda cerrada y quien mentorea
+puede prepararse.
+
+### El acta compromiso es un instrumento legal
+
+`actas.evidencia` guarda cuándo, desde qué IP, con qué navegador y **una copia
+del texto vigente al aceptar** — si el acta se edita después, eso prueba qué
+firmó la persona.
+
+Pero aceptar con un clic es firma electrónica, no firma digital: la Ley 25.506
+les da valor probatorio distinto. **Si el acta tiene que ser oponible, quién
+define qué alcanza es Legales.** Hasta entonces, esta colección puede quedar
+corta o sobrar.
 
 ---
 

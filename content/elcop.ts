@@ -111,6 +111,39 @@ export const ESCUELA = {
   cohorte: "Cohorte 2026"
 } as const;
 
+/**
+ * Franja institucional que corre arriba de todo, por encima del header.
+ *
+ * Es el patrón habitual de los sitios de gobierno: deja claro de qué
+ * institución depende la iniciativa sin competir con la marca de ELCOP, que
+ * sigue siendo la que manda en el header.
+ *
+ * El logo va en su versión blanca porque el fondo es `municipal-900`.
+ */
+export const FRANJA_INSTITUCIONAL = {
+  institucion: "Municipalidad de San Miguel de Tucumán",
+  // En pantallas angostas no entra el nombre completo.
+  institucionCorta: "Municipalidad de SMT",
+  logo: { src: "/logo-ciudad-smt-blanco.png", ancho: 507, alto: 206 },
+  sitio: { etiqueta: "smt.gob.ar", href: "https://smt.gob.ar" }
+} as const;
+
+/**
+ * Crédito de desarrollo, al pie de todo.
+ *
+ * Va deliberadamente más discreto que el co-branding de SMT y UNSTA: ellas son
+ * las instituciones que respaldan la Escuela, la Dirección es quien construyó
+ * el sitio. No es la misma jerarquía.
+ */
+export const DESARROLLO = {
+  etiqueta: "Creado por",
+  nombre: "Dirección de Inteligencia Artificial",
+  organismo: "Municipalidad de San Miguel de Tucumán",
+  logo: { src: "/logo-direccion-ia.png", ancho: 526, alto: 220 },
+  // TODO: confirmar si la Dirección tiene una página propia a la que enlazar.
+  href: null as string | null
+} as const;
+
 export const NAVEGACION: ItemNavegacion[] = [
   { etiqueta: "Inicio", href: "/#inicio", tipo: "ancla" },
   { etiqueta: "Institucional", href: "/#institucional", tipo: "ancla" },
@@ -128,6 +161,50 @@ export const HERO = {
   ctaPrimario: { etiqueta: "Postulate", href: "#postulacion" },
   ctaSecundario: { etiqueta: "Conocé la diplomatura", href: "#formacion" }
 } as const;
+
+export type VideoHero = {
+  id: string;
+  mp4: string;
+  /** Fotograma fijo. Es lo único que se ve en celulares. */
+  portada: string;
+  descripcion: string;
+};
+
+/**
+ * Videos de fondo del hero.
+ *
+ * Son animaciones generadas a partir de fotos reales de la cohorte 2026. Van
+ * debajo de un velo blanco al 88%: se leen como textura viva, no como imagen.
+ * Se cruzan entre sí con una disolvencia de 1,4 segundos.
+ *
+ * No se descargan en celulares ni con movimiento reducido ni con el ahorro de
+ * datos activado: en esos casos se ve sólo la portada del primero.
+ *
+ * ⚠ `hero-photocall` es el telón de logos, y el generador deformó el sello de
+ * la UNSTA: donde va el lema se leen letras inventadas. Debajo del velo actual
+ * no se distingue. **Si alguna vez se sube la opacidad del video, ese hay que
+ * sacarlo de la lista.**
+ */
+export const VIDEOS_HERO: VideoHero[] = [
+  {
+    id: "hero-clase",
+    mp4: "/video/hero-clase.mp4",
+    portada: "/video/hero-clase.jpg",
+    descripcion: "Clase en el aula magna de la UNSTA"
+  },
+  {
+    id: "hero-grupo",
+    mp4: "/video/hero-grupo.mp4",
+    portada: "/video/hero-grupo.jpg",
+    descripcion: "Foto grupal de la cohorte"
+  },
+  {
+    id: "hero-photocall",
+    mp4: "/video/hero-unsta.mp4",
+    portada: "/video/hero-unsta.jpg",
+    descripcion: "Telón institucional de UNSTA y Ciudad SMT"
+  }
+];
 
 export const INDICADORES: Indicador[] = [
   {
@@ -171,6 +248,12 @@ export const INSTITUCIONAL = {
     etiqueta: "Descargá nuestra carpeta institucional",
     href: "/institucional/carpeta.pdf",
     disponible: false
+  },
+  foto: {
+    src: "/fotos/unsta-fachada.jpg",
+    alt: "Fachada de la UNSTA en San Miguel de Tucumán",
+    ancho: 1280,
+    alto: 854
   }
 } as const;
 
@@ -315,8 +398,15 @@ export const REFERENTES: Referente[] = [
 export const INSCRIPCIONES = {
   kicker: "Inscripciones",
   titulo: "Cómo se ingresa a la Escuela",
+  // La frase oficial del documento de ELCOP es una sola, larga. Se parte en dos
+  // para que el titular siga pegando: la primera mitad entra como bajada y la
+  // segunda como titular. El texto es textual y el corte cae en la coma.
+  becaIntro: "Con el objetivo de promover el talento y la excelencia en la función pública,",
   beca:
-    "La Municipalidad de SMT y la UNSTA otorgan una Beca del 100% para todos los seleccionados.",
+    "la Municipalidad de SMT y la UNSTA otorgan una Beca del 100% para todos los seleccionados.",
+  // Encadena cupos con proceso, como en el documento oficial.
+  etapasIntro:
+    "Debido a que los cupos son limitados, el proceso de selección consta de dos etapas obligatorias.",
   etapas: [
     {
       numero: 1,
@@ -334,6 +424,8 @@ export const INSCRIPCIONES = {
   cursada: {
     duracion: "4 meses de cursada",
     modalidad: "Modalidad mixta: presencial + virtual sincronizada",
+    modalidadDetalle:
+      "Permite un aprendizaje flexible, pero con fuerte anclaje en el networking presencial.",
     asistencia: "75% de asistencia para mantener la regularidad"
   },
   evaluacionFinal: {
@@ -467,6 +559,13 @@ export const FAQ: PreguntaFrecuente[] = [
  *
  * `esEjemplo: true` hace que la interfaz los muestre marcados como ejemplo,
  * para no presentarlos como contenido oficial.
+ *
+ * Las portadas SÍ son fotos reales de la cohorte 2026. El texto alternativo
+ * describe lo que se ve y nada más: no afirma de qué masterclass es cada una,
+ * porque no lo sabemos.
+ *
+ * TODO: confirmar con ELCOP a qué encuentro corresponde cada foto, para poder
+ * emparejarlas con la nota correcta y escribir un alt más preciso.
  */
 export const PUBLICACIONES: Publicacion[] = [
   {
@@ -477,8 +576,8 @@ export const PUBLICACIONES: Publicacion[] = [
     // TODO: confirmar con ELCOP — fecha de ejemplo.
     fecha: "2026-03-18",
     categoria: "Masterclass",
-    imagen: "/publicaciones/masterclass-inaugural.png",
-    imagenAlt: "Portada provisoria de la nota sobre la masterclass inaugural",
+    imagen: "/fotos/masterclass-aula.jpg",
+    imagenAlt: "Encuentro de la cohorte 2026 en el aula magna de la UNSTA",
     esEjemplo: true
   },
   {
@@ -489,8 +588,9 @@ export const PUBLICACIONES: Publicacion[] = [
     // TODO: confirmar con ELCOP — fecha de ejemplo.
     fecha: "2026-04-22",
     categoria: "Masterclass",
-    imagen: "/publicaciones/reynoso-opinion-publica.png",
-    imagenAlt: "Portada provisoria de la nota sobre opinión pública y electorado",
+    imagen: "/fotos/masterclass-datos.jpg",
+    imagenAlt:
+      "Clase de la cohorte 2026 con una presentación de datos de opinión pública proyectada",
     esEjemplo: true
   },
   {
@@ -501,8 +601,8 @@ export const PUBLICACIONES: Publicacion[] = [
     // TODO: confirmar con ELCOP — fecha de ejemplo.
     fecha: "2026-05-13",
     categoria: "Masterclass",
-    imagen: "/publicaciones/daffonchio-movilidad.png",
-    imagenAlt: "Portada provisoria de la nota sobre movilidad urbana",
+    imagen: "/fotos/cohorte-grupo.jpg",
+    imagenAlt: "Foto grupal de los becarios de la cohorte 2026 en la UNSTA",
     esEjemplo: true
   }
 ];
