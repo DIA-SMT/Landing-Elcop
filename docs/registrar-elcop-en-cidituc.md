@@ -33,7 +33,9 @@ rama más siguiendo el mismo patrón que `hub-ia`:
 } else if (nextParam == "elcop" && localStorage.getItem("token")) {
   const token = localStorage.getItem("token");
 
-  const url = new URL(`https://elcop.smt.gob.ar/auth/cidituc/callback`);
+  const url = new URL(
+    `https://landing-elcop.vercel.app/auth/cidituc/callback`,
+  );
   // const url = new URL(`http://localhost:3000/auth/cidituc/callback`);
 
   url.searchParams.append("auth", token);
@@ -44,9 +46,10 @@ rama más siguiendo el mismo patrón que `hub-ia`:
 
 Va **antes** del `else` final, que es el que atrapa todo lo que no reconoce.
 
-> ⚠️ El dominio `elcop.smt.gob.ar` es tentativo. Confirmar cuál va a ser el
-> definitivo antes de aplicar el cambio: es un valor hardcodeado y cambiarlo
-> después implica otro despliegue de CIDITUC.
+> ⚠️ **El callback tiene que estar publicado antes de que DITEC despliegue.**
+> La URL queda fija en su código: si redirigen a una ruta que todavía no
+> existe, la persona recibe un 404 después de autenticarse. Producción sale de
+> `main`, así que el ingreso tiene que estar mergeado ahí primero.
 
 ## Cómo probar antes de que esté desplegado
 

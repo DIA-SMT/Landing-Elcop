@@ -24,7 +24,9 @@ forma a la de `hub-ia`, ubicada antes del `else` final:
 } else if (nextParam == "elcop" && localStorage.getItem("token")) {
   const token = localStorage.getItem("token");
 
-  const url = new URL(`https://elcop.smt.gob.ar/auth/cidituc/callback`);
+  const url = new URL(
+    `https://landing-elcop.vercel.app/auth/cidituc/callback`,
+  );
   // const url = new URL(`http://localhost:3000/auth/cidituc/callback`);
 
   url.searchParams.append("auth", token);
@@ -35,13 +37,9 @@ forma a la de `hub-ia`, ubicada antes del `else` final:
 
 No toca ninguna de las otras integraciones.
 
-**Lo que necesitamos de ustedes:**
-
-1. Confirmar si el subdominio `elcop.smt.gob.ar` es correcto, o indicarnos cuál
-   usar. Elegimos ése por consistencia con el resto de las aplicaciones
-   registradas, pero todavía no está creado.
-2. Aplicar el cambio y desplegarlo cuando les quede cómodo. No tenemos apuro de
-   fecha; sí necesitamos saber cuándo, para coordinar de nuestro lado.
+**Lo que necesitamos de ustedes:** aplicar el cambio y desplegarlo cuando les
+quede cómodo. No tenemos apuro de fecha; sí necesitamos saber cuándo, para
+tener nuestro lado publicado antes.
 
 **Dos cosas que vimos revisando el código, por si les sirven.** Ninguna nos
 bloquea ni es urgente:
@@ -61,6 +59,26 @@ Gracias.
 ---
 
 ## Notas internas
+
+### Sobre el dominio
+
+Quedó `landing-elcop.vercel.app`, confirmado por ELCOP. Es distinto del patrón
+del resto: las doce aplicaciones registradas en el derivador son todas
+subdominios de `smt.gob.ar`.
+
+Vale tenerlo presente por dos motivos, ninguno bloqueante:
+
+- **Cómo se ve.** La persona sale de `cidituc.smt.gob.ar` y aterriza en un
+  dominio de Vercel. Es exactamente el salto que a la gente se le enseña a
+  desconfiar. No hay riesgo real —la contraseña se escribe sólo en CiDiTuc—,
+  pero para un programa oficial del municipio y la UNSTA es una diferencia de
+  presentación.
+- **Cuánto cuesta cambiarlo después.** La URL queda hardcodeada en el código de
+  DITEC. Si más adelante se decide mover a `elcop.smt.gob.ar`, hace falta otro
+  despliegue de ellos, no sólo un cambio nuestro.
+
+Del lado nuestro sumar un dominio propio en Vercel es trivial y no rompe nada:
+el costo real de cambiar está en coordinar el segundo despliegue con DITEC.
 
 **No pushear a `ditec-desarrollo/cidituc` sin que ellos lo pidan.** Es un
 sistema del que dependen doce aplicaciones del municipio —turnos, catastro,
