@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CONTACTO, ESCUELA } from "@/content/elcop";
-import { urlDeIngreso } from "@/lib/cidituc";
+import { ingresoHabilitado, urlDeIngreso } from "@/lib/cidituc";
 import { obtenerSesion } from "@/lib/sesion";
 
 export const metadata: Metadata = {
@@ -93,6 +93,38 @@ export default async function PaginaPortal({
           <p className="mt-3 text-tiny text-slate-500">
             Cerrás sesión sólo en ELCOP. Tu sesión de Ciudadano Digital sigue abierta.
           </p>
+        </div>
+      </section>
+    );
+  }
+
+  // Mientras CIDITUC no reconozca a ELCOP, mostrar el botón sería mandar a la
+  // gente a una puerta que no abre: se autentican bien y quedan en la pantalla
+  // principal de CIDITUC, sin ninguna explicación. El callback ya está
+  // publicado y funcionando; lo único que falta es que ellos desplieguen.
+  if (!ingresoHabilitado()) {
+    return (
+      <section className="page-shell py-24 md:py-32">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-brandYellow" />
+            Portal del Becario
+          </p>
+
+          <h1 className="mt-7 font-display text-4xl font-extrabold leading-tight tracking-tight text-ink md:text-5xl">
+            Próximamente
+          </h1>
+
+          <p className="mt-5 text-base leading-relaxed text-slate-600 md:text-lg">
+            Las personas seleccionadas de la {ESCUELA.cohorte} van a entrar acá con su cuenta de
+            Ciudadano Digital.
+          </p>
+
+          <div className="mt-10">
+            <Link href="/" className="secondary-button">
+              Volver al inicio
+            </Link>
+          </div>
         </div>
       </section>
     );

@@ -167,6 +167,22 @@ export function pareceUnToken(valor: string | null | undefined): valor is string
 }
 
 /**
+ * ¿Se muestra el botón de ingreso?
+ *
+ * Apagado hasta que DITEC despliegue el registro de ELCOP en su derivador.
+ * Antes de eso el botón lleva a CIDITUC, que no reconoce `next=elcop` y deja a
+ * la persona en su propia pantalla principal: se autentica bien y nunca vuelve,
+ * sin ningún mensaje que explique qué pasó.
+ *
+ * **El callback funciona igual con esto apagado.** Lo único que cambia es si el
+ * botón se ve. Así la ruta ya está publicada y esperando para cuando ellos
+ * desplieguen, y encenderlo es cambiar una variable.
+ */
+export function ingresoHabilitado(): boolean {
+  return process.env.CIDITUC_INGRESO_HABILITADO === "true";
+}
+
+/**
  * A dónde mandamos a la persona para que inicie sesión.
  *
  * `next` es un identificador de aplicación, no una URL: CIDITUC tiene una
