@@ -28,11 +28,11 @@ export const Usuarios: CollectionConfig = {
     create: soloAdmin,
     update: soloAdmin,
     delete: soloAdmin,
-    // Nadie entra al panel de administración salvo el equipo: el becario usa
-    // el portal del sitio, no el back office.
+    // El becario no entra al panel de administración: usa el portal del sitio.
+    // El docente sí, pero sólo alcanza su material y sus encuentros.
     admin: ({ req }) => {
       const rol = (req.user as { rol?: string } | null)?.rol;
-      return rol === "admin" || rol === "staff";
+      return rol === "admin" || rol === "staff" || rol === "docente";
     }
   },
   fields: [
@@ -44,7 +44,8 @@ export const Usuarios: CollectionConfig = {
       defaultValue: "becario",
       options: [
         { label: "Dirección (todo)", value: "admin" },
-        { label: "Coordinación (contenido y postulaciones)", value: "staff" },
+        { label: "Coordinación (contenido, postulaciones y cursada)", value: "staff" },
+        { label: "Docente (sus encuentros y su material)", value: "docente" },
         { label: "Becario (sólo el portal)", value: "becario" }
       ],
       admin: { position: "sidebar" }

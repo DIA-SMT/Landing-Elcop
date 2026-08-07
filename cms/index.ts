@@ -10,15 +10,24 @@
  * Lo que sí hacen ya: compilar y ser revisables. Cuando se resuelva la Fase 0,
  * armar `payload.config.ts` es importar estas listas.
  *
- * Falta escribir el esquema del Portal del Becario (Fase 4): entregas,
- * calendario de encuentros, asistencia, materiales, consultas de mentoría y
- * actas. Se deja para cuando el alcance esté cerrado, que hoy depende de
- * revisar el prototipo y de la definición legal del acta compromiso.
+ * El Portal del Becario ya está modelado, siguiendo las cinco secciones del
+ * prototipo: Dashboard, Mis Clases, Mentorías, Proyecto Final y Mi Beca. Lo
+ * que el Dashboard muestra no es una colección aparte: el porcentaje de
+ * asistencia, la condición de regularidad y el conteo de consultas pendientes
+ * se calculan a partir de las otras. Guardarlos sería tener dos versiones del
+ * mismo número.
  */
 
 import type { CollectionConfig, GlobalConfig } from "payload";
 
+import { Actas } from "./colecciones/Actas";
+import { Asistencias } from "./colecciones/Asistencias";
+import { Consultas } from "./colecciones/Consultas";
 import { Ejes } from "./colecciones/Ejes";
+import { Encuentros } from "./colecciones/Encuentros";
+import { Entregas } from "./colecciones/Entregas";
+import { Materiales } from "./colecciones/Materiales";
+import { SesionesMentoria } from "./colecciones/SesionesMentoria";
 import { IndicadoresCiudad } from "./colecciones/IndicadoresCiudad";
 import { Indicadores } from "./colecciones/Indicadores";
 import { Integrantes } from "./colecciones/Integrantes";
@@ -48,7 +57,16 @@ export const colecciones: CollectionConfig[] = [
   Publicaciones,
   IndicadoresCiudad,
   // Inscripciones
-  Postulaciones
+  Postulaciones,
+  // Cursada
+  Encuentros,
+  Asistencias,
+  Materiales,
+  SesionesMentoria,
+  Consultas,
+  // Portal del becario
+  Entregas,
+  Actas
 ];
 
 export const globales: GlobalConfig[] = [
@@ -59,5 +77,14 @@ export const globales: GlobalConfig[] = [
   Pie
 ];
 
-export { cualquiera, conSesion, equipoElcop, propioOEquipo, soloAdmin } from "./acceso";
+export {
+  conSesion,
+  cualquiera,
+  docenteOEquipo,
+  equipoElcop,
+  portal,
+  propioOEquipo,
+  soloAdmin,
+  subidoPorMiOEquipo
+} from "./acceso";
 export type { Rol } from "./acceso";
