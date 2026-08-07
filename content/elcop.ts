@@ -398,8 +398,15 @@ export const REFERENTES: Referente[] = [
 export const INSCRIPCIONES = {
   kicker: "Inscripciones",
   titulo: "Cómo se ingresa a la Escuela",
+  // La frase oficial del documento de ELCOP es una sola, larga. Se parte en dos
+  // para que el titular siga pegando: la primera mitad entra como bajada y la
+  // segunda como titular. El texto es textual y el corte cae en la coma.
+  becaIntro: "Con el objetivo de promover el talento y la excelencia en la función pública,",
   beca:
-    "La Municipalidad de SMT y la UNSTA otorgan una Beca del 100% para todos los seleccionados.",
+    "la Municipalidad de SMT y la UNSTA otorgan una Beca del 100% para todos los seleccionados.",
+  // Encadena cupos con proceso, como en el documento oficial.
+  etapasIntro:
+    "Debido a que los cupos son limitados, el proceso de selección consta de dos etapas obligatorias.",
   etapas: [
     {
       numero: 1,
@@ -417,6 +424,8 @@ export const INSCRIPCIONES = {
   cursada: {
     duracion: "4 meses de cursada",
     modalidad: "Modalidad mixta: presencial + virtual sincronizada",
+    modalidadDetalle:
+      "Permite un aprendizaje flexible, pero con fuerte anclaje en el networking presencial.",
     asistencia: "75% de asistencia para mantener la regularidad"
   },
   evaluacionFinal: {

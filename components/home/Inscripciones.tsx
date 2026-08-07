@@ -26,7 +26,12 @@ export function Inscripciones() {
           />
           <div className="relative max-w-3xl">
             <span aria-hidden="true" className="block h-1.5 w-14 rounded-full bg-brandYellow" />
-            <p className="mt-7 font-display text-2xl font-extrabold leading-tight tracking-tight text-white sm:text-3xl md:text-[2.5rem]">
+            {/* Las dos mitades son una sola oración del documento oficial: el
+                lector la lee corrida y el titular conserva el peso. */}
+            <p className="mt-7 text-base font-semibold leading-relaxed text-white md:text-lg">
+              {INSCRIPCIONES.becaIntro}
+            </p>
+            <p className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight text-white sm:text-3xl md:text-[2.5rem]">
               {beca}
             </p>
             <Link
@@ -45,6 +50,9 @@ export function Inscripciones() {
         <h3 className="font-display text-xl font-extrabold tracking-tight text-ink md:text-2xl">
           Dos etapas, ambas obligatorias
         </h3>
+        <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-600">
+          {INSCRIPCIONES.etapasIntro}
+        </p>
         <ol className="mt-6 grid gap-4 md:grid-cols-2">
           {etapas.map((etapa, indice) => (
             <li key={etapa.numero}>
@@ -86,6 +94,9 @@ export function Inscripciones() {
             <p className="micro-label">Modalidad</p>
             <p className="mt-2 font-display text-lg font-bold leading-snug text-ink">
               {cursada.modalidad}
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">
+              {cursada.modalidadDetalle}
             </p>
           </article>
         </Reveal>
