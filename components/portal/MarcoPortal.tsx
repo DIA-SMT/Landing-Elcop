@@ -15,7 +15,7 @@ export type SeccionPortal = "panel" | "clases" | "mentorias" | "proyecto" | "bec
 
 const SECCIONES: { id: SeccionPortal; etiqueta: string; href: string | null }[] = [
   { id: "panel", etiqueta: "Panel", href: "/portal" },
-  { id: "clases", etiqueta: "Mis clases", href: null },
+  { id: "clases", etiqueta: "Mis clases", href: "/portal/clases" },
   { id: "mentorias", etiqueta: "Mentorías", href: null },
   { id: "proyecto", etiqueta: "Proyecto final", href: null },
   { id: "beca", etiqueta: "Mi beca", href: null }

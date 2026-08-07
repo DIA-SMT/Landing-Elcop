@@ -5,7 +5,7 @@
  * vez. Guardar el porcentaje sería tener dos versiones del mismo número, y la
  * segunda siempre termina desfasada respecto de la primera.
  */
-import type { Asistencia, Encuentro, DatosDelPortal } from "./tipos";
+import type { Asistencia, DatosDelPortal, Encuentro, Material } from "./tipos";
 
 /** El piso de asistencia para mantener la regularidad. */
 export const MINIMO_ASISTENCIA = 75;
@@ -85,6 +85,73 @@ export function encuentrosRecientes(encuentros: Encuentro[], cuantos = 3): Encue
     .filter((e) => e.estado === "dictado")
     .sort((a, b) => +new Date(b.comienza) - +new Date(a.comienza))
     .slice(0, cuantos);
+}
+
+export type ModuloAgrupado = {
+  modulo: string;
+  eje: string;
+  encuentros: Encuentro[];
+  /** Material del módulo que no cuelga de ningún encuentro. */
+  materialesDelModulo: Material[];
+  /** Material de cada encuentro, por id. */
+  materialesPorEncuentro: Record<string, Material[]>;
+};
+
+/**
+ * Agrupa la cursada por módulo, que es como la pide el documento de ELCOP
+ * ("pestañas por módulo").
+ *
+ * El orden sale de los encuentros: primero el módulo cuyo encuentro más
+ * reciente es más nuevo. Así lo que se está cursando ahora queda arriba, sin
+ * necesidad de un campo de orden que alguien tenga que mantener al día.
+ */
+export function agruparPorModulo(
+  encuentros: Encuentro[],
+  materiales: Material[]
+): ModuloAgrupado[] {
+  const grupos = new Map<string, ModuloAgrupado>();
+
+  const asegurar = (modulo: string, eje: string): ModuloAgrupado => {
+    let grupo = grupos.get(modulo);
+    if (!grupo) {
+      grupo = { modulo, eje, encuentros: [], materialesDelModulo: [], materialesPorEncuentro: {} };
+      grupos.set(modulo, grupo);
+    }
+    return grupo;
+  };
+
+  for (const encuentro of encuentros) {
+    asegurar(encuentro.modulo, encuentro.eje).encuentros.push(encuentro);
+  }
+
+  for (const material of materiales) {
+    // El material puede llegar de un módulo que todavía no tiene encuentros
+    // cargados; en ese caso no sabemos su eje.
+    const grupo = asegurar(material.modulo, grupos.get(material.modulo)?.eje ?? "");
+    if (material.encuentroId) {
+      (grupo.materialesPorEncuentro[material.encuentroId] ??= []).push(material);
+    } else {
+      grupo.materialesDelModulo.push(material);
+    }
+  }
+
+  const masReciente = (grupo: ModuloAgrupado) =>
+    grupo.encuentros.reduce((max, e) => Math.max(max, +new Date(e.comienza)), 0);
+
+  return [...grupos.values()]
+    .map((grupo) => ({
+      ...grupo,
+      encuentros: grupo.encuentros.sort((a, b) => +new Date(b.comienza) - +new Date(a.comienza))
+    }))
+    .sort((a, b) => masReciente(b) - masReciente(a));
+}
+
+/** La asistencia de un encuentro, o `null` si no se registró ninguna. */
+export function asistenciaDe(
+  encuentroId: string,
+  asistencias: Asistencia[]
+): Asistencia | null {
+  return asistencias.find((a) => a.encuentroId === encuentroId) ?? null;
 }
 
 /** Resumen del estado académico que se muestra en el panel. */

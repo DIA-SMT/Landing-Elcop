@@ -189,11 +189,47 @@ function datosDeEjemplo(): DatosDelPortal {
     },
     {
       id: "m2",
-      titulo: "Bibliografía del eje El Territorio",
+      titulo: "Bibliografía del módulo",
       tipo: "bibliografia",
       modulo: "Lectura del territorio",
       encuentroId: null,
-      descripcion: "Lecturas sugeridas para todo el módulo.",
+      descripcion: "Lecturas sugeridas para todo el módulo, no para una clase puntual.",
+      archivo: "#"
+    },
+    {
+      id: "m3",
+      titulo: "Encuestas y sus límites — lectura",
+      tipo: "lectura",
+      modulo: "Lectura del territorio",
+      encuentroId: "e2",
+      descripcion: null,
+      archivo: "#"
+    },
+    {
+      id: "m4",
+      titulo: "Datos de opinión pública — planilla",
+      tipo: "otro",
+      modulo: "Lectura del territorio",
+      encuentroId: "e2",
+      descripcion: "La base que se usó en la clase.",
+      archivo: "#"
+    },
+    {
+      id: "m5",
+      titulo: "Toma de decisiones — presentación",
+      tipo: "presentacion",
+      modulo: "Perfil dirigente",
+      encuentroId: "e8",
+      descripcion: null,
+      archivo: "#"
+    },
+    {
+      id: "m6",
+      titulo: "Guía de lectura del presupuesto",
+      tipo: "lectura",
+      modulo: "La máquina del Estado",
+      encuentroId: null,
+      descripcion: "Para llegar preparado al próximo encuentro.",
       archivo: "#"
     }
   ];
