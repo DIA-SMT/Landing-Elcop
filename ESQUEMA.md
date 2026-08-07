@@ -1,9 +1,21 @@
 # Esquema de contenido
 
 Diseño de las colecciones del CMS, derivado de los tipos que ya están en
-[`content/elcop.ts`](content/elcop.ts). Es **diseño, no implementación**: no
-depende de que estén resueltos los bloqueantes de la Fase 0 del
-[`PLAN.md`](PLAN.md), y sirve igual si al final el CMS no es Payload.
+[`content/elcop.ts`](content/elcop.ts).
+
+> **El esquema ya está escrito como código en [`cms/`](cms/).** Este documento
+> explica el porqué de cada decisión; los archivos de `cms/` son la traducción
+> a configuración de Payload, y compilan.
+>
+> **Todavía no están conectados**: no hay `payload.config.ts` ni base de datos.
+> Conectarlos hoy rompería el sitio, que funciona sin base. Cuando se resuelva
+> la Fase 0 del [`PLAN.md`](PLAN.md), armar la configuración es importar
+> `colecciones` y `globales` de [`cms/index.ts`](cms/index.ts).
+>
+> Falta el esquema del Portal del Becario: entregas, calendario de encuentros,
+> asistencia, materiales, consultas de mentoría y actas. Queda para cuando el
+> alcance esté cerrado, que hoy depende de revisar el prototipo y de la
+> definición legal del acta compromiso.
 
 La regla que ordena todo: **el tipo de TypeScript que ya existe es el contrato.**
 Si una colección devuelve exactamente la forma que hoy tiene el módulo de

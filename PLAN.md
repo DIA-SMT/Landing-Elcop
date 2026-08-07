@@ -321,6 +321,7 @@ nadie:
 - ~~Levantar el proyecto en Vercel~~ — **lo toma Lucas.** Requiere que el
   proyecto esté en un repositorio git, que todavía no lo está.
 - ~~Armar el esquema de colecciones a partir de los tipos de
-  `content/elcop.ts`~~ — **hecho:** [`ESQUEMA.md`](ESQUEMA.md).
+  `content/elcop.ts`~~ — **hecho:** el diseño en [`ESQUEMA.md`](ESQUEMA.md) y
+  el código en [`cms/`](cms/), que ya compila. Falta conectarlo, que es Fase 1.
 - Sentarse con la Coordinación Administrativa a ver cómo procesan hoy las
   postulaciones. Es lo que define si el panel les sirve o les estorba.
