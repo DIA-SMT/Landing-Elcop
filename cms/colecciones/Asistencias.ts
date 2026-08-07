@@ -17,9 +17,9 @@ import { equipoElcop, propioOEquipo, soloAdmin } from "../acceso";
  * una asistencia, la diferencia entre "la marcó el becario con el QR" y "la
  * cargó la coordinación a mano" es lo primero que se va a mirar.
  *
- * TODO: al conectar, agregar un índice único sobre (encuentro, becario). Sin
- * eso, un doble toque en el QR puede dejar dos registros del mismo encuentro y
- * el porcentaje sale mal.
+ * El índice único sobre (encuentro, becario) evita que un doble toque en el QR
+ * deje dos registros del mismo encuentro y el porcentaje salga mal. El
+ * prototipo ya lo tenía y estaba bien puesto.
  */
 export const Asistencias: CollectionConfig = {
   slug: "asistencias",
@@ -30,6 +30,7 @@ export const Asistencias: CollectionConfig = {
     description: "Se cargan desde el QR o a mano. No se crean desde acá."
   },
   defaultSort: "-registradaEn",
+  indexes: [{ fields: ["encuentro", "becario"], unique: true }],
   access: {
     read: propioOEquipo("becario"),
     create: () => false,

@@ -196,7 +196,28 @@ para el resto.
 *Fecha externa: el cierre de la cursada, unos 4 meses después de la Fase 2.*
 
 El alcance salió del documento `Página Web ELCOP.docx` y del prototipo en
-Replit. Es bastante más de lo que suponíamos, así que va partido en dos.
+Replit. Es bastante más de lo que suponíamos, así que va partido en tres.
+
+> **Decisión sobre el prototipo: se rehace, no se migra — pero se le toma el
+> modelo de datos.**
+>
+> El prototipo es una aplicación completa, no un mockup: monorepo pnpm con
+> Postgres y Drizzle, API en Express 5, frontend React + Vite con shadcn/ui, y
+> una especificación OpenAPI como fuente de verdad con generación de tipos.
+>
+> Migrarlo implicaría mantener **dos frontends** —su SPA de Vite y nuestro
+> Next.js— y **dos sistemas de diseño**. Reestilar noventa componentes de
+> shadcn al sistema municipal es más trabajo que rehacer las ocho pantallas del
+> portal.
+>
+> Su modelo de datos, en cambio, es valioso y está informado por conversaciones
+> con ELCOP que nosotros no tuvimos. De ahí salieron tres cambios al esquema:
+> la jerarquía de tres niveles (eje → módulo → encuentro), las masterclass como
+> encuentros marcados en vez de una lista aparte, y el proyecto final como
+> formulario estructurado en vez de un archivo suelto.
+>
+> **No se reutiliza nada de su capa de autenticación.** Ver el ítem 31 de
+> `PENDIENTES.md`.
 
 #### 4A — Base del portal y entrega del proyecto
 

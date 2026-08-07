@@ -25,7 +25,7 @@ export const Encuentros: CollectionConfig = {
   admin: {
     useAsTitle: "titulo",
     group: "Cursada",
-    defaultColumns: ["titulo", "eje", "comienza", "modalidad", "estado"],
+    defaultColumns: ["titulo", "modulo", "comienza", "modalidad", "estado"],
     description: "El calendario de clases. De acá salen la asistencia y el material."
   },
   defaultSort: "-comienza",
@@ -41,11 +41,33 @@ export const Encuentros: CollectionConfig = {
   fields: [
     { name: "titulo", type: "text", required: true },
     {
-      name: "eje",
+      name: "modulo",
       type: "relationship",
-      relationTo: "ejes",
+      relationTo: "modulos",
       required: true,
-      admin: { position: "sidebar", description: "A qué módulo de la diplomatura pertenece." }
+      admin: {
+        position: "sidebar",
+        description: "El módulo al que pertenece. El eje se deduce del módulo."
+      }
+    },
+    {
+      // Las masterclass son encuentros como cualquier otro, con una marca. Es
+      // lo que hacía el prototipo y evita cargar dos veces lo mismo: la ficha
+      // pública del disertante vive una sola vez, en Referentes.
+      name: "esMasterclass",
+      type: "checkbox",
+      defaultValue: false,
+      admin: { position: "sidebar" }
+    },
+    {
+      name: "referente",
+      type: "relationship",
+      relationTo: "referentes",
+      required: false,
+      admin: {
+        description: "Quién dicta la masterclass. Es la misma ficha que se muestra en el sitio público.",
+        condition: (datos) => Boolean(datos?.esMasterclass)
+      }
     },
     {
       name: "docentes",

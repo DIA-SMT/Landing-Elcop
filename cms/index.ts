@@ -27,6 +27,7 @@ import { Ejes } from "./colecciones/Ejes";
 import { Encuentros } from "./colecciones/Encuentros";
 import { Entregas } from "./colecciones/Entregas";
 import { Materiales } from "./colecciones/Materiales";
+import { Modulos } from "./colecciones/Modulos";
 import { SesionesMentoria } from "./colecciones/SesionesMentoria";
 import { IndicadoresCiudad } from "./colecciones/IndicadoresCiudad";
 import { Indicadores } from "./colecciones/Indicadores";
@@ -52,6 +53,7 @@ export const colecciones: CollectionConfig[] = [
   Indicadores,
   Integrantes,
   Ejes,
+  Modulos,
   Referentes,
   Preguntas,
   Publicaciones,

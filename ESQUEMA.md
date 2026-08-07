@@ -316,6 +316,16 @@ tener dos versiones del mismo número, y la segunda siempre termina desfasada.
 no hay "próxima sesión", no hay "clases recientes" y, sobre todo, la asistencia
 no tiene de qué colgarse.
 
+La jerarquía tiene tres niveles: **eje → módulo → encuentro**. El nivel
+intermedio salió de la revisión del prototipo, que ya lo tenía.
+
+### Las masterclass son encuentros marcados
+
+Un encuentro con `esMasterclass` en verdadero apunta a su ficha en
+`referentes`, que es la misma que se muestra en el sitio público. Así la
+masterclass se carga una sola vez: la clase vive en el calendario y el
+disertante en su ficha, sin duplicar ninguno de los dos.
+
 ### Cómo se calcula el 75%
 
 Sólo cuentan los encuentros **presenciales** y **no cancelados**. Los virtuales
@@ -347,6 +357,17 @@ Cubre los dos casos reales: el material de una clase puntual y la bibliografía
 del módulo, que no pertenece a ningún encuentro. `visibleDesde` permite subirlo
 antes y publicarlo después, sin depender de que alguien se acuerde en el
 momento justo.
+
+### El proyecto final no es un archivo
+
+`entregas` es un formulario estructurado: problema, diagnóstico, propuesta,
+presupuesto y viabilidad. Los campos salen del prototipo, donde tienen pinta de
+venir de la rúbrica real.
+
+La razón no es de formulario: si esto es una competencia, tener ochenta
+proyectos en campos comparables permite ordenarlos y evaluarlos. Con ochenta
+PDF sueltos, cada uno es una caja negra. El archivo queda igual como adjunto
+opcional, para planos o la presentación de la defensa.
 
 ### Consultas: una sola colección para los dos modos
 

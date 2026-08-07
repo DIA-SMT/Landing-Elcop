@@ -5,10 +5,10 @@ import { docenteOEquipo, portal, subidoPorMiOEquipo } from "../acceso";
 /**
  * El repositorio de clases: presentaciones, lecturas y bibliografía.
  *
- * Cuelga del eje y, opcionalmente, de un encuentro. Así se cubren los dos casos
- * reales: el material de una clase puntual, y la bibliografía del módulo que no
- * pertenece a ningún encuentro en particular. El documento pide "pestañas por
- * módulo", que es exactamente agrupar por eje.
+ * Cuelga del módulo y, opcionalmente, de un encuentro. Así se cubren los dos
+ * casos reales: el material de una clase puntual, y la bibliografía del módulo
+ * que no pertenece a ningún encuentro en particular. El documento pide
+ * "pestañas por módulo", que es exactamente esto.
  *
  * **`visibleDesde` no es un adorno.** Casi siempre el material se sube antes de
  * la clase y no debería verse hasta después. Sin este campo, la alternativa es
@@ -20,7 +20,7 @@ export const Materiales: CollectionConfig = {
   admin: {
     useAsTitle: "titulo",
     group: "Cursada",
-    defaultColumns: ["titulo", "tipo", "eje", "encuentro", "visibleDesde"]
+    defaultColumns: ["titulo", "tipo", "modulo", "encuentro", "visibleDesde"]
   },
   defaultSort: "-visibleDesde",
   access: {
@@ -58,9 +58,9 @@ export const Materiales: CollectionConfig = {
       admin: { position: "sidebar" }
     },
     {
-      name: "eje",
+      name: "modulo",
       type: "relationship",
-      relationTo: "ejes",
+      relationTo: "modulos",
       required: true,
       admin: { position: "sidebar", description: "El módulo bajo el que se agrupa." }
     },
