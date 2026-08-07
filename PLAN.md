@@ -175,6 +175,15 @@ a menos frecuente:
 2. Indicadores, equipo, FAQ.
 3. Ejes de la diplomatura, textos institucionales.
 
+**Datos de la ciudad.** El documento pide que Publicaciones tenga "notas, fotos
+y datos de la ciudad". Se resuelve como una colección más: indicadores de San
+Miguel de Tucumán que carga la coordinación a mano.
+
+Dos reglas para esa colección, que no son opcionales en un sitio oficial:
+**cada indicador lleva fuente y fecha de corte visibles**, y los que sean
+estimados van marcados como tales. Un número sin fuente en un sitio del
+municipio es un problema, no un dato.
+
 Los componentes casi no cambian: conservan los mismos tipos y solo cambian de
 dónde leen. Lo que sí hay que hacer bien es la carga de imágenes con recorte y
 texto alternativo obligatorio, porque de ahí salen las fotos del equipo y de las
@@ -183,22 +192,58 @@ clases que hoy son marcadores de posición.
 Estimado orientativo: **2 a 3 semanas** para el grupo 1, más **1 a 2 semanas**
 para el resto.
 
-### Fase 4 — Becarios y trabajo final
+### Fase 4 — Portal del Becario
 *Fecha externa: el cierre de la cursada, unos 4 meses después de la Fase 2.*
+
+El alcance salió del documento `Página Web ELCOP.docx` y del prototipo en
+Replit. Es bastante más de lo que suponíamos, así que va partido en dos.
+
+#### 4A — Base del portal y entrega del proyecto
 
 - Alta de cuentas **derivada de las postulaciones marcadas como seleccionadas**.
   No hay registro público: el conjunto de usuarios es cerrado, y eso es una
   propiedad de seguridad que conviene conservar.
 - Invitación por email con enlace para definir contraseña.
-- Pantalla de entrega: subida de archivo con formato y tamaño acotados, fecha
-  límite validada en el servidor, posibilidad de reemplazar antes del cierre.
+- Dashboard: encabezado de bienvenida y estado académico (condición regular,
+  proyecto final pendiente o entregado, consultas de mentoría abiertas).
+- **Carga del Proyecto Final** en `/portal/proyecto`: subida de archivo con
+  formato y tamaño acotados, fecha límite validada en el servidor y posibilidad
+  de reemplazar antes del cierre.
 - Vista del comité académico: listado de entregas, descarga, estado.
 
 Estimado orientativo: **3 a 4 semanas.**
 
-### Fase 5 — Resto del Portal del Becario
-Asistencia, repositorio de clases y materiales. Fuera de alcance hasta que las
-fases anteriores estén en producción y usándose.
+#### 4B — Cursada: asistencia, clases y mentorías
+
+- **Calendario de encuentros.** Es la pieza que faltaba en el plan anterior:
+  sin un modelo de clases con fecha y módulo no hay "Próxima sesión", ni
+  "Clases recientes", ni de qué colgar la asistencia.
+- **Asistencia por QR con autoregistro.** El becario marca su propia asistencia
+  al entrar al aula. Ver §6: el QR tiene que rotar, si no se saca una foto y se
+  manda por WhatsApp. Incluye corrección manual por la coordinación, porque
+  siempre hay alguien que se queda sin batería.
+- **Termómetro de Regularidad**: porcentaje acumulado contra el piso del 75%.
+- **Repositorio de clases** por módulo, con archivos descargables (presentaciones,
+  lecturas y bibliografía).
+- **Formulario de Consultas para Mentorías**: el becario envía dudas técnicas
+  antes de las sesiones virtuales, y la coordinación las ve agrupadas.
+
+Estimado orientativo: **4 a 6 semanas.**
+
+#### 4C — Contrato de Beca y Acta Compromiso
+
+Personalizado por becario y con aceptación registrada. Es la parte con peso
+legal, no una pantalla más:
+
+- Generación de un PDF por persona con sus datos.
+- Aceptación desde el portal, con registro de fecha, hora y quién aceptó.
+- Descarga del documento aceptado.
+
+**Antes de construirlo hay que definir con Legales qué valor se le exige.** Un
+"acepto" con clic es firma electrónica; la firma digital de la Ley 25.506 es
+otra cosa y necesita certificado. No es una decisión de desarrollo.
+
+Estimado orientativo: **2 a 3 semanas**, más lo que tarde la definición legal.
 
 > Los estimados son para **ordenar el trabajo**, no para comprometer entregas.
 > Se firman cuando estén resueltos los puntos de la Fase 0.
@@ -232,6 +277,16 @@ que eso sea aceptable para el municipio antes de la Fase 1, no después.
 comité necesita más que descargar archivos. Hay que definirlo antes de la
 Fase 4.
 
+**Un QR fijo de asistencia no sirve.** Si el código es siempre el mismo, el
+primero que llega le saca una foto y la manda al grupo, y la asistencia deja de
+medir nada. La forma que funciona es un **código que rota cada 30 segundos**,
+proyectado en el aula, con la ventana de registro abierta sólo durante la
+clase. Conviene decidirlo ahora y no cuando ya esté construido.
+
+**El contrato firmado es un instrumento legal.** Aceptar con un clic no equivale
+a firmar. Si ELCOP necesita que el Acta Compromiso sea oponible, hay que
+involucrar a Legales antes de la Fase 4C, no después.
+
 ---
 
 ## 7. Lo que hay que conseguir, y de quién
@@ -248,6 +303,10 @@ Fase 4.
 | Aval para alojar datos personales en la nube | Municipalidad | Antes de la Fase 1 |
 | Formato, tamaño y fecha límite del trabajo final | ELCOP | Antes de la Fase 4 |
 | Si hay jurado y puntaje en el trabajo final | ELCOP | Antes de la Fase 4 |
+| Acceso al prototipo de Replit: URL publicada o el código exportado | Félix Agustín Paz | Antes de dimensionar la Fase 4 |
+| Qué indicadores de la ciudad se publican, con su fuente | ELCOP | Fase 3 |
+| Calendario de encuentros de la cohorte | ELCOP | Fase 4B |
+| Qué validez legal se le exige al Acta Compromiso | Legales | Antes de la Fase 4C |
 
 El resto de lo que falta —contenidos, fotos, logos en vectorial— sigue en
 [`PENDIENTES.md`](PENDIENTES.md).
