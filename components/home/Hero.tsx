@@ -19,9 +19,16 @@ export function Hero() {
         <VideoFondoHero />
         {/* En móvil el velo baja en vertical, porque no hay dos columnas y el
             texto ocupa todo el ancho. De 768px para arriba se vuelve
-            horizontal: denso donde está el texto, más suelto del lado de la
-            tarjeta, que es blanca y opaca. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/[0.90] to-white/[0.85] md:bg-gradient-to-r md:from-white/95 md:via-white/[0.88] md:to-white/[0.78]" />
+            horizontal: se mantiene al 82% hasta el 60% del ancho, que es hasta
+            donde llega el texto, y después se abre al 52% del lado de la
+            tarjeta, que es blanca y opaca.
+
+            El 82% no es un número elegido a ojo. Midiendo los fotogramas
+            reales, el bloque más oscuro que cae detrás del texto es
+            prácticamente negro, y ahí "transforman" en municipal-700 queda en
+            3,18:1 — apenas por encima del 3:1 que pide el texto grande. Bajar
+            a 75% lo dejaría en 2,64 y también voltearía la bajada. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.88] via-white/[0.84] to-white/[0.82] md:bg-gradient-to-r md:from-white/[0.85] md:via-white/[0.82] md:via-[60%] md:to-white/[0.52]" />
         {/* Difumina el corte de abajo contra el fondo de la página. */}
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#f8fbff]" />
       </div>

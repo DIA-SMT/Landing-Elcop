@@ -78,7 +78,10 @@ export function VideoFondoHero() {
   );
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    // Un toque de saturación: debajo del velo, el color se apaga bastante y
+    // sin esto la imagen se lee gris. No cambia el contraste del texto, porque
+    // las zonas oscuras del video ya están en el piso.
+    <div className="absolute inset-0 overflow-hidden saturate-[1.25]">
       {/* Portada: es la base de todo y lo único que se ve sin video. */}
       <Image
         src={VIDEOS_HERO[0].portada}

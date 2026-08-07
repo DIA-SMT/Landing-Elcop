@@ -248,6 +248,12 @@ export const INSTITUCIONAL = {
     etiqueta: "Descargá nuestra carpeta institucional",
     href: "/institucional/carpeta.pdf",
     disponible: false
+  },
+  foto: {
+    src: "/fotos/unsta-fachada.jpg",
+    alt: "Fachada de la UNSTA en San Miguel de Tucumán",
+    ancho: 1280,
+    alto: 854
   }
 } as const;
 
@@ -544,6 +550,13 @@ export const FAQ: PreguntaFrecuente[] = [
  *
  * `esEjemplo: true` hace que la interfaz los muestre marcados como ejemplo,
  * para no presentarlos como contenido oficial.
+ *
+ * Las portadas SÍ son fotos reales de la cohorte 2026. El texto alternativo
+ * describe lo que se ve y nada más: no afirma de qué masterclass es cada una,
+ * porque no lo sabemos.
+ *
+ * TODO: confirmar con ELCOP a qué encuentro corresponde cada foto, para poder
+ * emparejarlas con la nota correcta y escribir un alt más preciso.
  */
 export const PUBLICACIONES: Publicacion[] = [
   {
@@ -554,8 +567,8 @@ export const PUBLICACIONES: Publicacion[] = [
     // TODO: confirmar con ELCOP — fecha de ejemplo.
     fecha: "2026-03-18",
     categoria: "Masterclass",
-    imagen: "/publicaciones/masterclass-inaugural.png",
-    imagenAlt: "Portada provisoria de la nota sobre la masterclass inaugural",
+    imagen: "/fotos/masterclass-aula.jpg",
+    imagenAlt: "Encuentro de la cohorte 2026 en el aula magna de la UNSTA",
     esEjemplo: true
   },
   {
@@ -566,8 +579,9 @@ export const PUBLICACIONES: Publicacion[] = [
     // TODO: confirmar con ELCOP — fecha de ejemplo.
     fecha: "2026-04-22",
     categoria: "Masterclass",
-    imagen: "/publicaciones/reynoso-opinion-publica.png",
-    imagenAlt: "Portada provisoria de la nota sobre opinión pública y electorado",
+    imagen: "/fotos/masterclass-datos.jpg",
+    imagenAlt:
+      "Clase de la cohorte 2026 con una presentación de datos de opinión pública proyectada",
     esEjemplo: true
   },
   {
@@ -578,8 +592,8 @@ export const PUBLICACIONES: Publicacion[] = [
     // TODO: confirmar con ELCOP — fecha de ejemplo.
     fecha: "2026-05-13",
     categoria: "Masterclass",
-    imagen: "/publicaciones/daffonchio-movilidad.png",
-    imagenAlt: "Portada provisoria de la nota sobre movilidad urbana",
+    imagen: "/fotos/cohorte-grupo.jpg",
+    imagenAlt: "Foto grupal de los becarios de la cohorte 2026 en la UNSTA",
     esEjemplo: true
   }
 ];
