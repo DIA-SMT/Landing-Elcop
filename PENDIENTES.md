@@ -48,6 +48,7 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 | 21 | **Aval para alojar datos personales en la nube** | Municipalidad | La elección de infraestructura. |
 | 22 | **Formato, tamaño y fecha límite del trabajo final** | ELCOP | La pantalla de entrega. |
 | 23 | **Si el trabajo final tiene jurado y puntaje** | ELCOP | La vista del comité académico: no es lo mismo descargar archivos que evaluarlos. |
+| 24 | **Video del hero sin artefactos** | ELCOP / Dirección de IA | Los tres videos de fondo son animaciones generadas a partir de fotos reales. En el del telón institucional (`hero-unsta.mp4`) el generador deformó el sello de la UNSTA: donde va el lema se leen letras inventadas. Debajo del velo blanco actual no se distingue, pero **si alguna vez se sube la opacidad del fondo, ese video hay que sacarlo**. Está anotado en `VIDEOS_HERO`. |
 
 ---
 

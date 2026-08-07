@@ -162,6 +162,50 @@ export const HERO = {
   ctaSecundario: { etiqueta: "Conocé la diplomatura", href: "#formacion" }
 } as const;
 
+export type VideoHero = {
+  id: string;
+  mp4: string;
+  /** Fotograma fijo. Es lo único que se ve en celulares. */
+  portada: string;
+  descripcion: string;
+};
+
+/**
+ * Videos de fondo del hero.
+ *
+ * Son animaciones generadas a partir de fotos reales de la cohorte 2026. Van
+ * debajo de un velo blanco al 88%: se leen como textura viva, no como imagen.
+ * Se cruzan entre sí con una disolvencia de 1,4 segundos.
+ *
+ * No se descargan en celulares ni con movimiento reducido ni con el ahorro de
+ * datos activado: en esos casos se ve sólo la portada del primero.
+ *
+ * ⚠ `hero-photocall` es el telón de logos, y el generador deformó el sello de
+ * la UNSTA: donde va el lema se leen letras inventadas. Debajo del velo actual
+ * no se distingue. **Si alguna vez se sube la opacidad del video, ese hay que
+ * sacarlo de la lista.**
+ */
+export const VIDEOS_HERO: VideoHero[] = [
+  {
+    id: "hero-clase",
+    mp4: "/video/hero-clase.mp4",
+    portada: "/video/hero-clase.jpg",
+    descripcion: "Clase en el aula magna de la UNSTA"
+  },
+  {
+    id: "hero-grupo",
+    mp4: "/video/hero-grupo.mp4",
+    portada: "/video/hero-grupo.jpg",
+    descripcion: "Foto grupal de la cohorte"
+  },
+  {
+    id: "hero-photocall",
+    mp4: "/video/hero-unsta.mp4",
+    portada: "/video/hero-unsta.jpg",
+    descripcion: "Telón institucional de UNSTA y Ciudad SMT"
+  }
+];
+
 export const INDICADORES: Indicador[] = [
   {
     id: "postulantes",

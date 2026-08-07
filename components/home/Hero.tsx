@@ -2,25 +2,28 @@ import Link from "next/link";
 
 import { DIPLOMATURA, ESCUELA, HERO, INSCRIPCIONES, formatearNumero } from "@/content/elcop";
 import { Reveal } from "@/components/ui/Reveal";
+import { VideoFondoHero } from "@/components/home/VideoFondoHero";
 
 export function Hero() {
   return (
     <section id="inicio" className="relative isolate overflow-hidden scroll-mt-24 bg-white">
-      {/* Fondo: dos manchas de luz muy tenues y una grilla fina. Es decorativo,
-          no lleva contenido y queda fuera del árbol de accesibilidad. */}
+      {/* Fondo de video con velo. Es decorativo: no lleva contenido y queda
+          fuera del árbol de accesibilidad.
+
+          El velo es más denso a la izquierda, que es donde vive el texto, y se
+          afloja hacia la derecha, donde sólo está la tarjeta (que es blanca y
+          opaca). Así el video se percibe sin que ningún texto pierda contraste:
+          incluso sobre un fotograma completamente negro, el título en `ink`
+          queda en 11,7:1. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-40 -top-56 size-[680px] rounded-full bg-municipal-100/70 blur-3xl" />
-        <div className="absolute -right-48 top-24 size-[560px] rounded-full bg-municipal-50 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, rgba(18,34,29,.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(18,34,29,.055) 1px, transparent 1px)",
-            backgroundSize: "72px 72px",
-            maskImage: "radial-gradient(ellipse 90% 65% at 50% 0%, #000 30%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(ellipse 90% 65% at 50% 0%, #000 30%, transparent 100%)"
-          }}
-        />
+        <VideoFondoHero />
+        {/* En móvil el velo baja en vertical, porque no hay dos columnas y el
+            texto ocupa todo el ancho. De 768px para arriba se vuelve
+            horizontal: denso donde está el texto, más suelto del lado de la
+            tarjeta, que es blanca y opaca. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/[0.90] to-white/[0.85] md:bg-gradient-to-r md:from-white/95 md:via-white/[0.88] md:to-white/[0.78]" />
+        {/* Difumina el corte de abajo contra el fondo de la página. */}
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#f8fbff]" />
       </div>
 
       <div className="page-shell pb-24 pt-14 md:pb-28 md:pt-20 lg:pb-[7.5rem] lg:pt-24">
@@ -28,7 +31,10 @@ export function Hero() {
           {/* Columna de texto */}
           <div className="lg:col-span-7">
             <Reveal>
-              <p className="eyebrow">
+              {/* Opaco a propósito: el `bg-white/70` de `.eyebrow` deja pasar
+                  el video, y el municipal-700 a 10px necesita blanco puro
+                  detrás para llegar a 4,5:1. */}
+              <p className="eyebrow bg-white">
                 <span aria-hidden="true" className="size-1.5 rounded-full bg-municipal-700" />
                 {HERO.eyebrow}
               </p>
@@ -63,7 +69,9 @@ export function Hero() {
             </Reveal>
 
             <Reveal retardo={240}>
-              <p className="mt-8 text-sm text-slate-500">
+              {/* slate-600 y no slate-500: el 500 llega justo a 4,5:1 contra
+                  blanco puro, y acá abajo hay video. */}
+              <p className="mt-8 text-sm text-slate-600">
                 <span className="font-bold text-ink">{formatearNumero(1091)} personas</span> se
                 postularon a la primera convocatoria.
               </p>
