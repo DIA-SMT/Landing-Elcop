@@ -32,6 +32,7 @@
  * temporal que se puede dejar prendido en producción no es temporal. Acá, si
  * `NODE_ENV` es `production`, la bandera se ignora.
  */
+import { request as pedidoHttp } from "node:http";
 import { Agent, request as pedidoHttps } from "node:https";
 
 export type PerfilCidituc = {
@@ -64,23 +65,41 @@ function agente(): Agent {
   return new Agent({ rejectUnauthorized: !permitirInseguro, keepAlive: false });
 }
 
-/** Trae el perfil de la persona usando su token. `null` si no se pudo. */
+/**
+ * Trae el perfil de la persona usando su token. `null` si no se pudo.
+ *
+ * **Además de traer el documento, esta llamada es lo que valida el token.** El
+ * backend de CIDITUC verifica la firma antes de responder, así que uno falso o
+ * vencido no devuelve una persona. Por eso no guardamos su clave de firma: no
+ * agregaría ninguna comprobación que esta consulta no haga ya.
+ */
 export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null> {
   const base = process.env.CIDITUC_BACKEND_URL;
   if (!base) throw new Error("Falta CIDITUC_BACKEND_URL.");
 
   const url = new URL(`${base.replace(/\/$/, "")}/usuarios/authStatus`);
+  const enClaro = url.protocol === "http:";
+
+  // Sin cifrar se permite sólo fuera de producción, para poder apuntar a un
+  // CIDITUC local. En producción, mandar el token en claro por la red sería
+  // regalarlo a cualquiera que mire el tráfico.
+  if (enClaro && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "CIDITUC_BACKEND_URL no puede ser http:// en producción: el token viajaría sin cifrar."
+    );
+  }
 
   const cuerpo = await new Promise<string | null>((resolver) => {
-    const peticion = pedidoHttps(
+    const hacerPeticion = enClaro ? pedidoHttp : pedidoHttps;
+    const peticion = hacerPeticion(
       {
         hostname: url.hostname,
-        port: url.port || 443,
+        port: url.port || (enClaro ? 80 : 443),
         path: url.pathname,
         method: "GET",
         // Ojo: el backend de CIDITUC espera el token pelado, sin "Bearer".
         headers: { Authorization: token },
-        agent: agente(),
+        ...(enClaro ? {} : { agent: agente() }),
         timeout: TIEMPO_LIMITE_MS
       },
       (respuesta) => {

@@ -6,10 +6,19 @@
  *   1. El botón manda a la persona al login de CIDITUC con `?next=`.
  *   2. CIDITUC la autentica **en su propio dominio** y vuelve a nuestro
  *      callback con `?auth=<token>`.
- *   3. Verificamos la firma del token acá mismo, sin llamada de red.
- *   4. Traemos su documento del backend de CIDITUC.
- *   5. Comprobamos que ese documento sea el de un becario seleccionado.
- *   6. Emitimos nuestra propia cookie de sesión.
+ *   3. Le pedimos el perfil a su backend con ese token. Esa llamada valida la
+ *      firma del lado de ellos y nos devuelve el documento.
+ *   4. Comprobamos que ese documento sea el de un becario seleccionado.
+ *   5. Emitimos nuestra propia cookie de sesión.
+ *
+ * **Por qué no verificamos la firma acá.** Podríamos: el token es HS256 y
+ * bastaría con tener el `JWT_SECRET_KEY` de CIDITUC. Pero esa clave firma los
+ * tokens de las doce aplicaciones del municipio, y quien la tiene puede
+ * fabricar uno válido para cualquiera de ellas haciéndose pasar por cualquier
+ * vecino. Como la consulta del perfil es obligatoria de todos modos —sin el
+ * documento no hay forma de autorizar— y esa consulta ya valida la firma,
+ * guardarla no agregaría ninguna comprobación: sólo sumaría un secreto muy
+ * pesado a nuestras variables de entorno.
  *
  * Lo importante del paso 2: **la contraseña nunca toca este sitio.** Se escribe
  * únicamente en el dominio de CIDITUC.
@@ -58,14 +67,6 @@ function secretoDeSesion(): string {
     throw new Error(
       "Falta ELCOP_SESSION_SECRET, o es demasiado corto (mínimo 32 caracteres). Generá uno con: openssl rand -hex 32"
     );
-  }
-  return secreto;
-}
-
-function secretoDeCidituc(): string {
-  const secreto = process.env.CIDITUC_JWT_SECRET;
-  if (!secreto) {
-    throw new Error("Falta CIDITUC_JWT_SECRET (el JWT_SECRET_KEY del backend de CIDITUC).");
   }
   return secreto;
 }
@@ -153,46 +154,16 @@ export async function verificarSesion(token: string | undefined | null): Promise
 /* -------------------------------------------------------------------------- */
 
 /**
- * Verifica la firma del token que emite CIDITUC.
+ * Descarta lo que ni siquiera tiene forma de token, antes de salir a la red.
  *
- * El algoritmo está fijado en HMAC-SHA256 y **no se lee del encabezado del
- * token**. Esa es la diferencia entre una verificación correcta y una que se
- * puede saltear: si se confiara en el `alg` que trae el propio token, alguien
- * podría mandar uno con `alg: none` y pasar sin firma.
- *
- * Sólo devuelve el `id_persona`. El token de CIDITUC no trae el documento, así
- * que para saber quién es hay que preguntarle a su backend.
+ * No prueba nada y no reemplaza a nada: quien valida la firma es el backend de
+ * CIDITUC. Sirve para no hacerle una consulta por cada cadena de basura que
+ * alguien pegue en la URL.
  */
-export async function verificarTokenCidituc(
-  token: string | undefined | null
-): Promise<{ idPersona: number } | null> {
-  if (!token) return null;
-  const partes = token.split(".");
-  if (partes.length !== 3) return null;
-  const [encabezado, cuerpo, firma] = partes;
-
-  try {
-    const valida = await crypto.subtle.verify(
-      "HMAC",
-      await importarClave(secretoDeCidituc()),
-      desdeBase64Url(firma),
-      new TextEncoder().encode(`${encabezado}.${cuerpo}`)
-    );
-    if (!valida) return null;
-
-    const datos = JSON.parse(new TextDecoder().decode(desdeBase64Url(cuerpo))) as {
-      id?: number | string;
-      exp?: number;
-    };
-
-    if (typeof datos.exp === "number" && datos.exp < Math.floor(Date.now() / 1000)) return null;
-
-    const idPersona = Number(datos.id);
-    if (!Number.isFinite(idPersona)) return null;
-    return { idPersona };
-  } catch {
-    return null;
-  }
+export function pareceUnToken(valor: string | null | undefined): valor is string {
+  if (!valor) return false;
+  const partes = valor.split(".");
+  return partes.length === 3 && partes.every((parte) => parte.length > 0);
 }
 
 /**
