@@ -107,27 +107,75 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
         respuesta.setEncoding("utf8");
         respuesta.on("data", (parte) => (datos += parte));
         respuesta.on("end", () => {
-          resolver(respuesta.statusCode === 200 ? datos : null);
+          if (respuesta.statusCode !== 200) {
+            diagnosticar(`CIDITUC respondió ${respuesta.statusCode}: ${datos.slice(0, 200)}`);
+            resolver(null);
+            return;
+          }
+          resolver(datos);
         });
       }
     );
 
     peticion.on("timeout", () => {
+      diagnosticar(`sin respuesta en ${TIEMPO_LIMITE_MS} ms`);
       peticion.destroy();
       resolver(null);
     });
-    // Sin detalles del error: pueden arrastrar la URL o el token a un log.
-    peticion.on("error", () => resolver(null));
+    peticion.on("error", (fallo) => {
+      diagnosticar(`fallo de red o TLS: ${(fallo as NodeJS.ErrnoException).code ?? fallo.message}`);
+      resolver(null);
+    });
     peticion.end();
   });
 
   if (!cuerpo) return null;
 
+  let crudo: unknown;
   try {
-    return normalizar(JSON.parse(cuerpo));
+    crudo = JSON.parse(cuerpo);
   } catch {
+    diagnosticar(`la respuesta no es JSON: ${cuerpo.slice(0, 120)}`);
     return null;
   }
+
+  const perfil = normalizar(crudo);
+  if (!perfil) {
+    // El caso más difícil de adivinar: 200 con una forma distinta a la esperada.
+    //
+    // Desenvuelve igual que `normalizar` —la primera versión de esto miraba sólo
+    // `user` y terminó reportando las claves de afuera, que no servían de nada— y
+    // dice el **tipo** de los dos campos que deciden, porque el problema puede ser
+    // que falten o que lleguen como número.
+    //
+    // Se listan claves y tipos, nunca valores: ahí viven los datos de la persona.
+    const envoltorio = crudo as Record<string, unknown>;
+    const persona = (envoltorio?.usuarioSinContraseña ?? envoltorio?.user ?? envoltorio) as
+      | Record<string, unknown>
+      | undefined;
+    const claves = persona && typeof persona === "object" ? Object.keys(persona) : [];
+    diagnosticar(
+      `200 pero no se pudo armar el perfil. documento_persona: ${typeof persona?.documento_persona}, ` +
+        `id_persona: ${typeof persona?.id_persona}. Claves: ${claves.join(", ") || "(ninguna)"}`
+    );
+  }
+  return perfil;
+}
+
+/**
+ * Cuenta por qué falló la consulta, **sólo en desarrollo**.
+ *
+ * En producción no se registra nada: el detalle de un fallo de autenticación
+ * puede arrastrar el token o datos de la persona a un log, y un log es un lugar
+ * más donde después hay que cuidarlos. Pero sin esto, depurar el ingreso es
+ * adivinar — nos pasó, y de ahí salió esta función.
+ *
+ * Nunca imprime el token ni valores del perfil: sólo el estado HTTP, el código de
+ * error de red y los nombres de las claves que llegaron.
+ */
+function diagnosticar(detalle: string): void {
+  if (process.env.NODE_ENV === "production") return;
+  console.warn(`[cidituc] perfil no obtenido — ${detalle}`);
 }
 
 /**
@@ -139,12 +187,33 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
 function normalizar(respuesta: unknown): PerfilCidituc | null {
   if (!respuesta || typeof respuesta !== "object") return null;
 
-  // Según el endpoint, los datos vienen sueltos o anidados en `user`.
+  // ⚠️ Cada endpoint del backend envuelve la persona con una clave distinta, y
+  // esto ya nos costó una sesión de depuración:
+  //
+  //   /usuarios/authStatus    → { usuarioSinContraseña: { ...persona } }
+  //   /usuarios/authStatusIA  → { user: { ...persona } }
+  //
+  // Nosotros llamamos al primero —es el de ciudadanos; el segundo exige ser
+  // empleado del municipio y devolvería 401 a un becario—. Se aceptan las dos
+  // formas y la plana por si alguna versión del backend cambia, porque el precio
+  // de equivocarse es un "no pudimos consultar tus datos" sin más explicación.
   const contenedor = respuesta as Record<string, unknown>;
-  const persona = (contenedor.user ?? contenedor) as Record<string, unknown>;
+  const persona = (contenedor.usuarioSinContraseña ??
+    contenedor.user ??
+    contenedor) as Record<string, unknown>;
 
-  const texto = (valor: unknown): string | null =>
-    typeof valor === "string" && valor.trim() !== "" ? valor.trim() : null;
+  /**
+   * Acepta texto **o número**, y devuelve texto.
+   *
+   * No es indulgencia gratuita: el backend consulta MySQL con `SELECT p.*`, y una
+   * columna numérica llega como número de JavaScript. Exigir `typeof === "string"`
+   * hacía que un documento guardado como entero se descartara en silencio, y el
+   * ingreso fallaba con "no pudimos consultar tus datos" sin más pista.
+   */
+  const texto = (valor: unknown): string | null => {
+    if (typeof valor === "number" && Number.isFinite(valor)) return String(valor);
+    return typeof valor === "string" && valor.trim() !== "" ? valor.trim() : null;
+  };
 
   const documento = texto(persona.documento_persona);
   const idPersona = Number(persona.id_persona);
