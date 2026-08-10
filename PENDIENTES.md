@@ -40,7 +40,7 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 |---|---|---|---|
 | 14 | **Fecha de apertura de la próxima convocatoria** | ELCOP | Todo el cronograma: es la única fecha externa de la etapa de postulaciones. |
 | 15 | **El formulario de la 1ª convocatoria y su planilla de respuestas** | ELCOP | Los campos reales del formulario. La planilla dice cuáles se usaron y cuáles quedaron vacíos. |
-| 16 | **Cómo procesa hoy la coordinación las postulaciones** | Coordinación Administrativa | El diseño del panel. Sin esto se construye a ciegas. |
+| 16 | **Cómo procesa hoy la coordinación las postulaciones** | Coordinación Administrativa | El diseño del panel. Sin esto se construye a ciegas. **La reunión está preparada en [`docs/reunion-coordinacion.md`](docs/reunion-coordinacion.md)**, que cubre también los ítems 15 y 17. |
 | 17 | **Quiénes usan el panel y con qué permisos** | ELCOP | El esquema de roles. |
 | 18 | **Responsable del tratamiento de datos y aviso de privacidad** | Municipalidad / Legales | Publicar el formulario. Pasamos a custodiar DNI, fecha de nacimiento y teléfono de más de mil personas. |
 | 19 | **Dominio definitivo y acceso al DNS** | Municipalidad | El deploy. |
@@ -52,16 +52,19 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 | 25 | ~~Acceso al prototipo del Portal en Replit~~ | Félix Agustín Paz | El documento trae un enlace de invitación (`replit.com/join#…`), que sirve para sumar a una persona a la cuenta, no para mirar el proyecto. Hace falta la URL de la app publicada o el código exportado en zip. |
 | 26 | **Tres frases oficiales que hoy están parafraseadas** | — | El documento dice: *"Con el objetivo de promover el talento y la excelencia en la función pública, la Municipalidad de SMT y la UNSTA otorgan una Beca del 100%…"*; *"…permitiendo un aprendizaje flexible pero con fuerte anclaje en el networking presencial"*; y encadena cupos con proceso: *"Debido a que los cupos son limitados, el proceso de selección consta de dos etapas obligatorias"*. Falta decidir si se reemplazan por el texto textual. |
 | 27 | **Qué indicadores de la ciudad se publican, y con qué fuente** | ELCOP | Cada indicador necesita fuente y fecha de corte: un número sin origen en un sitio oficial es un problema. |
-| 28 | **Calendario de encuentros de la cohorte** | ELCOP | Sin fechas de clase no hay "próxima sesión" ni de qué colgar la asistencia. |
+| 28 | **Calendario de encuentros de la cohorte** | ELCOP | Sin fechas de clase no hay "próxima sesión" ni de qué colgar la asistencia. **Subió de prioridad:** el panel y Mis clases ya están construidos y hoy sólo pueden mostrar datos de ejemplo. Es el dato que los vuelve reales. |
 | 29 | **Validez legal exigida al Acta Compromiso** | Legales | Aceptar con un clic es firma electrónica; la firma digital de la Ley 25.506 es otra cosa. Define cuánto trabajo es la Fase 4C. |
 | 30 | **Confirmar el año de la cohorte** | ELCOP | El prototipo dice "Cohorte ELCOP ELCOP 2025" (con el nombre repetido). El sitio dice 2026, que coincide con el brief y con la fecha de las fotos. Lo tomamos como dato viejo del prototipo. |
 | 24 | **Video del hero sin artefactos** | ELCOP / Dirección de IA | Los tres videos de fondo son animaciones generadas a partir de fotos reales. En el del telón institucional (`hero-unsta.mp4`) el generador deformó el sello de la UNSTA: donde va el lema se leen letras inventadas. Debajo del velo blanco actual no se distingue, pero **si alguna vez se sube la opacidad del fondo, ese video hay que sacarlo**. Está anotado en `VIDEOS_HERO`. |
 
 ---
 
-## 2. Decisión técnica pendiente
+## 2. Decisiones técnicas pendientes
 
-**Destino real del formulario de postulación.**
+Las dos tienen la misma raíz: **todavía no hay base de datos.** Las dos están
+resueltas en cuanto a *qué* hay que hacer, y frenadas por el ítem 21.
+
+### 2 a. Destino real del formulario de postulación
 
 > **Actualizado:** ya está decidido que las postulaciones se guardan en base de
 > datos propia y se leen desde un panel, y que el formulario de la 1ª
@@ -96,6 +99,32 @@ De la respuesta dependen también dos cosas que todavía no están resueltas:
 Mientras tanto, la pantalla de confirmación avisa que el envío todavía no queda
 registrado, para no dar por presentada una postulación que no se guardó.
 
+### 2 b. Las consultas de mentoría se guardan en memoria del proceso
+
+⚠️ Mismo tapón que el de arriba, en la primera pantalla del portal donde el
+becario **escribe**.
+
+[`lib/portal/datos.ts`](lib/portal/datos.ts) guarda las consultas enviadas en un
+`Map` colgado de `globalThis` (`__consultasElcop`). Está documentado como
+provisorio en el propio archivo, pero conviene que figure acá:
+
+- **No es persistencia.** Un reinicio del servidor la vacía.
+- **En un despliegue serverless cada instancia tiene la suya.** En Vercel, dos
+  requests seguidos pueden ver listas distintas.
+- Se cuelga de `globalThis` para sobrevivir a la recompilación en caliente de
+  Next en desarrollo, que reinicia el módulo pero no el proceso.
+
+Alcanza para probar el circuito completo —enviar, ver la consulta en la lista,
+que el servidor valide el cierre de la sesión— y para nada más. **Ninguna
+consulta real puede depender de esto:** antes de que un becario de verdad use la
+pantalla hay que reemplazar `registrarConsulta` por una escritura a la base.
+
+Lo que *sí* está resuelto y no hay que rehacer: la validación compartida entre
+cliente y servidor ([`lib/portal/validacion-consulta.ts`](lib/portal/validacion-consulta.ts)),
+que la identidad salga de la cookie y nunca del cuerpo, y que el cierre de
+consultas se revalide en el servidor. Enchufar la base debería ser cambiar una
+sola función.
+
 ---
 
 ## 3. Inconsistencia a confirmar: duración y estructura
@@ -118,12 +147,35 @@ prensa, el cambio se hace en `DIPLOMATURA.duracion`, `INDICADORES` y `EJES` de
 
 ---
 
-## 4. Fuera del alcance de esta iteración
+## 4. Estado del Portal del Becario
 
-El **Portal del Becario** (login, dashboard, asistencia, repositorio de clases
-y carga del proyecto final) no está implementado. La navegación lo mantiene
-visible apuntando a `/portal`, que hoy es una página con "Próximamente" y nada
-más.
+**Ya no está fuera de alcance: está en construcción.** El "Próximamente" de
+`/portal` se reemplazó por pantallas reales, y el ingreso no es simulado —
+autentica contra CIDITUC, el identity provider del municipio.
 
-No hay autenticación simulada a propósito: un login que no valida nada confunde
-más de lo que ayuda.
+| Sección | Ruta | Estado |
+|---|---|---|
+| Panel — termómetro de regularidad, estado académico, próximo encuentro | `/portal` | ✅ Hecho |
+| Mis clases — repositorio por módulo | `/portal/clases` | ✅ Hecho |
+| Mentorías — consultas y sesiones | `/portal/mentorias` | ✅ Hecho |
+| Proyecto final — carga de la entrega | — | ⬜ Sin empezar |
+| Mi beca — Contrato y Acta Compromiso | — | ⬜ Sin empezar |
+
+Las dos secciones sin empezar se muestran igual en la navegación, marcadas como
+"Pronto" y sin enlace: esconderlas dejaría a la persona sin saber qué va a poder
+hacer acá, pero enlazarlas la mandaría a una ruta que no existe.
+
+Ninguna pantalla del portal muestra un número guardado: la regularidad se
+calcula de los encuentros y las asistencias cada vez. Y cuando lo que se ve son
+datos de ejemplo, la interfaz lo dice arriba de todo — un becario que ve un 89%
+inventado lo va a tomar por real.
+
+### Lo que le falta al portal para servir de verdad
+
+| Qué | De quién / de qué depende |
+|---|---|
+| **Que DITEC despliegue el ingreso de ELCOP en Derivador** | Sin eso el ingreso no funciona fuera de desarrollo, y por eso el botón sigue oculto. **Decidido el camino y rama pusheada; falta abrir el PR:** [`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md). El PR #96 de Agustín está mergeado en `dev` pero **no desplegado**, así que lo que destraba es el despliegue, no el merge. |
+| ⚠️ **Que `estadisticas.smt.gob.ar:5000` mande la cadena completa de certificados** | **Segundo bloqueo, independiente del PR.** El servidor envía sólo el certificado final y Node falla con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (verificado el 10/8/2026). El código prohíbe desactivar la verificación en producción, así que el ingreso no va a funcionar aunque DITEC despliegue. Alternativa de nuestro lado: cargar el intermedio en `CIDITUC_CA_PEM`. |
+| **Persistencia real** de asistencias, materiales y consultas | La base de datos, que depende del ítem 21. Ver §2 b. |
+| **Calendario de encuentros** | ELCOP, ítem 28. Es lo que convierte el panel y Mis clases en algo con datos propios. |
+| ~~Medir las pantallas del portal~~ | **Hecho.** Lighthouse da 100 en Accesibilidad, Buenas prácticas y SEO en las tres, con Performance de 96 a 100. Encontró dos fallas que la auditoría propia no detecta: ver `CONTEXTO.md` §6. |

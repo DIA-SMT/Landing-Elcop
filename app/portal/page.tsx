@@ -3,7 +3,10 @@ import Link from "next/link";
 
 import { CONTACTO, ESCUELA } from "@/content/elcop";
 import { ingresoHabilitado, urlDeIngreso } from "@/lib/cidituc";
+import { datosDelPortal } from "@/lib/portal/datos";
 import { obtenerSesion } from "@/lib/sesion";
+import { MarcoPortal } from "@/components/portal/MarcoPortal";
+import { Panel } from "@/components/portal/Panel";
 
 export const metadata: Metadata = {
   title: "Portal del Becario",
@@ -59,42 +62,11 @@ export default async function PaginaPortal({
   const error = searchParams.error ? MENSAJES[searchParams.error] : undefined;
 
   if (sesion) {
+    const datos = await datosDelPortal(sesion.becarioId);
     return (
-      <section className="page-shell py-20 md:py-28">
-        <div className="mx-auto max-w-3xl">
-          <p className="section-kicker">{ESCUELA.cohorte}</p>
-          <h1 className="mt-3 font-display text-3xl font-extrabold leading-tight tracking-tight text-ink md:text-4xl">
-            Hola, {sesion.nombre || "becario"}
-          </h1>
-          <p className="mt-4 text-base leading-relaxed text-slate-600">
-            Ingresaste con Ciudadano Digital. El portal todavía está en construcción: acá van a
-            estar tus clases, el material, las mentorías y la entrega del proyecto final.
-          </p>
-
-          <div className="mt-10 rounded-[24px] border border-black/5 bg-white p-6 shadow-card md:p-8">
-            <p className="micro-label">Tu sesión</p>
-            <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100">
-              <div className="flex items-baseline justify-between gap-4 py-3">
-                <dt className="text-sm text-slate-600">Documento</dt>
-                <dd className="text-sm font-bold text-ink">{sesion.documento}</dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-4 py-3">
-                <dt className="text-sm text-slate-600">Cohorte</dt>
-                <dd className="text-sm font-bold text-ink">{ESCUELA.cohorte}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <form action="/auth/cidituc/salir" method="post" className="mt-8">
-            <button type="submit" className="secondary-button">
-              Cerrar sesión
-            </button>
-          </form>
-          <p className="mt-3 text-tiny text-slate-500">
-            Cerrás sesión sólo en ELCOP. Tu sesión de Ciudadano Digital sigue abierta.
-          </p>
-        </div>
-      </section>
+      <MarcoPortal activa="panel" nombre={sesion.nombre || "becario"}>
+        <Panel datos={datos} />
+      </MarcoPortal>
     );
   }
 
