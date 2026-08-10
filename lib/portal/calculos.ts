@@ -5,7 +5,7 @@
  * vez. Guardar el porcentaje sería tener dos versiones del mismo número, y la
  * segunda siempre termina desfasada respecto de la primera.
  */
-import type { Asistencia, DatosDelPortal, Encuentro, Material } from "./tipos";
+import type { Asistencia, DatosDelPortal, Encuentro, Material, SesionMentoria } from "./tipos";
 
 /** El piso de asistencia para mantener la regularidad. */
 export const MINIMO_ASISTENCIA = 75;
@@ -152,6 +152,37 @@ export function asistenciaDe(
   asistencias: Asistencia[]
 ): Asistencia | null {
   return asistencias.find((a) => a.encuentroId === encuentroId) ?? null;
+}
+
+/**
+ * ¿Se le pueden mandar consultas a esta sesión?
+ *
+ * Tiene que estar programada y con el cierre de consultas por delante. El
+ * cierre es lo que hace funcionar el "antes de la sesión" del documento:
+ * pasada esa hora, quien mentorea tiene la lista cerrada para preparar el
+ * encuentro.
+ */
+export function sesionAbiertaAConsultas(sesion: SesionMentoria, ahora = new Date()): boolean {
+  return sesion.estado === "programada" && new Date(sesion.cierreDeConsultas) > ahora;
+}
+
+/** Las sesiones que aceptan consultas, de la más próxima a la más lejana. */
+export function sesionesAbiertas(sesiones: SesionMentoria[], ahora = new Date()): SesionMentoria[] {
+  return sesiones
+    .filter((sesion) => sesionAbiertaAConsultas(sesion, ahora))
+    .sort((a, b) => +new Date(a.comienza) - +new Date(b.comienza));
+}
+
+/** La próxima sesión de mentoría programada, aunque ya no acepte consultas. */
+export function proximaSesionMentoria(
+  sesiones: SesionMentoria[],
+  ahora = new Date()
+): SesionMentoria | null {
+  return (
+    sesiones
+      .filter((s) => s.estado === "programada" && new Date(s.comienza) >= ahora)
+      .sort((a, b) => +new Date(a.comienza) - +new Date(b.comienza))[0] ?? null
+  );
 }
 
 /** Resumen del estado académico que se muestra en el panel. */

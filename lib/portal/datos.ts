@@ -15,27 +15,100 @@
  * cómo va a verse. En ese caso la interfaz lo dice en pantalla: mostrarle a un
  * becario un 89% de asistencia inventado sería peor que no mostrarle nada.
  */
-import type { Acta, Asistencia, Consulta, DatosDelPortal, Encuentro, Entrega, Material } from "./tipos";
+import type {
+  Acta,
+  Asistencia,
+  Consulta,
+  DatosDelPortal,
+  Encuentro,
+  Entrega,
+  Material,
+  SesionMentoria
+} from "./tipos";
 
 /**
  * Trae todo lo del portal para un becario.
  *
  * TODO: reemplazar por las consultas reales cuando exista la base. Van a ser
- * cinco lecturas —encuentros de la cohorte, asistencias del becario, materiales
- * visibles, sus consultas y su entrega— más las actas.
+ * seis lecturas —encuentros de la cohorte, asistencias del becario, materiales
+ * visibles, sesiones de mentoría, sus consultas y su entrega— más las actas.
  */
 export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal> {
-  if (process.env.PORTAL_DATOS_DEMO === "true") return datosDeEjemplo();
+  const enviadas = consultasEnviadas(becarioId);
+
+  if (process.env.PORTAL_DATOS_DEMO === "true") {
+    const datos = datosDeEjemplo();
+    // Las recién enviadas arriba: es lo que la persona acaba de hacer.
+    return { ...datos, consultas: [...enviadas, ...datos.consultas] };
+  }
 
   return {
     encuentros: [],
     asistencias: [],
     materiales: [],
-    consultas: [],
+    consultas: enviadas,
+    sesionesMentoria: [],
     entrega: { estado: "sin-empezar", titulo: null, presentadoEn: null },
     actas: [],
     esDemostracion: false
   };
+}
+
+/**
+ * Las sesiones de mentoría, para validar en el servidor a cuál se puede
+ * mandar una consulta.
+ */
+export async function sesionesDeMentoria(): Promise<SesionMentoria[]> {
+  if (process.env.PORTAL_DATOS_DEMO === "true") return datosDeEjemplo().sesionesMentoria;
+  return [];
+}
+
+/* -------------------------------------------------------------------------- */
+/* Almacén provisorio de consultas                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Las consultas que el becario envía se guardan acá hasta que exista la base.
+ *
+ * ⚠️ **Es memoria del proceso, no persistencia.** Sobrevive mientras viva el
+ * servidor; en un despliegue serverless cada instancia tiene la suya y un
+ * reinicio la vacía. Alcanza para probar el circuito completo —enviar, ver la
+ * consulta en la lista, validar en el servidor— pero ninguna consulta real
+ * puede depender de esto.
+ *
+ * Se cuelga de `globalThis` para sobrevivir a la recompilación en caliente de
+ * Next en desarrollo, que reinicia el módulo pero no el proceso.
+ */
+const almacen = globalThis as unknown as {
+  __consultasElcop?: Map<string, Consulta[]>;
+};
+
+function consultasEnviadas(becarioId: string): Consulta[] {
+  return almacen.__consultasElcop?.get(becarioId) ?? [];
+}
+
+/** Registra una consulta enviada desde el portal. Devuelve la consulta creada. */
+export async function registrarConsulta(
+  becarioId: string,
+  datos: { asunto: string; texto: string; sesionId: string | null; sesion: string | null }
+): Promise<Consulta> {
+  const consulta: Consulta = {
+    id: `enviada-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    asunto: datos.asunto,
+    texto: datos.texto,
+    estado: "pendiente",
+    creadaEn: new Date().toISOString(),
+    sesionId: datos.sesionId,
+    sesion: datos.sesion,
+    respuesta: null,
+    respondidaEn: null
+  };
+
+  almacen.__consultasElcop ??= new Map();
+  const propias = almacen.__consultasElcop.get(becarioId) ?? [];
+  almacen.__consultasElcop.set(becarioId, [consulta, ...propias]);
+
+  return consulta;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -234,20 +307,53 @@ function datosDeEjemplo(): DatosDelPortal {
     }
   ];
 
+  const sesionesMentoria: SesionMentoria[] = [
+    {
+      id: "s1",
+      titulo: "Mentoría de proyecto final",
+      mentor: "Camila Giuliano",
+      comienza: diasDesdeHoy(6, 19),
+      // Las preguntas cierran un día antes, para que quien mentorea llegue
+      // con la lista leída.
+      cierreDeConsultas: diasDesdeHoy(5, 12),
+      enlace: null,
+      estado: "programada"
+    },
+    {
+      id: "s2",
+      titulo: "Mentoría de metodología",
+      mentor: "Rodrigo Gómez Tortosa",
+      comienza: diasDesdeHoy(-8, 19),
+      cierreDeConsultas: diasDesdeHoy(-9, 12),
+      enlace: null,
+      estado: "realizada"
+    }
+  ];
+
   const consultas: Consulta[] = [
     {
       id: "c1",
       asunto: "Dudas sobre el recorte del problema",
+      texto:
+        "Mi proyecto abarca todo el transporte público del área metropolitana y me dijeron que es demasiado. ¿Cómo decido qué recortar sin que pierda sentido?",
       estado: "pendiente",
       creadaEn: diasDesdeHoy(-2),
-      sesion: "Mentoría de proyecto final"
+      sesionId: "s1",
+      sesion: "Mentoría de proyecto final",
+      respuesta: null,
+      respondidaEn: null
     },
     {
       id: "c2",
       asunto: "Fuentes de datos de movilidad",
+      texto: "¿Dónde consigo datos de frecuencia de colectivos de la ciudad?",
       estado: "respondida",
       creadaEn: diasDesdeHoy(-9),
-      sesion: null
+      sesionId: null,
+      sesion: null,
+      respuesta:
+        "En la Dirección de Movilidad tienen los registros GPS de las unidades. Escribile a la coordinación y te armamos el contacto. Para lo público, el portal de datos del municipio tiene los recorridos actualizados.",
+      respondidaEn: diasDesdeHoy(-7)
     }
   ];
 
@@ -262,5 +368,14 @@ function datosDeEjemplo(): DatosDelPortal {
     { id: "a2", tipo: "acta-compromiso", titulo: "Acta Compromiso", aceptadaEn: null }
   ];
 
-  return { encuentros, asistencias, materiales, consultas, entrega, actas, esDemostracion: true };
+  return {
+    encuentros,
+    asistencias,
+    materiales,
+    consultas,
+    sesionesMentoria,
+    entrega,
+    actas,
+    esDemostracion: true
+  };
 }

@@ -50,9 +50,29 @@ export type EstadoConsulta = "pendiente" | "respondida" | "cerrada";
 export type Consulta = {
   id: string;
   asunto: string;
+  /** El texto de la duda, tal como lo escribió el becario. */
+  texto: string;
   estado: EstadoConsulta;
   creadaEn: string;
+  /** Id de la sesión a la que va dirigida, o `null` si es del canal abierto. */
+  sesionId: string | null;
+  /** Nombre de la sesión, para mostrar sin tener que buscarla. */
   sesion: string | null;
+  respuesta: string | null;
+  respondidaEn: string | null;
+};
+
+export type EstadoSesionMentoria = "programada" | "realizada" | "cancelada";
+
+export type SesionMentoria = {
+  id: string;
+  titulo: string;
+  mentor: string | null;
+  comienza: string;
+  /** Después de esta hora no se aceptan más preguntas para esta sesión. */
+  cierreDeConsultas: string;
+  enlace: string | null;
+  estado: EstadoSesionMentoria;
 };
 
 export type EstadoEntrega = "sin-empezar" | "borrador" | "presentado" | "observado" | "aprobado";
@@ -76,6 +96,7 @@ export type DatosDelPortal = {
   asistencias: Asistencia[];
   materiales: Material[];
   consultas: Consulta[];
+  sesionesMentoria: SesionMentoria[];
   entrega: Entrega;
   actas: Acta[];
   /** `true` cuando lo que se muestra son datos de ejemplo y no reales. */
