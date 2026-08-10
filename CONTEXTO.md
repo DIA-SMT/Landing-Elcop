@@ -53,9 +53,11 @@ cambia.
 - La sesión de desarrollo probada contra el servidor: **con** cookie renderiza el
   panel, **sin** cookie las rutas internas devuelven 307 a `/portal`.
 - El envío de una consulta probado de punta a punta con datos de ejemplo.
-
-**Lo que todavía no se midió:** Lighthouse no corrió sobre las pantallas del
-portal. Son posteriores a esa medición.
+- **Lighthouse sobre las tres pantallas del portal**, con sesión y sobre un build
+  de producción: **100 en Accesibilidad, Buenas prácticas y SEO** en las tres, y
+  Performance entre 96 y 100 —mejor de lo esperado para páginas `force-dynamic`,
+  que no se prerenderizan—. Encontró dos fallas de accesibilidad que la auditoría
+  propia no ve; están corregidas y explicadas en §6.
 
 ---
 
@@ -269,6 +271,38 @@ producción.
 la página en reposo. Hay que provocarlo y medirlo aparte, como se hizo con
 `.form-error` en Mentorías.
 
+### ⚠️ `auditar.mjs` no reemplaza a Lighthouse
+
+Esto ya costó dos bugs que se commitearon como verificados. La auditoría propia
+mide **contraste, desborde, jerarquía de encabezados, tamaño tipográfico y
+objetivos táctiles**, y nada más. No valida ARIA, ni la estructura semántica, ni
+los landmarks.
+
+Los dos que se escaparon, con las tres pantallas dando 9 de 9 limpio:
+
+- Un `<p>` como hermano de `dt`/`dd` dentro de un `<dl>`, que le rompe la
+  estructura. Aparecía sólo con datos de ejemplo, porque el elemento era
+  condicional.
+- Un `aria-controls` con espacios, porque el `id` embebía el nombre del módulo.
+  Es una lista de referencias separada por espacios: "La máquina del Estado"
+  apuntaba a cuatro ids inexistentes y el acordeón quedaba sin relación
+  programática.
+
+**Antes de commitear una pantalla nueva del portal, pasarle Lighthouse además de
+la auditoría propia:**
+
+```bash
+npm i --no-save lighthouse
+```
+
+```bash
+node node_modules/lighthouse/cli/index.js http://localhost:3000/portal/clases --extra-headers=headers.json --preset=desktop
+```
+
+`headers.json` es `{"Cookie": "<lo que imprime sesion-dev.mjs>"}`. Y va sobre
+`npm run build` + `npm run start`, no sobre el servidor de desarrollo: en dev los
+números de Performance no significan nada.
+
 ---
 
 ## 7. Trampas conocidas
@@ -280,6 +314,18 @@ un `npm run dev` corriendo sobre el mismo `.next`. Frenalo y volvé a compilar.
 
 **El puerto 3000 queda tomado** por un `next start` anterior. `Get-Process node
 | Stop-Process -Force` lo libera.
+
+**Y si no lo liberás, medís el build viejo.** Es la versión cara de la trampa
+anterior: `next start` falla con `EADDRINUSE` **en su log y no en la terminal**,
+así que parece que arrancó. El servidor viejo sigue sirviendo, pero su manifiesto
+apunta a chunks que el rebuild ya sobreescribió: la página tira `ChunkLoadError`,
+el cliente muestra "Application error" y Lighthouse informa un documento sin
+`title`, sin `lang` y sin `main`. Se lee como si el código estuviera roto.
+Verificar antes de medir:
+
+```bash
+node -e "require('net').createServer().listen(3000).on('error',()=>{console.log('OCUPADO');process.exit(1)}).on('listening',function(){console.log('libre');this.close()})"
+```
 
 **Los mensajes de commit largos rompen en PowerShell.** Los here-strings con
 acentos y barras se parsean mal. Escribilos a un archivo y usá `git commit -F`.

@@ -256,10 +256,15 @@ function EstadoAcademico({ estado }: { estado: ReturnType<typeof estadoAcademico
 
         <div className="py-3">
           <dt className="text-sm text-slate-600">Proyecto final</dt>
+          {/* El título va adentro del `dd`, no como hermano: un `<dl>` sólo
+              admite grupos de `dt` y `dd`, y un tercer elemento en el medio le
+              rompe la estructura. Además el título es parte del valor. */}
           <dd className="mt-1 text-sm font-bold text-ink">
             {TEXTO_ENTREGA[entrega.estado] ?? entrega.estado}
+            {entrega.titulo && (
+              <p className="mt-0.5 text-tiny font-normal text-slate-500">{entrega.titulo}</p>
+            )}
           </dd>
-          {entrega.titulo && <p className="mt-0.5 text-tiny text-slate-500">{entrega.titulo}</p>}
         </div>
 
         <div className="py-3">

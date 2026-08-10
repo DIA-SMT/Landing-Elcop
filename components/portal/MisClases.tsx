@@ -64,10 +64,14 @@ export function MisClases({
       )}
 
       <div className="flex flex-col gap-4">
-        {modulos.map((grupo) => {
+        {modulos.map((grupo, indice) => {
           const abierto = abiertos.includes(grupo.modulo);
-          const idBoton = `${idBase}-${grupo.modulo}-boton`;
-          const idPanel = `${idBase}-${grupo.modulo}-panel`;
+          // El id va por posición y no por nombre de módulo: los nombres tienen
+          // espacios, y `aria-controls` es una lista de ids separada por
+          // espacios. "La máquina del Estado" se leía como cuatro referencias
+          // inexistentes, y el acordeón quedaba sin relación programática.
+          const idBoton = `${idBase}-${indice}-boton`;
+          const idPanel = `${idBase}-${indice}-panel`;
 
           return (
             <section
