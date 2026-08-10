@@ -203,6 +203,9 @@ pedir esos dos datos antes de arrancar y no después.
 **Sentarse con la Coordinación Administrativa.** Sigue siendo lo único de alto
 valor que no depende de terceros, y alimenta la Fase 2, que es la única con
 fecha externa dura. Sin eso el panel de postulaciones se construye a ciegas.
+**Está preparada en [`docs/reunion-coordinacion.md`](docs/reunion-coordinacion.md):**
+el texto para coordinarla, las preguntas agrupadas por lo que desbloquean, y qué
+cambia en el código según lo que respondan.
 
 Si hay que elegir uno: **la reunión**, porque destraba trabajo ajeno y el portal
 avanza igual sin ella. Mi beca queda para el final: depende de Legales (ítem 29)

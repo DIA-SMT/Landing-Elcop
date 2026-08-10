@@ -40,7 +40,7 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 |---|---|---|---|
 | 14 | **Fecha de apertura de la próxima convocatoria** | ELCOP | Todo el cronograma: es la única fecha externa de la etapa de postulaciones. |
 | 15 | **El formulario de la 1ª convocatoria y su planilla de respuestas** | ELCOP | Los campos reales del formulario. La planilla dice cuáles se usaron y cuáles quedaron vacíos. |
-| 16 | **Cómo procesa hoy la coordinación las postulaciones** | Coordinación Administrativa | El diseño del panel. Sin esto se construye a ciegas. |
+| 16 | **Cómo procesa hoy la coordinación las postulaciones** | Coordinación Administrativa | El diseño del panel. Sin esto se construye a ciegas. **La reunión está preparada en [`docs/reunion-coordinacion.md`](docs/reunion-coordinacion.md)**, que cubre también los ítems 15 y 17. |
 | 17 | **Quiénes usan el panel y con qué permisos** | ELCOP | El esquema de roles. |
 | 18 | **Responsable del tratamiento de datos y aviso de privacidad** | Municipalidad / Legales | Publicar el formulario. Pasamos a custodiar DNI, fecha de nacimiento y teléfono de más de mil personas. |
 | 19 | **Dominio definitivo y acceso al DNS** | Municipalidad | El deploy. |
