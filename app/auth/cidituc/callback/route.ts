@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { COOKIE_SESION, DURACION_SESION_SEGUNDOS, firmarSesion, pareceUnToken } from "@/lib/cidituc";
 import { obtenerPerfil } from "@/lib/cidituc-perfil";
 import { buscarBecarioPorDocumento, normalizarDocumento } from "@/lib/padron";
+import { rolDe } from "@/lib/portal/roles";
 
 /**
  * Vuelta desde CIDITUC: `/auth/cidituc/callback?auth=<token>`
@@ -47,9 +48,14 @@ export async function GET(request: Request) {
   const documento = normalizarDocumento(perfil.documento);
   if (!documento) return rechazar(origen, "documento-invalido");
 
-  // 2. El padrón. Acá se cae quien no es becario.
+  // 2. La autorización. Acá se cae quien no tiene nada que hacer en el portal.
+  //
+  // Dos puertas y no una: el padrón de becarios, y los roles elevados. El comité
+  // académico y la dirección **no son becarios**, así que si el padrón fuera la
+  // única condición, la gente que evalúa no podría ni entrar.
   const becario = await buscarBecarioPorDocumento(documento);
-  if (!becario) return rechazar(origen, "no-es-becario");
+  const rol = rolDe(documento);
+  if (!becario && !rol) return rechazar(origen, "no-es-becario");
 
   // 3. Nuestra sesión. No se guarda el token de CIDITUC: ya cumplió su función
   // y conservarlo sólo ampliaría lo que se pierde si la cookie se filtra.
@@ -57,8 +63,12 @@ export async function GET(request: Request) {
   const sesion = await firmarSesion({
     idPersona: perfil.idPersona,
     documento,
-    nombre: nombreCompleto || becario.nombre,
-    becarioId: becario.id
+    nombre: nombreCompleto || becario?.nombre || "",
+    // Quien no es becario no tiene entrega propia: su documento sirve de
+    // identificador y el portal del becario le va a aparecer vacío, que es la
+    // verdad. El rol no se guarda acá; se resuelve en cada pedido (ver
+    // `lib/portal/roles.ts`).
+    becarioId: becario?.id ?? documento
   });
 
   const respuesta = NextResponse.redirect(`${origen}/portal`);

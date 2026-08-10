@@ -212,6 +212,93 @@ export async function guardarEntrega(
 }
 
 /* -------------------------------------------------------------------------- */
+/* Lo que ve el comité académico                                              */
+/* -------------------------------------------------------------------------- */
+
+/** Una entrega con la identidad de quien la escribió, para el listado. */
+export type EntregaDeCohorte = {
+  becarioId: string;
+  /** `null` mientras no tengamos el nombre: hoy el padrón sólo trae documentos. */
+  nombre: string | null;
+  entrega: Entrega;
+};
+
+/**
+ * Todas las entregas de la cohorte, para el comité.
+ *
+ * ⚠️ **No comprueba permisos.** Quien llame tiene que haber verificado el rol
+ * antes; esta función sólo lee. La comprobación vive en las rutas, que es donde
+ * se sabe quién está pidiendo.
+ *
+ * TODO: cuando exista la base es un `select` con join a becarios, ordenado por
+ * estado y fecha. Hoy junta el ejemplo con lo que haya en memoria.
+ */
+export async function entregasDeLaCohorte(): Promise<EntregaDeCohorte[]> {
+  const porBecario = new Map<string, EntregaDeCohorte>();
+
+  if (process.env.PORTAL_DATOS_DEMO === "true") {
+    for (const fila of entregasDeEjemplo()) porBecario.set(fila.becarioId, fila);
+  }
+
+  // Lo guardado de verdad gana sobre el ejemplo: si alguien escribió, es lo suyo.
+  for (const [becarioId, entrega] of almacen.__entregasElcop ?? []) {
+    porBecario.set(becarioId, {
+      becarioId,
+      nombre: porBecario.get(becarioId)?.nombre ?? null,
+      entrega
+    });
+  }
+
+  // Primero lo que espera respuesta del comité, que es a lo que vienen.
+  const prioridad: Record<Entrega["estado"], number> = {
+    presentado: 0,
+    observado: 1,
+    borrador: 2,
+    aprobado: 3,
+    "sin-empezar": 4
+  };
+
+  return [...porBecario.values()].sort(
+    (a, b) =>
+      prioridad[a.entrega.estado] - prioridad[b.entrega.estado] ||
+      (a.nombre ?? a.becarioId).localeCompare(b.nombre ?? b.becarioId, "es")
+  );
+}
+
+/**
+ * Devuelve una entrega con observaciones del comité.
+ *
+ * Sólo se puede observar algo **presentado**: observar un borrador sería opinar
+ * sobre lo que la persona todavía está escribiendo, y observar algo aprobado
+ * contradice la aprobación. Devuelve `null` si no corresponde, y la ruta lo
+ * traduce a un error.
+ */
+export async function registrarObservaciones(
+  becarioId: string,
+  observaciones: string
+): Promise<Entrega | null> {
+  const actual = entregaGuardada(becarioId) ?? entregaDeEjemploDe(becarioId);
+  if (!actual || actual.estado !== "presentado") return null;
+
+  const entrega: Entrega = {
+    ...actual,
+    estado: "observado",
+    observaciones: observaciones.trim()
+  };
+
+  almacen.__entregasElcop ??= new Map();
+  almacen.__entregasElcop.set(becarioId, entrega);
+
+  return entrega;
+}
+
+/** La entrega de ejemplo de un becario, para poder operar sobre el ejemplo. */
+function entregaDeEjemploDe(becarioId: string): Entrega | null {
+  if (process.env.PORTAL_DATOS_DEMO !== "true") return null;
+  return entregasDeEjemplo().find((f) => f.becarioId === becarioId)?.entrega ?? null;
+}
+
+/* -------------------------------------------------------------------------- */
 /* Datos de ejemplo                                                           */
 /* -------------------------------------------------------------------------- */
 
@@ -493,4 +580,108 @@ function datosDeEjemplo(): DatosDelPortal {
     actas,
     esDemostracion: true
   };
+}
+
+/**
+ * Entregas de ejemplo de la cohorte, para poder mostrar el listado del comité.
+ *
+ * Los estados están elegidos para que se vea el trabajo real de quien evalúa:
+ * dos esperando respuesta, una ya devuelta con observaciones, una en borrador
+ * que todavía no le corresponde mirar y una aprobada.
+ *
+ * El primer documento es el del padrón provisorio, así que la entrega que se
+ * escribe desde el portal aparece en este listado y el circuito se puede probar
+ * de punta a punta con una sola persona.
+ */
+function entregasDeEjemplo(): EntregaDeCohorte[] {
+  const base = (titulo: string, resumen: string): Entrega["secciones"] => ({
+    problema: `${resumen} El problema afecta a los barrios del sur y no tiene hoy ninguna respuesta sistemática de la Municipalidad, más allá de intervenciones puntuales que no se sostienen en el tiempo.`,
+    diagnostico:
+      "Relevamiento propio de tres semanas, más los datos abiertos del municipio y entrevistas con vecinos y con personal de la dirección correspondiente.",
+    propuesta: `${titulo} en tres etapas, empezando por una prueba en un radio acotado para medir antes de escalar al resto de la ciudad.`,
+    presupuesto:
+      "Equipo de dos personas a tiempo parcial durante seis meses, más equipamiento que en buena medida ya existe en el municipio y se puede reasignar.",
+    viabilidad:
+      "No requiere ordenanza nueva: entra en las facultades de la dirección. El riesgo principal es la coordinación entre áreas, que se mitiga con una mesa de trabajo mensual."
+  });
+
+  return [
+    {
+      becarioId: "30456789",
+      nombre: null,
+      entrega: {
+        estado: "presentado",
+        titulo: "Red de ciclovías para el microcentro",
+        resumen:
+          "Una red de ciclovías protegidas que conecte las cuatro avenidas del microcentro con las terminales de colectivos, para que el tramo final de un viaje en transporte público se pueda hacer en bicicleta.",
+        secciones: base("Una red de ciclovías protegidas", "El microcentro concentra la mayor densidad de viajes diarios y no tiene infraestructura ciclista continua."),
+        presentadoEn: diasDesdeHoy(-4),
+        guardadaEn: diasDesdeHoy(-4),
+        observaciones: null
+      }
+    },
+    {
+      becarioId: "28111222",
+      nombre: "Marina Sosa",
+      entrega: {
+        estado: "presentado",
+        titulo: "Puntos verdes con seguimiento de residuos",
+        resumen:
+          "Doce puntos verdes con registro de lo que se recibe, para saber por primera vez qué y cuánto se separa en origen en la ciudad y poder planificar sobre datos y no sobre estimaciones.",
+        secciones: base("Doce puntos verdes con registro", "La ciudad no sabe cuánto residuo se separa en origen porque nunca se midió."),
+        presentadoEn: diasDesdeHoy(-2),
+        guardadaEn: diasDesdeHoy(-2),
+        observaciones: null
+      }
+    },
+    {
+      becarioId: "27333444",
+      nombre: "Julián Pereyra",
+      entrega: {
+        estado: "observado",
+        titulo: "Turnos únicos para trámites municipales",
+        resumen:
+          "Un sistema único de turnos para los trámites que hoy están repartidos en seis sistemas distintos, para que el vecino no tenga que saber qué dirección atiende qué.",
+        secciones: base("Un sistema único de turnos", "Los trámites municipales están repartidos en seis sistemas de turnos que no se hablan entre sí."),
+        presentadoEn: diasDesdeHoy(-12),
+        guardadaEn: diasDesdeHoy(-12),
+        observaciones:
+          "El diagnóstico está muy bien, pero el presupuesto no distingue entre lo que ya existe y lo que hay que comprar. Revisalo y volvé a presentar."
+      }
+    },
+    {
+      becarioId: "26555666",
+      nombre: "Carla Nieva",
+      entrega: {
+        estado: "borrador",
+        titulo: "Arbolado urbano por cuadra",
+        resumen: "",
+        secciones: {
+          problema:
+            "El arbolado de la ciudad se releva por avenida y no por cuadra, así que los faltantes en el interior de los barrios no aparecen en ningún registro.",
+          diagnostico: "",
+          propuesta: "",
+          presupuesto: "",
+          viabilidad: ""
+        },
+        presentadoEn: null,
+        guardadaEn: diasDesdeHoy(-1),
+        observaciones: null
+      }
+    },
+    {
+      becarioId: "25777888",
+      nombre: "Rodrigo Salvatierra",
+      entrega: {
+        estado: "aprobado",
+        titulo: "Presupuesto participativo en formato abierto",
+        resumen:
+          "Publicar los resultados del presupuesto participativo en formato abierto y comparable entre años, para que se pueda seguir qué se votó y qué se ejecutó.",
+        secciones: base("Publicación en formato abierto", "Los resultados del presupuesto participativo se publican en PDF, así que no se pueden comparar entre años."),
+        presentadoEn: diasDesdeHoy(-20),
+        guardadaEn: diasDesdeHoy(-20),
+        observaciones: null
+      }
+    }
+  ];
 }

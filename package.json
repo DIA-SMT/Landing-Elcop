@@ -14,7 +14,8 @@
     "portal": "node herramientas/ver-portal.mjs portal",
     "sesion": "node herramientas/sesion-dev.mjs",
     "auditar": "node herramientas/auditar.mjs",
-    "auditar:portal": "node herramientas/auditar.mjs --portal"
+    "auditar:portal": "node herramientas/auditar.mjs --portal",
+    "auditar:comite": "node herramientas/auditar.mjs --comite"
   },
   "dependencies": {
     "next": "14.2.15",

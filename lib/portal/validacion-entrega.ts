@@ -143,6 +143,31 @@ export function avanceDeEntrega(datos: BorradorEntrega): { completas: number; to
   return { completas, total: SECCIONES_PROYECTO.length + 2 };
 }
 
+/* -------------------------------------------------------------------------- */
+/* Observaciones del comité                                                   */
+/* -------------------------------------------------------------------------- */
+
+export const LIMITES_OBSERVACIONES = { minimo: 30, maximo: 3000 } as const;
+
+/**
+ * Valida las observaciones con que el comité devuelve una entrega.
+ *
+ * El mínimo no es capricho: una devolución de tres palabras deja a la persona
+ * sin saber qué corregir, y el estado `observado` le bloquea la aprobación
+ * mientras no rehaga algo que no entiende.
+ */
+export function validarObservaciones(texto: string): string | null {
+  const actual = texto.trim().length;
+  if (actual === 0) return "Escribí la devolución: es lo único que la persona va a leer.";
+  if (actual < LIMITES_OBSERVACIONES.minimo) {
+    return `Muy corta: al menos ${LIMITES_OBSERVACIONES.minimo} caracteres, para que se entienda qué corregir.`;
+  }
+  if (actual > LIMITES_OBSERVACIONES.maximo) {
+    return `Te pasaste del máximo de ${LIMITES_OBSERVACIONES.maximo} caracteres.`;
+  }
+  return null;
+}
+
 /** Un borrador vacío, para arrancar el formulario. */
 export function borradorVacio(): BorradorEntrega {
   return {

@@ -50,6 +50,10 @@ function normalizarRuta(valor) {
 const RUTA = normalizarRuta(argumentos[0]);
 const BASE = argumentos[1] ?? "http://localhost:3000";
 
+// `--como=31999888` abre como esa persona, para ver el portal con otro rol.
+const como = process.argv.find((a) => a.startsWith("--como="))?.slice("--como=".length);
+const DOCUMENTO = como ? como.replace(/\D/g, "") : undefined;
+
 const CANDIDATOS_CHROME = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
@@ -74,7 +78,7 @@ const navegador = await puppeteer.launch({
 });
 
 const [pagina] = await navegador.pages();
-await pagina.setCookie(cookieDeSesion(BASE));
+await pagina.setCookie(cookieDeSesion(BASE, DOCUMENTO ? { documento: DOCUMENTO } : undefined));
 
 try {
   await pagina.goto(`${BASE}${RUTA}`, { waitUntil: "domcontentloaded" });

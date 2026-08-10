@@ -63,6 +63,13 @@ cambia.
   en `presentado`, sin sesión da 401, y volver a guardar como borrador lo retira.
   En el navegador: los errores aparecen sólo en las secciones vacías, el foco va a
   la primera que falla y el aviso sale por `aria-live`.
+- **Los permisos del comité probados con las dos sesiones.** Con documento del
+  padrón: `/comite`, `/comite/<otro>` y el `POST` de observaciones dan **404**; sin
+  sesión, 307 al portal y 401 en el `POST`. Con rol de comité, 200. Y el circuito
+  completo: devolver una presentada la deja `observado`, devolver un borrador da
+  409, una devolución corta da 400, y el becario ve el texto en su pantalla.
+- **Las dos pantallas del comité**: 6 de 6 en la auditoría propia y **100 en las
+  cuatro categorías de Lighthouse**.
 
 ---
 
@@ -166,6 +173,40 @@ es peor que no tenerlo.
 
 ⚠️ **Mismo `Map` en memoria** (`__entregasElcop`), y acá pesa más que en las
 consultas, porque lo que se pierde en un reinicio es un trabajo largo.
+
+### Y la contraparte: la vista del comité académico
+
+`/comite` lista los proyectos de toda la cohorte, ordenados por lo que espera
+respuesta y no alfabéticamente —quien evalúa viene a eso—, y `/comite/<becarioId>`
+lo deja leer y **devolverlo con observaciones**. El becario ve esa devolución en su
+pantalla y el proyecto vuelve a quedar a la espera de que lo corrija.
+
+**Aprobar no está**, y es a propósito: si aprueba una persona sola o hace falta un
+jurado es el ítem 23, y no es una decisión de desarrollo. El estado `aprobado`
+existe en el modelo y las dos pantallas lo manejan; lo que falta es quién lo
+dispara.
+
+#### Esta pantalla obligó a inventar roles
+
+Hasta acá el portal tenía una sola clase de usuario y todo lo que veía era suyo.
+Mostrar los proyectos de otros rompe eso, así que apareció
+[`lib/portal/roles.ts`](lib/portal/roles.ts), con tres decisiones que conviene no
+deshacer:
+
+- **El rol no va en la cookie.** Se resuelve en cada pedido a partir del documento
+  de la sesión. Si fuera parte de la cookie firmada, sacarle el permiso a alguien
+  no tendría efecto hasta que le venciera —un día—, y las sesiones emitidas antes
+  del cambio no lo traerían, obligando a elegir un valor por omisión que es una
+  decisión de seguridad tomada por descuido.
+- **Sin rol es 404, no 403.** Un 403 le confirma a quien prueba direcciones que
+  existe algo del otro lado.
+- **El ingreso ahora autoriza por padrón *o* por rol.** El comité y la dirección
+  no son becarios: con el padrón como única puerta, la gente que evalúa no podía
+  ni entrar. Lo encontramos armando esto, no en producción.
+
+Quien tiene el rol ve un enlace a `/comite` en la navegación del portal. Sin eso,
+alguien del comité entraría a `/portal`, vería un portal de becario vacío y
+pensaría que está roto.
 
 #### Una limitación del modelo que conviene conocer
 

@@ -48,6 +48,22 @@ Windows. Acepta `portal/clases`, `portal/mentorias`, `portal/proyecto`.
 Si preferís usar tu navegador de siempre, `npm run sesion` imprime la cookie para
 pegarla en DevTools → Application → Cookies.
 
+### Ver la vista del comité académico
+
+`/comite` muestra los proyectos de toda la cohorte, así que **exige rol**: hay que
+estar en `ELCOP_COMITE_PROVISORIO`. Sin ese rol la ruta responde **404 y no 403**,
+para no confirmarle a nadie que existe algo del otro lado.
+
+Para abrirla en desarrollo hay que emitir la sesión de alguien con ese rol:
+
+```bash
+node herramientas/ver-portal.mjs comite --como=31999888
+```
+
+`npm run sesion 31999888` hace lo mismo pero imprimiendo la cookie. Cambiar el
+documento es la forma de probar los permisos: con uno del padrón, `/comite` tiene
+que dar 404.
+
 Para ver datos en vez de pantallas vacías, `PORTAL_DATOS_DEMO=true` en
 `.env.local`. Vacío es el estado correcto mientras no haya base, y es lo que un
 becario ve el primer día.
@@ -64,6 +80,10 @@ npm run auditar
 
 ```bash
 npm run auditar:portal
+```
+
+```bash
+npm run auditar:comite
 ```
 
 El primero recorre las páginas públicas; el segundo, las de adentro del portal,
@@ -117,20 +137,23 @@ app/
   page.tsx                home: las 9 secciones en orden
   publicaciones/          listado de notas
   portal/                 Portal del Becario: panel, clases, mentorías, proyecto
+  comite/                 vista del comité académico (exige rol)
   auth/cidituc/           ingreso y salida con Ciudadano Digital
   api/postulacion/        recepción del formulario (hoy no persiste)
   api/portal/consultas/   consultas de mentoría (hoy en memoria)
   api/portal/entrega/     proyecto final (hoy en memoria)
+  api/comite/             devolución con observaciones (exige rol)
 components/
   layout/                 Header (con menú móvil) y Footer
   home/                   una sección de la home por archivo
   portal/                 marco, panel y pantallas del portal
+  comite/                 listado y lectura de proyectos
   ui/                     Reveal y ContadorAnimado
 content/elcop.ts          todo el contenido, tipado
 lib/
   cidituc.ts              firma y verificación de la sesión
   padron.ts               quién tiene derecho a entrar (provisorio)
-  portal/                 tipos, cálculos y datos del portal
+  portal/                 tipos, cálculos, datos y roles del portal
 herramientas/             auditoría de accesibilidad y sesión de desarrollo
 ```
 

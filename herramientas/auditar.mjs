@@ -27,17 +27,29 @@
 import { existsSync } from "node:fs";
 import puppeteer from "puppeteer-core";
 
-import { avisarSiFaltanDatos, cargarEntorno, cookieDeSesion } from "./sesion-dev.mjs";
+import {
+  avisarSiFaltanDatos,
+  cargarEntorno,
+  cookieDeSesion,
+  primerDocumentoDelComite
+} from "./sesion-dev.mjs";
 
-const CON_SESION = process.argv.includes("--portal");
+const CON_PORTAL = process.argv.includes("--portal");
+const CON_COMITE = process.argv.includes("--comite");
+const CON_SESION = CON_PORTAL || CON_COMITE;
 // Los flags se filtran para que `--portal` no se tome por la URL base.
 const BASE = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "http://localhost:3000";
 
 // Sin sesión, `/portal` es la pantalla de ingreso: entra en el recorrido
 // público. Las de adentro sólo se pueden medir con la cookie puesta.
-const RUTAS = CON_SESION
-  ? ["/portal", "/portal/clases", "/portal/mentorias", "/portal/proyecto"]
-  : ["/", "/publicaciones", "/portal"];
+//
+// `--comite` necesita además la cookie de alguien con ese rol: con la del
+// becario, /comite responde 404 y se mediría la página de error.
+const RUTAS = CON_COMITE
+  ? ["/comite", "/comite/28111222"]
+  : CON_PORTAL
+    ? ["/portal", "/portal/clases", "/portal/mentorias", "/portal/proyecto"]
+    : ["/", "/publicaciones", "/portal"];
 const ANCHOS = [360, 768, 1440];
 
 const CANDIDATOS_CHROME = [
@@ -152,11 +164,17 @@ if (CON_SESION) {
   avisarSiFaltanDatos();
 }
 
+const documentoDeLaSesion = CON_COMITE ? primerDocumentoDelComite() : undefined;
+
 for (const ruta of RUTAS) {
   for (const ancho of ANCHOS) {
     const pagina = await navegador.newPage();
     await pagina.setViewport({ width: ancho, height: 900 });
-    if (CON_SESION) await pagina.setCookie(cookieDeSesion(BASE));
+    if (CON_SESION) {
+      await pagina.setCookie(
+        cookieDeSesion(BASE, documentoDeLaSesion ? { documento: documentoDeLaSesion } : undefined)
+      );
+    }
     await pagina.goto(`${BASE}${ruta}`, { waitUntil: "networkidle0" });
     const r = await pagina.evaluate(auditar);
 
