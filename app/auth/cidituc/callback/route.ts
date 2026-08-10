@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { COOKIE_SESION, DURACION_SESION_SEGUNDOS, firmarSesion, pareceUnToken } from "@/lib/cidituc";
 import { obtenerPerfil } from "@/lib/cidituc-perfil";
 import { buscarBecarioPorDocumento, normalizarDocumento } from "@/lib/padron";
-import { rolDe } from "@/lib/portal/roles";
+import { esComite } from "@/lib/portal/roles";
 
 /**
  * Vuelta desde CIDITUC: `/auth/cidituc/callback?auth=<token>`
@@ -50,12 +50,11 @@ export async function GET(request: Request) {
 
   // 2. La autorización. Acá se cae quien no tiene nada que hacer en el portal.
   //
-  // Dos puertas y no una: el padrón de becarios, y los roles elevados. El comité
-  // académico y la dirección **no son becarios**, así que si el padrón fuera la
-  // única condición, la gente que evalúa no podría ni entrar.
+  // Dos puertas y no una: el padrón de becarios, y el comité académico. Quien
+  // evalúa no es becario, así que con el padrón como única condición no podría
+  // ni entrar.
   const becario = await buscarBecarioPorDocumento(documento);
-  const rol = rolDe(documento);
-  if (!becario && !rol) return rechazar(origen, "no-es-becario");
+  if (!becario && !esComite(documento)) return rechazar(origen, "no-es-becario");
 
   // 3. Nuestra sesión. No se guarda el token de CIDITUC: ya cumplió su función
   // y conservarlo sólo ampliaría lo que se pierde si la cookie se filtra.

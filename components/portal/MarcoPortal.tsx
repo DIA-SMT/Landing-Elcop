@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ESCUELA } from "@/content/elcop";
-import { puedeVerTodasLasEntregas } from "@/lib/portal/roles";
+import { esComite } from "@/lib/portal/roles";
 import { obtenerSesion } from "@/lib/sesion";
 
 /**
@@ -34,7 +34,7 @@ export async function MarcoPortal({ activa, nombre, children }: Props) {
   // del portal por un enlace. Sin esto, alguien del comité que entre a /portal
   // ve un portal de becario vacío y ninguna pista de que su vista existe.
   const sesion = await obtenerSesion();
-  const esComite = sesion ? puedeVerTodasLasEntregas(sesion.documento) : false;
+  const muestraComite = sesion ? esComite(sesion.documento) : false;
 
   return (
     <div className="page-shell py-10 md:py-14">
@@ -78,7 +78,7 @@ export async function MarcoPortal({ activa, nombre, children }: Props) {
             })}
           </ul>
 
-          {esComite && (
+          {muestraComite && (
             <div className="mt-6 border-t border-slate-100 pt-4">
               <p className="micro-label">Comité académico</p>
               <Link

@@ -15,6 +15,8 @@
  * propio proveedor— y queda anotado como pendiente.
  */
 
+import { almacen } from "@/lib/almacen";
+
 /** Ventana y techo. Conservador a propósito: una conversación normal no los roza. */
 export const LIMITE = {
   ventanaMs: 60_000,
@@ -25,7 +27,7 @@ export const LIMITE = {
 
 type Registro = { recientes: number[]; delDia: number; diaUtc: number };
 
-const almacen = globalThis as unknown as { __chatElcop?: Map<string, Registro> };
+const registros = almacen<Registro>("limite-chat");
 
 function diaActual(ahora: number): number {
   return Math.floor(ahora / 86_400_000);
@@ -48,10 +50,9 @@ export type Veredicto = { permitido: true } | { permitido: false; motivo: string
 
 /** Cuenta esta llamada y decide si pasa. */
 export function permitirLlamada(clave: string, ahora = Date.now()): Veredicto {
-  almacen.__chatElcop ??= new Map();
   const hoy = diaActual(ahora);
 
-  const registro = almacen.__chatElcop.get(clave) ?? { recientes: [], delDia: 0, diaUtc: hoy };
+  const registro = registros.get(clave) ?? { recientes: [], delDia: 0, diaUtc: hoy };
   if (registro.diaUtc !== hoy) {
     registro.diaUtc = hoy;
     registro.delDia = 0;
@@ -60,7 +61,7 @@ export function permitirLlamada(clave: string, ahora = Date.now()): Veredicto {
   registro.recientes = registro.recientes.filter((t) => ahora - t < LIMITE.ventanaMs);
 
   if (registro.delDia >= LIMITE.porDia) {
-    almacen.__chatElcop.set(clave, registro);
+    registros.set(clave, registro);
     return {
       permitido: false,
       motivo: "Llegaste al máximo de consultas por hoy. Escribinos por el formulario del sitio.",
@@ -69,7 +70,7 @@ export function permitirLlamada(clave: string, ahora = Date.now()): Veredicto {
   }
 
   if (registro.recientes.length >= LIMITE.porVentana) {
-    almacen.__chatElcop.set(clave, registro);
+    registros.set(clave, registro);
     const masViejo = registro.recientes[0]!;
     return {
       permitido: false,
@@ -80,12 +81,12 @@ export function permitirLlamada(clave: string, ahora = Date.now()): Veredicto {
 
   registro.recientes.push(ahora);
   registro.delDia += 1;
-  almacen.__chatElcop.set(clave, registro);
+  registros.set(clave, registro);
 
   // El Map crecería sin techo con tráfico real: se poda cuando se hace grande.
-  if (almacen.__chatElcop.size > 5000) {
-    for (const [k, v] of almacen.__chatElcop) {
-      if (v.recientes.length === 0 && v.diaUtc !== hoy) almacen.__chatElcop.delete(k);
+  if (registros.size > 5000) {
+    for (const [k, v] of registros) {
+      if (v.recientes.length === 0 && v.diaUtc !== hoy) registros.delete(k);
     }
   }
 

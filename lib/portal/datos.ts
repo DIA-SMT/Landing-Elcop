@@ -15,6 +15,7 @@
  * cómo va a verse. En ese caso la interfaz lo dice en pantalla: mostrarle a un
  * becario un 89% de asistencia inventado sería peor que no mostrarle nada.
  */
+import { almacen } from "@/lib/almacen";
 import type {
   Acta,
   Asistencia,
@@ -93,24 +94,17 @@ export async function fechaLimiteEntrega(): Promise<string | null> {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Las consultas que el becario envía se guardan acá hasta que exista la base.
+ * Lo que se escribe desde el portal, hasta que exista la base.
  *
- * ⚠️ **Es memoria del proceso, no persistencia.** Sobrevive mientras viva el
- * servidor; en un despliegue serverless cada instancia tiene la suya y un
- * reinicio la vacía. Alcanza para probar el circuito completo —enviar, ver la
- * consulta en la lista, validar en el servidor— pero ninguna consulta real
- * puede depender de esto.
- *
- * Se cuelga de `globalThis` para sobrevivir a la recompilación en caliente de
- * Next en desarrollo, que reinicia el módulo pero no el proceso.
+ * No es persistencia y la advertencia completa está en
+ * [`lib/almacen.ts`](../almacen.ts): un reinicio los vacía y en serverless cada
+ * instancia lleva el suyo.
  */
-const almacen = globalThis as unknown as {
-  __consultasElcop?: Map<string, Consulta[]>;
-  __entregasElcop?: Map<string, Entrega>;
-};
+const consultasPorBecario = almacen<Consulta[]>("consultas");
+const entregasPorBecario = almacen<Entrega>("entregas");
 
 function consultasEnviadas(becarioId: string): Consulta[] {
-  return almacen.__consultasElcop?.get(becarioId) ?? [];
+  return consultasPorBecario.get(becarioId) ?? [];
 }
 
 /** Registra una consulta enviada desde el portal. Devuelve la consulta creada. */
@@ -130,9 +124,8 @@ export async function registrarConsulta(
     respondidaEn: null
   };
 
-  almacen.__consultasElcop ??= new Map();
-  const propias = almacen.__consultasElcop.get(becarioId) ?? [];
-  almacen.__consultasElcop.set(becarioId, [consulta, ...propias]);
+  const propias = consultasPorBecario.get(becarioId) ?? [];
+  consultasPorBecario.set(becarioId, [consulta, ...propias]);
 
   return consulta;
 }
@@ -156,7 +149,7 @@ export function entregaVacia(): Entrega {
 
 /** La entrega guardada del becario, o `null` si nunca guardó. */
 export function entregaGuardada(becarioId: string): Entrega | null {
-  return almacen.__entregasElcop?.get(becarioId) ?? null;
+  return entregasPorBecario.get(becarioId) ?? null;
 }
 
 /**
@@ -205,8 +198,7 @@ export async function guardarEntrega(
     observaciones: anterior?.observaciones ?? null
   };
 
-  almacen.__entregasElcop ??= new Map();
-  almacen.__entregasElcop.set(becarioId, entrega);
+  entregasPorBecario.set(becarioId, entrega);
 
   return entrega;
 }
@@ -241,7 +233,7 @@ export async function entregasDeLaCohorte(): Promise<EntregaDeCohorte[]> {
   }
 
   // Lo guardado de verdad gana sobre el ejemplo: si alguien escribió, es lo suyo.
-  for (const [becarioId, entrega] of almacen.__entregasElcop ?? []) {
+  for (const [becarioId, entrega] of entregasPorBecario) {
     porBecario.set(becarioId, {
       becarioId,
       nombre: porBecario.get(becarioId)?.nombre ?? null,
@@ -286,8 +278,7 @@ export async function registrarObservaciones(
     observaciones: observaciones.trim()
   };
 
-  almacen.__entregasElcop ??= new Map();
-  almacen.__entregasElcop.set(becarioId, entrega);
+  entregasPorBecario.set(becarioId, entrega);
 
   return entrega;
 }
@@ -310,121 +301,47 @@ function diasDesdeHoy(dias: number, hora = 18): string {
   return fecha.toISOString();
 }
 
+/** A qué eje pertenece cada módulo, para no repetirlo en cada encuentro. */
+const EJE_DEL_MODULO: Record<string, string> = {
+  "Perfil dirigente": "El Sujeto Político",
+  "Lectura del territorio": "El Territorio",
+  "La máquina del Estado": "El Estado"
+};
+
 function datosDeEjemplo(): DatosDelPortal {
-  const encuentros: Encuentro[] = [
-    {
-      id: "e1",
-      titulo: "Ética y vocación pública",
-      modulo: "Perfil dirigente",
-      eje: "El Sujeto Político",
-      comienza: diasDesdeHoy(-21),
-      termina: diasDesdeHoy(-21, 21),
-      modalidad: "presencial",
-      estado: "dictado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: false,
-      referente: null
-    },
-    {
-      id: "e2",
-      titulo: "Opinión pública y dinámica del electorado",
-      modulo: "Lectura del territorio",
-      eje: "El Territorio",
-      comienza: diasDesdeHoy(-14),
-      termina: diasDesdeHoy(-14, 21),
-      modalidad: "presencial",
-      estado: "dictado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: true,
-      referente: "Diego Reynoso"
-    },
-    {
-      id: "e3",
-      titulo: "Narrativa y discurso",
-      modulo: "Perfil dirigente",
-      eje: "El Sujeto Político",
-      comienza: diasDesdeHoy(-7),
-      termina: diasDesdeHoy(-7, 20),
-      modalidad: "virtual",
-      estado: "dictado",
-      lugar: null,
-      enlace: "https://meet.example/elcop",
-      esMasterclass: false,
-      referente: null
-    },
-    {
-      id: "e4",
-      titulo: "Presupuesto municipal",
-      modulo: "La máquina del Estado",
-      eje: "El Estado",
-      comienza: diasDesdeHoy(-3),
-      termina: diasDesdeHoy(-3, 21),
-      modalidad: "presencial",
-      estado: "cancelado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: false,
-      referente: null
-    },
-    {
-      id: "e5",
-      titulo: "Arquitectura institucional del municipio",
-      modulo: "La máquina del Estado",
-      eje: "El Estado",
-      comienza: diasDesdeHoy(4),
-      termina: diasDesdeHoy(4, 21),
-      modalidad: "presencial",
-      estado: "programado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: false,
-      referente: null
-    },
-    {
-      id: "e6",
-      titulo: "Organizaciones sociales y trabajo barrial",
-      modulo: "Lectura del territorio",
-      eje: "El Territorio",
-      comienza: diasDesdeHoy(-35),
-      termina: diasDesdeHoy(-35, 21),
-      modalidad: "presencial",
-      estado: "dictado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: false,
-      referente: null
-    },
-    {
-      id: "e7",
-      titulo: "Masterclass inaugural",
-      modulo: "Perfil dirigente",
-      eje: "El Sujeto Político",
-      comienza: diasDesdeHoy(-42),
-      termina: diasDesdeHoy(-42, 21),
-      modalidad: "presencial",
-      estado: "dictado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: true,
-      referente: "Marisol De Ambrosio"
-    },
-    {
-      id: "e8",
-      titulo: "Toma de decisiones en contextos de conflicto",
-      modulo: "Perfil dirigente",
-      eje: "El Sujeto Político",
-      comienza: diasDesdeHoy(-28),
-      termina: diasDesdeHoy(-28, 21),
-      modalidad: "presencial",
-      estado: "dictado",
-      lugar: "Aula magna, UNSTA",
-      enlace: null,
-      esMasterclass: false,
-      referente: null
-    }
-  ];
+  // El cronograma como tabla: así se lee de un vistazo qué clase cae cuándo y en
+  // qué estado, que es lo que hay que poder ajustar al probar. Lo repetido —el
+  // aula, la hora de fin, el enlace de los virtuales, el eje— se completa abajo.
+  const clases = [
+    { id: "e7", dias: -42, titulo: "Masterclass inaugural", modulo: "Perfil dirigente", referente: "Marisol De Ambrosio" },
+    { id: "e6", dias: -35, titulo: "Organizaciones sociales y trabajo barrial", modulo: "Lectura del territorio" },
+    { id: "e8", dias: -28, titulo: "Toma de decisiones en contextos de conflicto", modulo: "Perfil dirigente" },
+    { id: "e1", dias: -21, titulo: "Ética y vocación pública", modulo: "Perfil dirigente" },
+    { id: "e2", dias: -14, titulo: "Opinión pública y dinámica del electorado", modulo: "Lectura del territorio", referente: "Diego Reynoso" },
+    { id: "e3", dias: -7, titulo: "Narrativa y discurso", modulo: "Perfil dirigente", modalidad: "virtual" },
+    { id: "e4", dias: -3, titulo: "Presupuesto municipal", modulo: "La máquina del Estado", estado: "cancelado" },
+    { id: "e5", dias: 4, titulo: "Arquitectura institucional del municipio", modulo: "La máquina del Estado", estado: "programado" }
+  ] as const;
+
+  const encuentros: Encuentro[] = clases.map((clase) => {
+    const modalidad = "modalidad" in clase ? clase.modalidad : "presencial";
+    const esVirtual = modalidad === "virtual";
+    return {
+      id: clase.id,
+      titulo: clase.titulo,
+      modulo: clase.modulo,
+      eje: EJE_DEL_MODULO[clase.modulo]!,
+      comienza: diasDesdeHoy(clase.dias),
+      termina: diasDesdeHoy(clase.dias, esVirtual ? 20 : 21),
+      modalidad,
+      estado: "estado" in clase ? clase.estado : "dictado",
+      lugar: esVirtual ? null : "Aula magna, UNSTA",
+      enlace: esVirtual ? "https://meet.example/elcop" : null,
+      // Una masterclass es un encuentro con referente, no una lista aparte.
+      esMasterclass: "referente" in clase,
+      referente: "referente" in clase ? clase.referente : null
+    };
+  });
 
   // Cinco presenciales dictados, presente en cuatro: 80%, por encima del piso.
   // El virtual (e3) no computa y el cancelado (e4) sale del denominador.
@@ -437,92 +354,30 @@ function datosDeEjemplo(): DatosDelPortal {
     { encuentroId: "e2", estado: "ausente", origen: "manual", registradaEn: diasDesdeHoy(-14, 22) }
   ];
 
+  // Con `encuentroId` el material cuelga de una clase; sin él, del módulo entero.
+  // Esa es la única distinción que la pantalla necesita mostrar.
   const materiales: Material[] = [
-    {
-      id: "m1",
-      titulo: "Ética pública — presentación",
-      tipo: "presentacion",
-      modulo: "Perfil dirigente",
-      encuentroId: "e1",
-      descripcion: "Las diapositivas del encuentro.",
-      archivo: "#"
-    },
-    {
-      id: "m2",
-      titulo: "Bibliografía del módulo",
-      tipo: "bibliografia",
-      modulo: "Lectura del territorio",
-      encuentroId: null,
-      descripcion: "Lecturas sugeridas para todo el módulo, no para una clase puntual.",
-      archivo: "#"
-    },
-    {
-      id: "m3",
-      titulo: "Encuestas y sus límites — lectura",
-      tipo: "lectura",
-      modulo: "Lectura del territorio",
-      encuentroId: "e2",
-      descripcion: null,
-      archivo: "#"
-    },
-    {
-      id: "m4",
-      titulo: "Datos de opinión pública — planilla",
-      tipo: "otro",
-      modulo: "Lectura del territorio",
-      encuentroId: "e2",
-      descripcion: "La base que se usó en la clase.",
-      archivo: "#"
-    },
-    {
-      id: "m5",
-      titulo: "Toma de decisiones — presentación",
-      tipo: "presentacion",
-      modulo: "Perfil dirigente",
-      encuentroId: "e8",
-      descripcion: null,
-      archivo: "#"
-    },
-    {
-      id: "m6",
-      titulo: "Guía de lectura del presupuesto",
-      tipo: "lectura",
-      modulo: "La máquina del Estado",
-      encuentroId: null,
-      descripcion: "Para llegar preparado al próximo encuentro.",
-      archivo: "#"
-    }
+    { id: "m1", titulo: "Ética pública — presentación", tipo: "presentacion", modulo: "Perfil dirigente", encuentroId: "e1", descripcion: "Las diapositivas del encuentro.", archivo: "#" },
+    { id: "m2", titulo: "Bibliografía del módulo", tipo: "bibliografia", modulo: "Lectura del territorio", encuentroId: null, descripcion: "Lecturas de todo el módulo, no de una clase puntual.", archivo: "#" },
+    { id: "m3", titulo: "Encuestas y sus límites — lectura", tipo: "lectura", modulo: "Lectura del territorio", encuentroId: "e2", descripcion: null, archivo: "#" },
+    { id: "m4", titulo: "Toma de decisiones — presentación", tipo: "presentacion", modulo: "Perfil dirigente", encuentroId: "e8", descripcion: null, archivo: "#" },
+    { id: "m5", titulo: "Guía de lectura del presupuesto", tipo: "lectura", modulo: "La máquina del Estado", encuentroId: null, descripcion: "Para llegar preparado al próximo encuentro.", archivo: "#" }
   ];
 
   const sesionesMentoria: SesionMentoria[] = [
-    {
-      id: "s1",
-      titulo: "Mentoría de proyecto final",
-      mentor: "Camila Giuliano",
-      comienza: diasDesdeHoy(6, 19),
-      // Las preguntas cierran un día antes, para que quien mentorea llegue
-      // con la lista leída.
-      cierreDeConsultas: diasDesdeHoy(5, 12),
-      enlace: null,
-      estado: "programada"
-    },
-    {
-      id: "s2",
-      titulo: "Mentoría de metodología",
-      mentor: "Rodrigo Gómez Tortosa",
-      comienza: diasDesdeHoy(-8, 19),
-      cierreDeConsultas: diasDesdeHoy(-9, 12),
-      enlace: null,
-      estado: "realizada"
-    }
+    // Las preguntas cierran un día antes, para que quien mentorea llegue con la
+    // lista leída. Es lo que hace funcionar el "antes de la sesión".
+    { id: "s1", titulo: "Mentoría de proyecto final", mentor: "Camila Giuliano", comienza: diasDesdeHoy(6, 19), cierreDeConsultas: diasDesdeHoy(5, 12), enlace: null, estado: "programada" },
+    { id: "s2", titulo: "Mentoría de metodología", mentor: "Rodrigo Gómez Tortosa", comienza: diasDesdeHoy(-8, 19), cierreDeConsultas: diasDesdeHoy(-9, 12), enlace: null, estado: "realizada" }
   ];
 
+  // Una dirigida a una sesión y sin responder; otra del canal abierto y ya
+  // respondida: los dos modos y los dos estados que se ven en la pantalla.
   const consultas: Consulta[] = [
     {
       id: "c1",
       asunto: "Dudas sobre el recorte del problema",
-      texto:
-        "Mi proyecto abarca todo el transporte público del área metropolitana y me dijeron que es demasiado. ¿Cómo decido qué recortar sin que pierda sentido?",
+      texto: "Mi proyecto abarca todo el transporte público del área metropolitana y me dijeron que es demasiado. ¿Cómo decido qué recortar sin que pierda sentido?",
       estado: "pendiente",
       creadaEn: diasDesdeHoy(-2),
       sesionId: "s1",
@@ -538,24 +393,20 @@ function datosDeEjemplo(): DatosDelPortal {
       creadaEn: diasDesdeHoy(-9),
       sesionId: null,
       sesion: null,
-      respuesta:
-        "En la Dirección de Movilidad tienen los registros GPS de las unidades. Escribile a la coordinación y te armamos el contacto. Para lo público, el portal de datos del municipio tiene los recorridos actualizados.",
+      respuesta: "En la Dirección de Movilidad tienen los registros GPS de las unidades. Escribile a la coordinación y te armamos el contacto.",
       respondidaEn: diasDesdeHoy(-7)
     }
   ];
 
-  // Un borrador a medio escribir, que es el estado más útil para mostrar: se ve
-  // lo que ya está, lo que falta y el aviso de que todavía no está presentado.
+  // Un borrador a medio escribir: se ve lo que ya está, lo que falta y el aviso
+  // de que todavía no está presentado.
   const entrega: Entrega = {
     estado: "borrador",
     titulo: "Red de ciclovías para el microcentro",
-    resumen:
-      "Una red de ciclovías protegidas que conecte las cuatro avenidas del microcentro con las terminales de colectivos, para que el tramo final de un viaje en transporte público se pueda hacer en bicicleta sin compartir calzada con el tránsito vehicular.",
+    resumen: "Una red de ciclovías protegidas que conecte las cuatro avenidas del microcentro con las terminales de colectivos.",
     secciones: {
-      problema:
-        "El microcentro concentra la mayor densidad de viajes diarios de la ciudad y no tiene infraestructura ciclista continua. Quien llega en colectivo a las terminales y necesita cubrir los últimos quince cuadras lo hace caminando o compartiendo calzada con el tránsito, que en hora pico circula sobre los 40 km/h. Afecta sobre todo a quienes trabajan en el centro y viven en la periferia.",
-      diagnostico:
-        "Los tramos de ciclovía existentes están desconectados entre sí: terminan en esquinas sin continuidad. Falta relevamiento propio de conteos por hora y del registro de siniestros con ciclistas de los últimos tres años, que hay que pedir a la Dirección de Movilidad.",
+      problema: "El microcentro concentra la mayor densidad de viajes diarios y no tiene infraestructura ciclista continua. Quien llega en colectivo a las terminales cubre las últimas cuadras caminando o compartiendo calzada con el tránsito.",
+      diagnostico: "Los tramos existentes están desconectados entre sí: terminan en esquinas sin continuidad. Falta el registro de siniestros con ciclistas de los últimos tres años.",
       propuesta: "",
       presupuesto: "",
       viabilidad: ""
@@ -570,118 +421,63 @@ function datosDeEjemplo(): DatosDelPortal {
     { id: "a2", tipo: "acta-compromiso", titulo: "Acta Compromiso", aceptadaEn: null }
   ];
 
-  return {
-    encuentros,
-    asistencias,
-    materiales,
-    consultas,
-    sesionesMentoria,
-    entrega,
-    actas,
-    esDemostracion: true
-  };
+  return { encuentros, asistencias, materiales, consultas, sesionesMentoria, entrega, actas, esDemostracion: true };
 }
 
 /**
- * Entregas de ejemplo de la cohorte, para poder mostrar el listado del comité.
+ * Entregas de ejemplo de la cohorte, para mostrar el listado del comité.
  *
- * Los estados están elegidos para que se vea el trabajo real de quien evalúa:
- * dos esperando respuesta, una ya devuelta con observaciones, una en borrador
- * que todavía no le corresponde mirar y una aprobada.
+ * Hay una por estado: es lo que quien evalúa necesita distinguir de un vistazo, y
+ * cinco redacciones distintas no agregarían nada. Por eso las secciones se
+ * completan igual para todas y sólo cambian el título y el problema.
  *
  * El primer documento es el del padrón provisorio, así que la entrega que se
  * escribe desde el portal aparece en este listado y el circuito se puede probar
  * de punta a punta con una sola persona.
  */
 function entregasDeEjemplo(): EntregaDeCohorte[] {
-  const base = (titulo: string, resumen: string): Entrega["secciones"] => ({
-    problema: `${resumen} El problema afecta a los barrios del sur y no tiene hoy ninguna respuesta sistemática de la Municipalidad, más allá de intervenciones puntuales que no se sostienen en el tiempo.`,
-    diagnostico:
-      "Relevamiento propio de tres semanas, más los datos abiertos del municipio y entrevistas con vecinos y con personal de la dirección correspondiente.",
-    propuesta: `${titulo} en tres etapas, empezando por una prueba en un radio acotado para medir antes de escalar al resto de la ciudad.`,
-    presupuesto:
-      "Equipo de dos personas a tiempo parcial durante seis meses, más equipamiento que en buena medida ya existe en el municipio y se puede reasignar.",
-    viabilidad:
-      "No requiere ordenanza nueva: entra en las facultades de la dirección. El riesgo principal es la coordinación entre áreas, que se mitiga con una mesa de trabajo mensual."
-  });
+  const ejemplos = [
+    { doc: "30456789", nombre: null, estado: "presentado", dias: -4,
+      titulo: "Red de ciclovías para el microcentro",
+      problema: "El microcentro concentra la mayor densidad de viajes diarios y no tiene infraestructura ciclista continua." },
+    { doc: "28111222", nombre: "Marina Sosa", estado: "presentado", dias: -2,
+      titulo: "Puntos verdes con seguimiento de residuos",
+      problema: "La ciudad no sabe cuánto residuo se separa en origen porque nunca se midió." },
+    { doc: "27333444", nombre: "Julián Pereyra", estado: "observado", dias: -12,
+      titulo: "Turnos únicos para trámites municipales",
+      problema: "Los trámites están repartidos en seis sistemas de turnos que no se hablan entre sí.",
+      observaciones: "El diagnóstico está muy bien, pero el presupuesto no distingue entre lo que ya existe y lo que hay que comprar. Revisalo y volvé a presentar." },
+    { doc: "26555666", nombre: "Carla Nieva", estado: "borrador", dias: -1,
+      titulo: "Arbolado urbano por cuadra",
+      problema: "El arbolado se releva por avenida y no por cuadra, así que los faltantes dentro de los barrios no figuran en ningún registro." },
+    { doc: "25777888", nombre: "Rodrigo Salvatierra", estado: "aprobado", dias: -20,
+      titulo: "Presupuesto participativo en formato abierto",
+      problema: "Los resultados se publican en PDF, así que no se pueden comparar entre años." }
+  ] as const;
 
-  return [
-    {
-      becarioId: "30456789",
-      nombre: null,
+  return ejemplos.map(({ doc, nombre, estado, dias, titulo, problema, ...resto }) => {
+    // Un borrador tiene sólo lo primero escrito: es lo que lo hace reconocible
+    // como borrador en el listado, y lo que impide devolverlo.
+    const enBorrador = estado === "borrador";
+
+    return {
+      becarioId: doc,
+      nombre,
       entrega: {
-        estado: "presentado",
-        titulo: "Red de ciclovías para el microcentro",
-        resumen:
-          "Una red de ciclovías protegidas que conecte las cuatro avenidas del microcentro con las terminales de colectivos, para que el tramo final de un viaje en transporte público se pueda hacer en bicicleta.",
-        secciones: base("Una red de ciclovías protegidas", "El microcentro concentra la mayor densidad de viajes diarios y no tiene infraestructura ciclista continua."),
-        presentadoEn: diasDesdeHoy(-4),
-        guardadaEn: diasDesdeHoy(-4),
-        observaciones: null
-      }
-    },
-    {
-      becarioId: "28111222",
-      nombre: "Marina Sosa",
-      entrega: {
-        estado: "presentado",
-        titulo: "Puntos verdes con seguimiento de residuos",
-        resumen:
-          "Doce puntos verdes con registro de lo que se recibe, para saber por primera vez qué y cuánto se separa en origen en la ciudad y poder planificar sobre datos y no sobre estimaciones.",
-        secciones: base("Doce puntos verdes con registro", "La ciudad no sabe cuánto residuo se separa en origen porque nunca se midió."),
-        presentadoEn: diasDesdeHoy(-2),
-        guardadaEn: diasDesdeHoy(-2),
-        observaciones: null
-      }
-    },
-    {
-      becarioId: "27333444",
-      nombre: "Julián Pereyra",
-      entrega: {
-        estado: "observado",
-        titulo: "Turnos únicos para trámites municipales",
-        resumen:
-          "Un sistema único de turnos para los trámites que hoy están repartidos en seis sistemas distintos, para que el vecino no tenga que saber qué dirección atiende qué.",
-        secciones: base("Un sistema único de turnos", "Los trámites municipales están repartidos en seis sistemas de turnos que no se hablan entre sí."),
-        presentadoEn: diasDesdeHoy(-12),
-        guardadaEn: diasDesdeHoy(-12),
-        observaciones:
-          "El diagnóstico está muy bien, pero el presupuesto no distingue entre lo que ya existe y lo que hay que comprar. Revisalo y volvé a presentar."
-      }
-    },
-    {
-      becarioId: "26555666",
-      nombre: "Carla Nieva",
-      entrega: {
-        estado: "borrador",
-        titulo: "Arbolado urbano por cuadra",
-        resumen: "",
+        estado,
+        titulo,
+        resumen: enBorrador ? null : `${titulo}: una propuesta para la ciudad, con etapas y presupuesto.`,
         secciones: {
-          problema:
-            "El arbolado de la ciudad se releva por avenida y no por cuadra, así que los faltantes en el interior de los barrios no aparecen en ningún registro.",
-          diagnostico: "",
-          propuesta: "",
-          presupuesto: "",
-          viabilidad: ""
+          problema,
+          diagnostico: enBorrador ? "" : "Relevamiento propio, datos abiertos del municipio y entrevistas con vecinos.",
+          propuesta: enBorrador ? "" : `${titulo}, en tres etapas, empezando por una prueba acotada para medir antes de escalar.`,
+          presupuesto: enBorrador ? "" : "Dos personas a tiempo parcial durante seis meses, con equipamiento que ya existe en el municipio.",
+          viabilidad: enBorrador ? "" : "No requiere ordenanza nueva. El riesgo principal es la coordinación entre áreas."
         },
-        presentadoEn: null,
-        guardadaEn: diasDesdeHoy(-1),
-        observaciones: null
+        presentadoEn: enBorrador ? null : diasDesdeHoy(dias),
+        guardadaEn: diasDesdeHoy(dias),
+        observaciones: "observaciones" in resto ? resto.observaciones : null
       }
-    },
-    {
-      becarioId: "25777888",
-      nombre: "Rodrigo Salvatierra",
-      entrega: {
-        estado: "aprobado",
-        titulo: "Presupuesto participativo en formato abierto",
-        resumen:
-          "Publicar los resultados del presupuesto participativo en formato abierto y comparable entre años, para que se pueda seguir qué se votó y qué se ejecutó.",
-        secciones: base("Publicación en formato abierto", "Los resultados del presupuesto participativo se publican en PDF, así que no se pueden comparar entre años."),
-        presentadoEn: diasDesdeHoy(-20),
-        guardadaEn: diasDesdeHoy(-20),
-        observaciones: null
-      }
-    }
-  ];
+    };
+  });
 }

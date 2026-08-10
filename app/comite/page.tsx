@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ListaEntregas } from "@/components/comite/ListaEntregas";
 import { MarcoComite } from "@/components/comite/MarcoComite";
 import { entregasDeLaCohorte } from "@/lib/portal/datos";
-import { puedeVerTodasLasEntregas } from "@/lib/portal/roles";
+import { esComite } from "@/lib/portal/roles";
 import { obtenerSesion } from "@/lib/sesion";
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export default async function PaginaComite() {
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/portal");
-  if (!puedeVerTodasLasEntregas(sesion.documento)) notFound();
+  if (!esComite(sesion.documento)) notFound();
 
   const entregas = await entregasDeLaCohorte();
 

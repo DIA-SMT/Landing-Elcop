@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { DetalleEntrega } from "@/components/comite/DetalleEntrega";
 import { MarcoComite } from "@/components/comite/MarcoComite";
 import { entregasDeLaCohorte } from "@/lib/portal/datos";
-import { puedeVerTodasLasEntregas } from "@/lib/portal/roles";
+import { esComite } from "@/lib/portal/roles";
 import { obtenerSesion } from "@/lib/sesion";
 
 export const metadata: Metadata = {
@@ -28,7 +28,7 @@ export default async function PaginaEntregaDelComite({
 }) {
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/portal");
-  if (!puedeVerTodasLasEntregas(sesion.documento)) notFound();
+  if (!esComite(sesion.documento)) notFound();
 
   const becarioId = decodeURIComponent(params.becarioId);
   const entregas = await entregasDeLaCohorte();

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { registrarObservaciones } from "@/lib/portal/datos";
-import { puedeVerTodasLasEntregas } from "@/lib/portal/roles";
+import { esComite } from "@/lib/portal/roles";
 import { LIMITES_OBSERVACIONES, validarObservaciones } from "@/lib/portal/validacion-entrega";
 import { obtenerSesion } from "@/lib/sesion";
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, mensaje: "Iniciá sesión." }, { status: 401 });
   }
 
-  if (!puedeVerTodasLasEntregas(sesion.documento)) {
+  if (!esComite(sesion.documento)) {
     return NextResponse.json({ ok: false, mensaje: "No encontrado." }, { status: 404 });
   }
 
