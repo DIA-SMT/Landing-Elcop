@@ -14,8 +14,9 @@
 > Aunque DITEC lo hubiera mergeado y desplegado, **el ingreso habría seguido sin
 > funcionar**, porque el cambio no vive en la app a la que apuntamos.
 >
-> La rama `elcop-portal-becario` quedó pusheada en ese repo. **Conviene borrarla**
-> para que nadie la mergee por error.
+> La rama `elcop-portal-becario` **ya se borró** de ese repo, para que nadie la
+> mergee por error. El commit `394bd46` sigue existiendo en el clon local, así que
+> si algún día hiciera falta se recupera con un push.
 >
 > El diagnóstico de abajo —"cae en el `else` final de `PrivateRoute.jsx`"— es
 > incorrecto. El síntoma real era otro: en `cidituc.smt.gob.ar` el login es el del

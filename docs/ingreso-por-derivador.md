@@ -155,9 +155,9 @@ por lo mismo que `NEXT_PUBLIC_CIDITUC_LOGIN_URL` va entre comillas en el `.env`.
 
 - **Avisarle a Agustín** antes de que lo vea por notificación: el PR toca el
   código que él acaba de mergear.
-- **Decidir qué hacer con la rama del repo `cidituc`**, que quedó pusheada y
-  ahora sabemos que apunta a la app equivocada. Lo razonable es borrarla para que
-  nadie la mergee por error.
+- ~~Borrar la rama del repo `cidituc`~~ **Hecho.** Apuntaba a la app equivocada y
+  se borró del remoto; el commit `394bd46` sigue en el clon local por si alguna
+  vez hiciera falta.
 - **`state`**: Derivador lo reenvía y hoy nuestro callback lo ignora. Si se
   quiere usar para devolver a la persona a la pantalla que pidió, hay que
   validarlo como ruta interna —sólo un path que empiece con `/portal`, nunca una
