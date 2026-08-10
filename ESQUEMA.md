@@ -213,13 +213,30 @@ conservar.
 
 ### 4.3 Entregas (Fase 4)
 
+**Es un formulario estructurado, no un archivo.** El razonamiento está en §5.4;
+esta tabla es la que hay que mirar al implementar.
+
 | Campo | Tipo | Nota |
 |---|---|---|
 | `becario` | relación a Usuarios | |
-| `archivo` | archivo subido | Formato y tamaño a definir con ELCOP. |
 | `titulo` | texto | Nombre del proyecto. |
-| `resumen` | área de texto | |
-| `entregadaEn` | fecha y hora | Automática. |
+| `resumen` | área de texto | Una síntesis breve, para el listado del comité. |
+| `problema` | área de texto | Qué problema de la ciudad aborda. |
+| `diagnostico` | área de texto | En qué evidencia se apoya. |
+| `propuesta` | área de texto | Qué se propone hacer. |
+| `presupuesto` | área de texto | Qué recursos requiere. |
+| `viabilidad` | área de texto | Por qué es realizable. |
+| `estado` | opciones | `borrador`, `presentado`, `observado`, `aprobado`. |
+| `archivo` | archivo subido | **Adjunto opcional**, para planos o la presentación de la defensa. Formato y tamaño a definir con ELCOP (ítem 22). Necesita almacenamiento, así que depende de la Fase 1. |
+| `entregadaEn` | fecha y hora | Automática, al presentar. |
+
+Los cinco campos del medio salen del prototipo, donde tienen pinta de venir de
+la rúbrica real. **Falta confirmarlos con ELCOP**, junto con el largo esperado de
+cada uno.
+
+**El borrador no es un extra.** Nadie escribe cinco secciones de una sentada: sin
+guardar sin presentar, la persona escribe en otra parte y pega al final, que es
+la forma de perder trabajo.
 
 La fecha límite se valida **en el servidor**. Una fecha límite que sólo se
 controla en el navegador no es una fecha límite.

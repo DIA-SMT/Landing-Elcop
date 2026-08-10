@@ -5,10 +5,10 @@ import { ESCUELA } from "@/content/elcop";
 /**
  * Armazón del Portal del Becario: la navegación lateral y el encabezado.
  *
- * Las cinco secciones son las del prototipo. Sólo el panel existe todavía; las
- * demás se muestran igual, marcadas como pendientes, porque esconderlas dejaría
- * a la persona sin saber qué va a poder hacer acá. Lo que no se hace es
- * enlazarlas a rutas que no existen.
+ * Las cinco secciones son las del prototipo. Las que todavía no existen se
+ * muestran igual, marcadas como pendientes, porque esconderlas dejaría a la
+ * persona sin saber qué va a poder hacer acá. Lo que no se hace es enlazarlas a
+ * rutas que no existen: para eso el `href` es `null`.
  */
 
 export type SeccionPortal = "panel" | "clases" | "mentorias" | "proyecto" | "beca";
@@ -17,7 +17,7 @@ const SECCIONES: { id: SeccionPortal; etiqueta: string; href: string | null }[] 
   { id: "panel", etiqueta: "Panel", href: "/portal" },
   { id: "clases", etiqueta: "Mis clases", href: "/portal/clases" },
   { id: "mentorias", etiqueta: "Mentorías", href: "/portal/mentorias" },
-  { id: "proyecto", etiqueta: "Proyecto final", href: null },
+  { id: "proyecto", etiqueta: "Proyecto final", href: "/portal/proyecto" },
   { id: "beca", etiqueta: "Mi beca", href: null }
 ];
 

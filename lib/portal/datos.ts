@@ -22,6 +22,7 @@ import type {
   DatosDelPortal,
   Encuentro,
   Entrega,
+  EstadoEntrega,
   Material,
   SesionMentoria
 } from "./tipos";
@@ -35,11 +36,17 @@ import type {
  */
 export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal> {
   const enviadas = consultasEnviadas(becarioId);
+  const propia = entregaGuardada(becarioId);
 
   if (process.env.PORTAL_DATOS_DEMO === "true") {
     const datos = datosDeEjemplo();
-    // Las recién enviadas arriba: es lo que la persona acaba de hacer.
-    return { ...datos, consultas: [...enviadas, ...datos.consultas] };
+    return {
+      ...datos,
+      // Las recién enviadas arriba: es lo que la persona acaba de hacer.
+      consultas: [...enviadas, ...datos.consultas],
+      // Lo que escribió gana sobre el ejemplo: si ya trabajó, es lo suyo.
+      entrega: propia ?? datos.entrega
+    };
   }
 
   return {
@@ -48,7 +55,7 @@ export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal>
     materiales: [],
     consultas: enviadas,
     sesionesMentoria: [],
-    entrega: { estado: "sin-empezar", titulo: null, presentadoEn: null },
+    entrega: propia ?? entregaVacia(),
     actas: [],
     esDemostracion: false
   };
@@ -61,6 +68,24 @@ export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal>
 export async function sesionesDeMentoria(): Promise<SesionMentoria[]> {
   if (process.env.PORTAL_DATOS_DEMO === "true") return datosDeEjemplo().sesionesMentoria;
   return [];
+}
+
+/**
+ * Fecha límite para presentar el proyecto final, en ISO, o `null` si no hay.
+ *
+ * ⚠️ **Hoy devuelve `null` a propósito.** ELCOP todavía no definió la fecha
+ * —ítem 22 de `PENDIENTES.md`—, y poner una inventada sería peor: alguien la
+ * tomaría por oficial y organizaría su trabajo contra un dato falso. Sin fecha,
+ * la interfaz lo dice y el servidor no rechaza nada por vencimiento.
+ *
+ * TODO: cuando ELCOP la confirme, sale de la configuración de la cohorte.
+ */
+export async function fechaLimiteEntrega(): Promise<string | null> {
+  const configurada = process.env.PORTAL_FECHA_LIMITE_ENTREGA;
+  if (configurada && !Number.isNaN(Date.parse(configurada))) {
+    return new Date(configurada).toISOString();
+  }
+  return null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -81,6 +106,7 @@ export async function sesionesDeMentoria(): Promise<SesionMentoria[]> {
  */
 const almacen = globalThis as unknown as {
   __consultasElcop?: Map<string, Consulta[]>;
+  __entregasElcop?: Map<string, Entrega>;
 };
 
 function consultasEnviadas(becarioId: string): Consulta[] {
@@ -109,6 +135,80 @@ export async function registrarConsulta(
   almacen.__consultasElcop.set(becarioId, [consulta, ...propias]);
 
   return consulta;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Almacén provisorio del proyecto final                                      */
+/* -------------------------------------------------------------------------- */
+
+/** Una entrega en blanco: lo que ve alguien que todavía no escribió nada. */
+export function entregaVacia(): Entrega {
+  return {
+    estado: "sin-empezar",
+    titulo: null,
+    resumen: null,
+    secciones: { problema: "", diagnostico: "", propuesta: "", presupuesto: "", viabilidad: "" },
+    presentadoEn: null,
+    guardadaEn: null,
+    observaciones: null
+  };
+}
+
+/** La entrega guardada del becario, o `null` si nunca guardó. */
+export function entregaGuardada(becarioId: string): Entrega | null {
+  return almacen.__entregasElcop?.get(becarioId) ?? null;
+}
+
+/**
+ * En qué estado queda la entrega después de guardar.
+ *
+ * Presentar siempre deja `presentado`. Guardar un borrador deja `borrador`,
+ * incluso si venía presentada: quien vuelve a editar la retiró de hecho, y decir
+ * que sigue presentada sería mentir sobre qué va a evaluar el comité.
+ *
+ * La única excepción es `observado`: ahí el comité ya escribió algo, y ese estado
+ * se conserva hasta que la persona vuelva a presentar. `aprobado` no llega acá,
+ * porque `entregaAbierta` lo deja afuera antes.
+ */
+function estadoTrasGuardar(anterior: EstadoEntrega, presentar: boolean): EstadoEntrega {
+  if (presentar) return "presentado";
+  return anterior === "observado" ? "observado" : "borrador";
+}
+
+/**
+ * Guarda el proyecto final, como borrador o presentado.
+ *
+ * ⚠️ **Mismo almacén en memoria que las consultas, y la misma advertencia**: un
+ * reinicio lo vacía y en serverless cada instancia tiene el suyo. Acá pesa más
+ * que en las consultas, porque lo que se pierde es un trabajo largo. **Antes de
+ * que un becario real escriba su proyecto, esto tiene que ser la base.**
+ */
+export async function guardarEntrega(
+  becarioId: string,
+  datos: {
+    titulo: string;
+    resumen: string;
+    secciones: Entrega["secciones"];
+    presentar: boolean;
+  }
+): Promise<Entrega> {
+  const anterior = entregaGuardada(becarioId);
+  const ahora = new Date().toISOString();
+
+  const entrega: Entrega = {
+    estado: estadoTrasGuardar(anterior?.estado ?? "sin-empezar", datos.presentar),
+    titulo: datos.titulo.trim() || null,
+    resumen: datos.resumen.trim() || null,
+    secciones: datos.secciones,
+    presentadoEn: datos.presentar ? ahora : (anterior?.presentadoEn ?? null),
+    guardadaEn: ahora,
+    observaciones: anterior?.observaciones ?? null
+  };
+
+  almacen.__entregasElcop ??= new Map();
+  almacen.__entregasElcop.set(becarioId, entrega);
+
+  return entrega;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -357,10 +457,25 @@ function datosDeEjemplo(): DatosDelPortal {
     }
   ];
 
+  // Un borrador a medio escribir, que es el estado más útil para mostrar: se ve
+  // lo que ya está, lo que falta y el aviso de que todavía no está presentado.
   const entrega: Entrega = {
     estado: "borrador",
     titulo: "Red de ciclovías para el microcentro",
-    presentadoEn: null
+    resumen:
+      "Una red de ciclovías protegidas que conecte las cuatro avenidas del microcentro con las terminales de colectivos, para que el tramo final de un viaje en transporte público se pueda hacer en bicicleta sin compartir calzada con el tránsito vehicular.",
+    secciones: {
+      problema:
+        "El microcentro concentra la mayor densidad de viajes diarios de la ciudad y no tiene infraestructura ciclista continua. Quien llega en colectivo a las terminales y necesita cubrir los últimos quince cuadras lo hace caminando o compartiendo calzada con el tránsito, que en hora pico circula sobre los 40 km/h. Afecta sobre todo a quienes trabajan en el centro y viven en la periferia.",
+      diagnostico:
+        "Los tramos de ciclovía existentes están desconectados entre sí: terminan en esquinas sin continuidad. Falta relevamiento propio de conteos por hora y del registro de siniestros con ciclistas de los últimos tres años, que hay que pedir a la Dirección de Movilidad.",
+      propuesta: "",
+      presupuesto: "",
+      viabilidad: ""
+    },
+    presentadoEn: null,
+    guardadaEn: diasDesdeHoy(-3),
+    observaciones: null
   };
 
   const actas: Acta[] = [

@@ -24,9 +24,9 @@ Repositorio: `DIA-SMT/Landing-Elcop`, rama **`Lucas`**. Último commit:
 `content/elcop.ts`.
 
 **El Portal del Becario está en construcción, y es lo que tenemos entre manos.**
-Ya no es un "Próximamente": tiene ingreso real con CIDITUC, y tres de sus cinco
-secciones construidas —panel, Mis clases y Mentorías—. El árbol de trabajo está
-limpio.
+Ya no es un "Próximamente": tiene ingreso real con CIDITUC, y **cuatro de sus
+cinco secciones** construidas —panel, Mis clases, Mentorías y Proyecto final—.
+Falta Mi beca, que depende de Legales.
 
 El detalle por sección está en §2 de este documento, y lo que le falta al portal
 para servir de verdad en [`PENDIENTES.md`](PENDIENTES.md) §4.
@@ -53,11 +53,16 @@ cambia.
 - La sesión de desarrollo probada contra el servidor: **con** cookie renderiza el
   panel, **sin** cookie las rutas internas devuelven 307 a `/portal`.
 - El envío de una consulta probado de punta a punta con datos de ejemplo.
-- **Lighthouse sobre las tres pantallas del portal**, con sesión y sobre un build
-  de producción: **100 en Accesibilidad, Buenas prácticas y SEO** en las tres, y
-  Performance entre 96 y 100 —mejor de lo esperado para páginas `force-dynamic`,
-  que no se prerenderizan—. Encontró dos fallas de accesibilidad que la auditoría
-  propia no ve; están corregidas y explicadas en §6.
+- **Lighthouse sobre las cuatro pantallas del portal**, con sesión y sobre un
+  build de producción: **100 en Accesibilidad, Buenas prácticas y SEO** en todas,
+  y Performance entre 96 y 100 —mejor de lo esperado para páginas
+  `force-dynamic`, que no se prerenderizan—. Encontró dos fallas de accesibilidad
+  que la auditoría propia no ve; están corregidas y explicadas en §6.
+- **El proyecto final probado de punta a punta**: guardar un borrador incompleto
+  da 200, presentarlo da 400 con un error por campo, presentarlo completo lo deja
+  en `presentado`, sin sesión da 401, y volver a guardar como borrador lo retira.
+  En el navegador: los errores aparecen sólo en las secciones vacías, el foco va a
+  la primera que falla y el aviso sale por `aria-live`.
 
 ---
 
@@ -72,8 +77,8 @@ enlace, para que se sepa qué va a haber sin prometer rutas que no están.
 | Panel | `/portal` | ✅ Commiteado (`3d9a2c8`) |
 | Mis clases | `/portal/clases` | ✅ Commiteado (`3b5b940`) |
 | Mentorías | `/portal/mentorias` | ✅ Commiteado (`3bd0a8f`) |
-| Proyecto final | — | ⬜ Sin empezar |
-| Mi beca | — | ⬜ Sin empezar |
+| Proyecto final | `/portal/proyecto` | ✅ Hecho, sin el adjunto opcional |
+| Mi beca | — | ⬜ Sin empezar, y depende de Legales |
 
 ### El ingreso ya funciona
 
@@ -131,6 +136,43 @@ que tenerlo presente:
 **Ninguna consulta real puede depender de esto.** Es un pendiente bloqueante
 antes de que un becario de verdad use la pantalla, y el motivo es el mismo que
 frena el formulario público: no hay base de datos todavía.
+
+### Lo último que se hizo: Proyecto final
+
+Formulario estructurado —título, resumen y cinco secciones: problema,
+diagnóstico, propuesta, recursos y viabilidad—. **No es un archivo**, y esa es la
+decisión: ochenta proyectos en campos comparables se evalúan, ochenta PDF
+sueltos son cajas negras.
+
+Dos acciones, y su diferencia es todo el diseño de la pantalla:
+
+- **Guardar borrador** sólo comprueba techos. Nadie escribe cinco secciones de
+  una sentada, y si guardar exigiera tenerlo completo, la persona escribiría en
+  otra parte y pegaría al final — que es la forma de perder trabajo.
+- **Presentar** exige todo, porque después se evalúa.
+
+Las dos validaciones viven en
+[`validacion-entrega.ts`](lib/portal/validacion-entrega.ts) y las usan cliente y
+servidor.
+
+**La fecha límite se configura con `PORTAL_FECHA_LIMITE_ENTREGA` y hoy está
+vacía**, porque ELCOP no la definió (ítem 22). Sin fecha la pantalla dice "A
+confirmar" y el servidor no rechaza por vencimiento; el día que se configure,
+empieza a hacerlo sin tocar código.
+
+**El adjunto opcional no está.** Necesita almacenamiento, o sea la Fase 1, o sea
+el aval de la nube. La pantalla no lo menciona: prometer un botón que no existe
+es peor que no tenerlo.
+
+⚠️ **Mismo `Map` en memoria** (`__entregasElcop`), y acá pesa más que en las
+consultas, porque lo que se pierde en un reinicio es un trabajo largo.
+
+#### Una limitación del modelo que conviene conocer
+
+Se guarda **una sola versión**. Si alguien presenta y después edita y guarda
+como borrador, lo presentado se reemplaza y el estado vuelve a `borrador`: en la
+práctica retiró la entrega. La pantalla lo dice con esas palabras. Un historial
+de versiones necesita la base.
 
 ---
 
@@ -208,15 +250,18 @@ En orden de urgencia.
 
 ## 5. Lo primero que haría mañana
 
-Hay dos caminos, y la elección no es técnica.
+**Del portal ya no queda nada que se pueda construir sin destrabar a un
+tercero.** Mi beca, la única sección que falta, depende de que Legales defina qué
+validez se le exige al Acta Compromiso (ítem 29): un "acepto" con clic es firma
+electrónica, y la firma digital de la Ley 25.506 es otra cosa. Construirla antes
+de esa definición es tirar código.
 
-**Seguir el portal: Proyecto final.** Es el que sigue por dependencia — la Fase
-4A lo pone junto al panel, y de las dos secciones que faltan es la que tiene
-fecha externa (el cierre de la cursada). El problema es que **no se puede
-terminar sin los ítems 22 y 23**: formato, tamaño y fecha límite de la entrega,
-y si hay jurado y puntaje. Se puede construir la pantalla y dejar los límites
-como constantes a confirmar, que es lo que se viene haciendo, pero conviene
-pedir esos dos datos antes de arrancar y no después.
+Así que las dos cosas que siguen son de gestión, no de teclado:
+
+**Abrir el PR de Derivador y avisarle a Agustín.** Es lo que destraba el ingreso,
+y está todo escrito en
+[`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md). Ojo: lo que
+hace falta es el **despliegue**, no el merge.
 
 **Sentarse con la Coordinación Administrativa.** Sigue siendo lo único de alto
 valor que no depende de terceros, y alimenta la Fase 2, que es la única con
@@ -225,9 +270,10 @@ fecha externa dura. Sin eso el panel de postulaciones se construye a ciegas.
 el texto para coordinarla, las preguntas agrupadas por lo que desbloquean, y qué
 cambia en el código según lo que respondan.
 
-Si hay que elegir uno: **la reunión**, porque destraba trabajo ajeno y el portal
-avanza igual sin ella. Mi beca queda para el final: depende de Legales (ítem 29)
-y es la única parte con peso jurídico.
+Si aparece tiempo de desarrollo igual, lo que más rinde es **la vista del comité
+académico** del proyecto final (ítem 23): es la contraparte de la pantalla que
+acaba de quedar lista, y aunque falte saber si hay jurado y puntaje, el listado y
+la lectura de entregas no dependen de eso.
 
 ---
 

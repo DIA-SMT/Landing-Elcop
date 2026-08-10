@@ -5,7 +5,14 @@
  * vez. Guardar el porcentaje sería tener dos versiones del mismo número, y la
  * segunda siempre termina desfasada respecto de la primera.
  */
-import type { Asistencia, DatosDelPortal, Encuentro, Material, SesionMentoria } from "./tipos";
+import type {
+  Asistencia,
+  DatosDelPortal,
+  Encuentro,
+  Entrega,
+  Material,
+  SesionMentoria
+} from "./tipos";
 
 /** El piso de asistencia para mantener la regularidad. */
 export const MINIMO_ASISTENCIA = 75;
@@ -183,6 +190,34 @@ export function proximaSesionMentoria(
       .filter((s) => s.estado === "programada" && new Date(s.comienza) >= ahora)
       .sort((a, b) => +new Date(a.comienza) - +new Date(b.comienza))[0] ?? null
   );
+}
+
+/**
+ * ¿Se puede todavía editar y presentar el proyecto final?
+ *
+ * Dos condiciones, y la segunda es la que suele olvidarse: que la fecha límite
+ * no haya pasado, y que la entrega no esté ya cerrada por el comité. Una
+ * entrega aprobada no se sigue editando aunque sobre tiempo.
+ *
+ * `fechaLimite` puede ser `null` mientras ELCOP no la confirme (ítem 22). Sin
+ * fecha se permite editar: el riesgo de que alguien entregue tarde es menor que
+ * el de bloquear a todos por un dato que falta.
+ */
+export function entregaAbierta(
+  entrega: Entrega,
+  fechaLimite: string | null,
+  ahora = new Date()
+): boolean {
+  if (entrega.estado === "aprobado") return false;
+  if (!fechaLimite) return true;
+  return new Date(fechaLimite) > ahora;
+}
+
+/** Días que faltan para la fecha límite. Negativo si ya pasó, `null` si no hay. */
+export function diasHastaLimite(fechaLimite: string | null, ahora = new Date()): number | null {
+  if (!fechaLimite) return null;
+  const milisegundosPorDia = 1000 * 60 * 60 * 24;
+  return Math.ceil((+new Date(fechaLimite) - +ahora) / milisegundosPorDia);
 }
 
 /** Resumen del estado académico que se muestra en el panel. */

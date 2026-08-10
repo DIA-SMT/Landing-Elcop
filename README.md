@@ -107,10 +107,11 @@ app/
   layout.tsx              fuentes, header, footer, metadatos
   page.tsx                home: las 9 secciones en orden
   publicaciones/          listado de notas
-  portal/                 Portal del Becario: panel, clases y mentorías
+  portal/                 Portal del Becario: panel, clases, mentorías, proyecto
   auth/cidituc/           ingreso y salida con Ciudadano Digital
   api/postulacion/        recepción del formulario (hoy no persiste)
   api/portal/consultas/   consultas de mentoría (hoy en memoria)
+  api/portal/entrega/     proyecto final (hoy en memoria)
 components/
   layout/                 Header (con menú móvil) y Footer
   home/                   una sección de la home por archivo
@@ -127,9 +128,10 @@ herramientas/             auditoría de accesibilidad y sesión de desarrollo
 ## Alcance
 
 La web pública está terminada. El **Portal del Becario** está en construcción:
-el ingreso con Ciudadano Digital funciona, y de sus cinco secciones están
-hechas tres —panel, Mis clases y Mentorías—. Faltan Proyecto final y Mi beca,
-que se muestran en la navegación marcadas como "Pronto".
+el ingreso con Ciudadano Digital funciona, y de sus cinco secciones están hechas
+cuatro —panel, Mis clases, Mentorías y Proyecto final—. Falta Mi beca, que se
+muestra en la navegación marcada como "Pronto" y depende de una definición de
+Legales.
 
 Lo que el portal todavía no tiene es **persistencia**: no hay base de datos, así
 que las asistencias y los materiales salen de una capa provisoria y las

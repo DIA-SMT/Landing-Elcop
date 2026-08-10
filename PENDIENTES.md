@@ -46,8 +46,9 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 | 19 | **Dominio definitivo y acceso al DNS** | Municipalidad | El deploy. |
 | 20 | **Dominio de envío de emails verificado** (SPF, DKIM, DMARC) | Sistemas del municipio | Confirmaciones e invitaciones. **Es el trámite más lento: conviene arrancarlo primero.** |
 | 21 | **Aval para alojar datos personales en la nube** | Municipalidad | La elección de infraestructura. |
-| 22 | **Formato, tamaño y fecha límite del trabajo final** | ELCOP | La pantalla de entrega. |
-| 23 | **Si el trabajo final tiene jurado y puntaje** | ELCOP | La vista del comité académico: no es lo mismo descargar archivos que evaluarlos. |
+| 22 | **Fecha límite del trabajo final**, y formato y tamaño del adjunto | ELCOP | **Ya no bloquea la pantalla**, que está construida. La fecha se configura con `PORTAL_FECHA_LIMITE_ENTREGA` y hoy está vacía: la pantalla muestra "A confirmar" y no rechaza nada por vencimiento. El formato y el tamaño son del adjunto opcional, que además espera almacenamiento (Fase 1). |
+| 23 | **Si el trabajo final tiene jurado y puntaje** | ELCOP | La vista del comité académico, que es lo que falta del proyecto final. No bloquea la entrega del becario. |
+| 32 | **Confirmar las cinco secciones del proyecto y su largo** | ELCOP | Los campos —problema, diagnóstico, propuesta, recursos, viabilidad— salen del prototipo, donde parecen venir de la rúbrica real, y las preguntas de ayuda las escribimos nosotros. Los mínimos y máximos son nuestros: 200 a 4.000 caracteres por sección. |
 | 31 | ⚠️ **URGENTE — el prototipo de Replit guarda las contraseñas en texto plano** | Félix Agustín Paz / Dirección de IA | En `artifacts/api-server/src/routes/auth.ts`, `checkPassword` compara con `===`. La columna se llama `passwordHash`, lo que hace parecer que estuvieran hasheadas. Además `replit.md` trae credenciales de prueba versionadas (`ana.gomez@elcop.edu.ar` / `becario123`). **Hay que verificar si ese Repl está publicado**: si lo está, cualquiera con el enlace entra como becario. El propio `replit.md` lo reconoce como pendiente, pero no puede sobrevivir a la mudanza. |
 | 25 | ~~Acceso al prototipo del Portal en Replit~~ | Félix Agustín Paz | El documento trae un enlace de invitación (`replit.com/join#…`), que sirve para sumar a una persona a la cuenta, no para mirar el proyecto. Hace falta la URL de la app publicada o el código exportado en zip. |
 | 26 | **Tres frases oficiales que hoy están parafraseadas** | — | El documento dice: *"Con el objetivo de promover el talento y la excelencia en la función pública, la Municipalidad de SMT y la UNSTA otorgan una Beca del 100%…"*; *"…permitiendo un aprendizaje flexible pero con fuerte anclaje en el networking presencial"*; y encadena cupos con proceso: *"Debido a que los cupos son limitados, el proceso de selección consta de dos etapas obligatorias"*. Falta decidir si se reemplazan por el texto textual. |
@@ -158,7 +159,7 @@ autentica contra CIDITUC, el identity provider del municipio.
 | Panel — termómetro de regularidad, estado académico, próximo encuentro | `/portal` | ✅ Hecho |
 | Mis clases — repositorio por módulo | `/portal/clases` | ✅ Hecho |
 | Mentorías — consultas y sesiones | `/portal/mentorias` | ✅ Hecho |
-| Proyecto final — carga de la entrega | — | ⬜ Sin empezar |
+| Proyecto final — formulario estructurado | `/portal/proyecto` | ✅ Hecho, sin el adjunto |
 | Mi beca — Contrato y Acta Compromiso | — | ⬜ Sin empezar |
 
 Las dos secciones sin empezar se muestran igual en la navegación, marcadas como

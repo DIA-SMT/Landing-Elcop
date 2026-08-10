@@ -36,7 +36,7 @@ const BASE = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "http://l
 // Sin sesión, `/portal` es la pantalla de ingreso: entra en el recorrido
 // público. Las de adentro sólo se pueden medir con la cookie puesta.
 const RUTAS = CON_SESION
-  ? ["/portal", "/portal/clases", "/portal/mentorias"]
+  ? ["/portal", "/portal/clases", "/portal/mentorias", "/portal/proyecto"]
   : ["/", "/publicaciones", "/portal"];
 const ANCHOS = [360, 768, 1440];
 

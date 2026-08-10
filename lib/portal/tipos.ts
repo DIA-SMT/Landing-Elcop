@@ -77,10 +77,37 @@ export type SesionMentoria = {
 
 export type EstadoEntrega = "sin-empezar" | "borrador" | "presentado" | "observado" | "aprobado";
 
+/**
+ * Las cinco secciones del proyecto final, además del título y el resumen.
+ *
+ * Es un formulario estructurado y no un archivo a propósito: ochenta proyectos
+ * en campos comparables se evalúan, y ochenta PDF sueltos son cajas negras. El
+ * razonamiento está en `ESQUEMA.md` §5.4.
+ *
+ * TODO: confirmar con ELCOP los campos y el largo esperado de cada uno. Salen
+ * del prototipo, donde parecen venir de la rúbrica real.
+ */
+export const SECCIONES_PROYECTO = [
+  "problema",
+  "diagnostico",
+  "propuesta",
+  "presupuesto",
+  "viabilidad"
+] as const;
+
+export type SeccionProyecto = (typeof SECCIONES_PROYECTO)[number];
+
 export type Entrega = {
   estado: EstadoEntrega;
   titulo: string | null;
+  resumen: string | null;
+  /** Las cinco secciones. Vacías mientras no se escribieron. */
+  secciones: Record<SeccionProyecto, string>;
   presentadoEn: string | null;
+  /** Última vez que se guardó, presentada o no. */
+  guardadaEn: string | null;
+  /** Observaciones del comité, cuando el estado es `observado`. */
+  observaciones: string | null;
 };
 
 export type Acta = {
