@@ -28,6 +28,22 @@ import { identificar, permitirLlamada } from "@/lib/chat/limite";
  * un chat eso se lee como que se colgó.
  */
 
+/**
+ * Cuenta por qué falló la llamada, en dos niveles.
+ *
+ * - `resumen` sale **siempre**, también en producción. Sin una línea en los
+ *   registros, una clave sin saldo se ve igual que todo funcionando: el
+ *   visitante ve "no está disponible" y nadie se entera nunca.
+ * - `detalle` sale **sólo en desarrollo**. Es el cuerpo que manda el proveedor,
+ *   y puede traer datos de la cuenta. Mismo criterio que `lib/cidituc-perfil.ts`.
+ *
+ * Ninguno de los dos imprime la clave.
+ */
+function diagnosticar(resumen: string, detalle?: string): void {
+  const enDesarrollo = process.env.NODE_ENV !== "production";
+  console.warn(`[chat] ${resumen}${enDesarrollo && detalle ? ` — ${detalle}` : ""}`);
+}
+
 const MODELO_POR_OMISION = "anthropic/claude-haiku-4.5";
 const LIMITES = { mensaje: 600, turnos: 8 } as const;
 const TIEMPO_LIMITE_MS = 30_000;
@@ -106,8 +122,13 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${clave}`,
         "Content-Type": "application/json",
         // OpenRouter los usa para atribuir el tráfico en su panel.
+        //
+        // Sólo ASCII: un valor de cabecera es una ByteString, así que cualquier
+        // carácter por encima de 255 —una raya larga, una tilde— hace fallar el
+        // `fetch` entero antes de salir a la red. Acá había un "ELCOP — Escuela"
+        // y rompía todas las llamadas.
         "HTTP-Referer": process.env.NEXT_PUBLIC_SITIO_URL ?? "https://landing-elcop.vercel.app",
-        "X-Title": "ELCOP — Escuela de Liderazgo y Comunicación Política"
+        "X-Title": "ELCOP"
       },
       body: JSON.stringify({
         model: process.env.OPENROUTER_MODELO ?? MODELO_POR_OMISION,
@@ -120,13 +141,30 @@ export async function POST(request: Request) {
         temperature: 0.2
       })
     });
-  } catch {
-    return error("El asistente tardó demasiado. Probá de nuevo.", 504);
+  } catch (fallo) {
+    // El nombre del error alcanza para saber qué clase de falla es: TimeoutError
+    // es el proveedor, cualquier otra cosa somos nosotros. El mensaje va aparte
+    // porque es texto libre de una librería y no se controla qué trae.
+    const nombre = (fallo as Error)?.name ?? "Error";
+    diagnosticar(`la llamada falló con ${nombre}`, (fallo as Error)?.message);
+
+    // Decir "tardó demasiado" ante un error de programación manda a esperar por
+    // algo que solo nunca va a mejorar.
+    return nombre === "TimeoutError"
+      ? error("El asistente tardó demasiado. Probá de nuevo.", 504)
+      : error("El asistente no está disponible en este momento.", 502);
   }
 
   if (!respuesta.ok || !respuesta.body) {
-    // El detalle del proveedor no se reenvía: puede traer datos de la cuenta.
-    console.error("OpenRouter respondió", respuesta.status);
+    // El cuerpo del error del proveedor no se reenvía al visitante ni se
+    // registra en producción: puede traer datos de la cuenta. En desarrollo sí,
+    // que es lo que permite distinguir una clave sin saldo de un modelo mal
+    // escrito. El código de estado, en cambio, se registra siempre.
+    const cuerpo =
+      process.env.NODE_ENV === "production"
+        ? undefined
+        : (await respuesta.text().catch(() => "")).slice(0, 300);
+    diagnosticar(`OpenRouter respondió ${respuesta.status}`, cuerpo);
     return error("El asistente no está disponible en este momento.", 502);
   }
 
