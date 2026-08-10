@@ -176,15 +176,12 @@ En orden de urgencia.
 
 1. **⚠️ El prototipo de Replit guarda contraseñas en texto plano** y tiene
    credenciales de prueba versionadas. *Verificar si está publicado.* Ítem 31.
-2. **DITEC tiene que registrar ELCOP en CIDITUC.** Bloquea que el ingreso al
-   portal funcione fuera de desarrollo, y por eso el botón sigue oculto. Hay
-   **dos caminos preparados y la elección no es técnica**: por CiDiTuc —rama
-   pusheada, PR sin abrir, [`docs/pr-cidituc.md`](docs/pr-cidituc.md)— o por
-   Derivador, que es como Agustín integró UrbanIA y **ya está mergeado del lado
-   de ellos** —[`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md)—.
-   Nuestro código funciona igual con los dos: entregan el mismo `?auth=<token>`
-   al mismo callback. **Hay que preguntarle a Agustín por qué eligió Derivador**
-   antes de decidir.
+2. **DITEC tiene que desplegar el ingreso de ELCOP en Derivador.** Bloquea que el
+   ingreso funcione fuera de desarrollo, y por eso el botón sigue oculto. Rama
+   pusheada, **falta abrir el PR**:
+   [`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md). Ojo: el PR
+   #96 de Agustín está mergeado en `dev` **pero no desplegado**, así que el
+   despliegue —no el merge— es lo que destraba esto.
 3. **⚠️ La cadena de certificados de `estadisticas.smt.gob.ar:5000`.** Es un
    **segundo bloqueo independiente del PR**, y estaba archivado como no urgente:
    era cierto mientras el botón estuviera oculto, y deja de serlo justo cuando
@@ -356,9 +353,22 @@ script detecta la conversión y lo explica, pero conviene saberlo antes.
 termina en `#/login` y sin comillas el `#` abre un comentario: se pierde la ruta
 y la redirección no vuelve nunca.
 
-**El identificador de la app en CIDITUC no es una URL nuestra.** Es una clave
-que su `PrivateRoute.jsx` mapea a una URL de vuelta fija. Si el valor no está en
-esa lista, la persona termina en el derivador de CIDITUC y no vuelve al portal.
+**⚠️ Los nombres de los repos de CiDiTuc están cruzados respecto de los
+dominios.** Verificado comparando los bundles desplegados:
+`cidituc.smt.gob.ar` sirve el repo **`derivador`** —su bundle trae `Libre Deuda` y
+`Combustibles`— y `ciudaddigital.smt.gob.ar` sirve el repo **`cidituc`** —trae
+`hub-ia` y `juventudyaccion`—. Los títulos también están al revés. Nos costó un PR
+apuntado a la app equivocada: apuntamos el ingreso a `cidituc.smt.gob.ar`, así
+que **el repo que hay que tocar es `derivador`**.
+
+**El identificador de la app no es una URL nuestra.** Es una clave que la app de
+ingreso mapea a una URL de vuelta. En `derivador` esa URL es una variable de
+entorno (`VITE_APP_ELCOP_CALLBACK_URL`); en `cidituc` está hardcodeada. Si la
+clave no está registrada, la persona se autentica y no vuelve al portal.
+
+**Derivador usa `HashRouter`:** la ruta va después del `#`. Sin él cae en la ruta
+comodín, `getAuth()` no encuentra token y expulsa a `ciudaddigital.smt.gob.ar`,
+que se lee como si la pantalla no existiera.
 
 **Las consultas de mentoría desaparecen al reiniciar el servidor.** No es un
 bug: es el `Map` en memoria de §2.

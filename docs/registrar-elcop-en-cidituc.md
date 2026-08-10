@@ -1,5 +1,22 @@
 # Registrar ELCOP en CIDITUC
 
+> ## ⚠️ El diagnóstico de este documento es incorrecto
+>
+> **El camino vigente es** [`ingreso-por-derivador.md`](ingreso-por-derivador.md).
+>
+> Acá se atribuye el problema al `else` final de `PrivateRoute.jsx` del repo
+> `cidituc`. Esa app se despliega en `ciudaddigital.smt.gob.ar`, y nosotros
+> mandamos a la gente a `cidituc.smt.gob.ar`, que sirve el repo `derivador`. Los
+> nombres de las carpetas están cruzados respecto de los dominios.
+>
+> **Lo que pasaba de verdad:** en `cidituc.smt.gob.ar` el login es el del
+> Derivador, que no tenía ningún soporte de `next` hasta el PR #96 de Agustín. Por
+> eso, después de autenticarse, navegaba a `/home` — el síntoma que se describe
+> abajo, con la causa equivocada.
+>
+> Se conserva porque las secciones "Cómo probar antes de que esté desplegado" y
+> "Lo que este proyecto ya tiene resuelto" siguen sirviendo.
+
 Para que CIDITUC devuelva al Portal del Becario después del ingreso, hay que
 agregar a ELCOP en su lista de aplicaciones conocidas. **Sin esto el ingreso no
 funciona**, y el síntoma es confuso: la persona se autentica bien y termina en

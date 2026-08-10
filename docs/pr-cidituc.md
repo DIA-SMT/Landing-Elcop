@@ -1,10 +1,31 @@
-# PR en CiDiTuc — registrar ELCOP en el derivador
+# PR en CiDiTuc — DESCARTADO, apuntaba a la app equivocada
 
-Rama `elcop-portal-becario` **ya pusheada** a `ditec-desarrollo/cidituc`.
+> ## ⛔ No abrir este PR
+>
+> **El camino elegido es por Derivador:**
+> [`ingreso-por-derivador.md`](ingreso-por-derivador.md).
+>
+> Este cambio va al repo `cidituc`, que se despliega en
+> **`ciudaddigital.smt.gob.ar`**. Nosotros mandamos a la gente a
+> **`cidituc.smt.gob.ar`**, que sirve el repo `derivador`. Los nombres de las
+> carpetas están cruzados respecto de los dominios, y eso fue lo que nos
+> confundió: verificado comparando los bundles desplegados, no deducido.
+>
+> Aunque DITEC lo hubiera mergeado y desplegado, **el ingreso habría seguido sin
+> funcionar**, porque el cambio no vive en la app a la que apuntamos.
+>
+> La rama `elcop-portal-becario` quedó pusheada en ese repo. **Conviene borrarla**
+> para que nadie la mergee por error.
+>
+> El diagnóstico de abajo —"cae en el `else` final de `PrivateRoute.jsx`"— es
+> incorrecto. El síntoma real era otro: en `cidituc.smt.gob.ar` el login es el del
+> Derivador, que no tenía soporte de `next` hasta el PR #96 de Agustín, así que
+> después de autenticarse navegaba a `/home`.
+>
+> Se conserva el documento porque el razonamiento sobre el redirector abierto y la
+> nota del dominio siguen valiendo.
 
-**Abrir el PR:**
-<https://github.com/ditec-desarrollo/cidituc/pull/new/elcop-portal-becario>
-
+Rama `elcop-portal-becario` pusheada a `ditec-desarrollo/cidituc`.
 Base: `master`. Un commit, `394bd46`, 13 líneas en `src/routes/PrivateRoute.jsx`.
 
 ---
