@@ -5,11 +5,10 @@
  * ELCOP. Sin esto, `/portal` muestra "Próximamente" y no hay manera de llegar al
  * panel: la cookie la emite el callback, y el callback necesita a CIDITUC.
  *
- * Uso:
- *   node herramientas/ver-portal.mjs [ruta] [base]
+ * Uso, con `npm run dev` corriendo en otra terminal:
  *
- *   node herramientas/ver-portal.mjs                    → /portal
- *   node herramientas/ver-portal.mjs portal/mentorias   → esa pantalla
+ *   npm run portal                                      → /portal
+ *   node herramientas/ver-portal.mjs portal/proyecto    → esa pantalla
  *
  * **La ruta va sin barra inicial.** En Git Bash sobre Windows, un argumento que
  * empieza con `/` se convierte en una ruta del sistema —`/portal` termina como
@@ -80,7 +79,11 @@ await pagina.setCookie(cookieDeSesion(BASE));
 try {
   await pagina.goto(`${BASE}${RUTA}`, { waitUntil: "domcontentloaded" });
 } catch {
-  console.error(`No pude abrir ${BASE}${RUTA}. ¿Está corriendo npm run dev?`);
+  console.error(
+    `No pude abrir ${BASE}${RUTA}.\n` +
+      "Casi siempre es que no hay servidor: abrí otra terminal y dejá corriendo\n" +
+      "  npm run dev"
+  );
   await navegador.close();
   process.exit(1);
 }

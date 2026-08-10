@@ -25,19 +25,28 @@ Otros comandos: `npm run build`, `npm run start`, `npm run typecheck`.
 
 ### Ver el Portal del Becario
 
-Las pantallas del portal exigen sesión, y la sesión la emite el callback de
-CIDITUC. Mientras DITEC no registre ELCOP eso no pasa, así que `/portal` muestra
-"Próximamente" y no hay forma de llegar al panel desde el navegador.
+**Si entrás a `/portal` en el navegador vas a ver "Próximamente", y está bien.**
+Las pantallas del portal exigen una cookie de sesión que emite el callback de
+CIDITUC, y eso no va a pasar hasta que DITEC despliegue el ingreso. Lo mismo vale
+para el sitio publicado: ahí "Próximamente" es el estado correcto hasta entonces.
 
-Con el servidor corriendo:
+Para verlo en desarrollo, con `npm run dev` corriendo en otra terminal:
 
 ```bash
-node herramientas/ver-portal.mjs portal
+npm run portal
 ```
 
-Abre una ventana con la cookie de sesión ya puesta. La ruta va **sin barra
-inicial** —Git Bash convierte `/portal` en una ruta de Windows— y acepta
-cualquier pantalla: `portal/clases`, `portal/mentorias`.
+Abre una ventana con la cookie ya puesta. Para una pantalla puntual:
+
+```bash
+node herramientas/ver-portal.mjs portal/proyecto
+```
+
+La ruta va **sin barra inicial**: Git Bash convierte `/portal` en una ruta de
+Windows. Acepta `portal/clases`, `portal/mentorias`, `portal/proyecto`.
+
+Si preferís usar tu navegador de siempre, `npm run sesion` imprime la cookie para
+pegarla en DevTools → Application → Cookies.
 
 Para ver datos en vez de pantallas vacías, `PORTAL_DATOS_DEMO=true` en
 `.env.local`. Vacío es el estado correcto mientras no haya base, y es lo que un
@@ -50,11 +59,11 @@ de servicio en un sistema que va a custodiar datos personales.
 ### Verificar accesibilidad
 
 ```bash
-node herramientas/auditar.mjs
+npm run auditar
 ```
 
 ```bash
-node herramientas/auditar.mjs --portal
+npm run auditar:portal
 ```
 
 El primero recorre las páginas públicas; el segundo, las de adentro del portal,
