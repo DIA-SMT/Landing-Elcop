@@ -177,10 +177,14 @@ En orden de urgencia.
 1. **⚠️ El prototipo de Replit guarda contraseñas en texto plano** y tiene
    credenciales de prueba versionadas. *Verificar si está publicado.* Ítem 31.
 2. **DITEC tiene que registrar ELCOP en CIDITUC.** Bloquea que el ingreso al
-   portal funcione fuera de desarrollo, y por eso el botón sigue oculto. La rama
-   `elcop-portal-becario` **ya está pusheada** a `ditec-desarrollo/cidituc`;
-   falta abrir el PR, con el texto listo en
-   [`docs/pr-cidituc.md`](docs/pr-cidituc.md).
+   portal funcione fuera de desarrollo, y por eso el botón sigue oculto. Hay
+   **dos caminos preparados y la elección no es técnica**: por CiDiTuc —rama
+   pusheada, PR sin abrir, [`docs/pr-cidituc.md`](docs/pr-cidituc.md)— o por
+   Derivador, que es como Agustín integró UrbanIA y **ya está mergeado del lado
+   de ellos** —[`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md)—.
+   Nuestro código funciona igual con los dos: entregan el mismo `?auth=<token>`
+   al mismo callback. **Hay que preguntarle a Agustín por qué eligió Derivador**
+   antes de decidir.
 3. **⚠️ La cadena de certificados de `estadisticas.smt.gob.ar:5000`.** Es un
    **segundo bloqueo independiente del PR**, y estaba archivado como no urgente:
    era cierto mientras el botón estuviera oculto, y deja de serlo justo cuando
