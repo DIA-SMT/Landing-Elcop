@@ -94,14 +94,20 @@ Autenticación con **CIDITUC**, el identity provider del municipio
 `app/auth/cidituc/callback/route.ts` la establece. Por eso todas las páginas del
 portal son `force-dynamic`: no se pueden prerenderizar.
 
+**Probado de punta a punta el 10 de agosto de 2026**, con una cuenta real contra
+el backend de producción: Derivador local → callback → portal con la sesión
+firmada. En el camino aparecieron dos bugs nuestros en la lectura del perfil, ya
+corregidos (`7de67e1`).
+
 Dos cosas que ya se resolvieron y conviene no volver a discutir: no se guarda la
 clave de firma de CIDITUC (`b9439a8`) — el perfil se consulta a
-`/usuarios/authStatus` y esa consulta valida el token de paso; y el botón de
-ingreso está oculto hasta que DITEC despliegue (`5100a07`).
+`/usuarios/authStatus` y esa consulta valida el token, verificado con un token
+falso que devuelve 401; y el botón de ingreso está oculto en producción hasta que
+DITEC despliegue (`5100a07`).
 
-**Falta que DITEC registre ELCOP en CIDITUC.** Está pedido en
-[`docs/pedido-a-ditec.md`](docs/pedido-a-ditec.md) y el procedimiento en
-[`docs/registrar-elcop-en-cidituc.md`](docs/registrar-elcop-en-cidituc.md).
+**Todo lo del ingreso está en un solo lugar:**
+[`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md) — cómo funciona, cómo
+probarlo, las trampas del backend y lo que falta para producción.
 
 ### Lo último que se hizo: Mentorías
 
@@ -262,7 +268,7 @@ En orden de urgencia.
 2. **DITEC tiene que desplegar el ingreso de ELCOP en Derivador.** Bloquea que el
    ingreso funcione fuera de desarrollo, y por eso el botón sigue oculto. Rama
    pusheada, **falta abrir el PR**:
-   [`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md). Ojo: el PR
+   [`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md). Ojo: el PR
    #96 de Agustín está mergeado en `dev` **pero no desplegado**, así que el
    despliegue —no el merge— es lo que destraba esto.
 3. **⚠️ La cadena de certificados de `estadisticas.smt.gob.ar:5000`.** Es un
@@ -301,7 +307,7 @@ Así que las dos cosas que siguen son de gestión, no de teclado:
 
 **Abrir el PR de Derivador y avisarle a Agustín.** Es lo que destraba el ingreso,
 y está todo escrito en
-[`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md). Ojo: lo que
+[`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md). Ojo: lo que
 hace falta es el **despliegue**, no el merge.
 
 **Sentarse con la Coordinación Administrativa.** Sigue siendo lo único de alto
