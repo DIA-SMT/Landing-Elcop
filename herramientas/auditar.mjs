@@ -9,6 +9,12 @@
  *
  * Uso:
  *   node herramientas/auditar.mjs [http://localhost:3000]
+ *   node herramientas/auditar.mjs --portal
+ *
+ * Con `--portal` audita las pantallas de adentro del portal, que exigen sesión.
+ * La cookie la firma `sesion-dev.mjs` y se inyecta en el navegador: sin eso, en
+ * `/portal` se mediría la pantalla de ingreso y no el panel, que es lo que pasó
+ * hasta que Mentorías obligó a resolverlo.
  *
  * Necesita el servidor corriendo y puppeteer-core:
  *   npm i --no-save puppeteer-core
@@ -21,8 +27,17 @@
 import { existsSync } from "node:fs";
 import puppeteer from "puppeteer-core";
 
-const BASE = process.argv[2] ?? "http://localhost:3000";
-const RUTAS = ["/", "/publicaciones", "/portal"];
+import { avisarSiFaltanDatos, cargarEntorno, cookieDeSesion } from "./sesion-dev.mjs";
+
+const CON_SESION = process.argv.includes("--portal");
+// Los flags se filtran para que `--portal` no se tome por la URL base.
+const BASE = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "http://localhost:3000";
+
+// Sin sesión, `/portal` es la pantalla de ingreso: entra en el recorrido
+// público. Las de adentro sólo se pueden medir con la cookie puesta.
+const RUTAS = CON_SESION
+  ? ["/portal", "/portal/clases", "/portal/mentorias"]
+  : ["/", "/publicaciones", "/portal"];
 const ANCHOS = [360, 768, 1440];
 
 const CANDIDATOS_CHROME = [
@@ -132,10 +147,16 @@ const navegador = await puppeteer.launch({
 
 let fallaron = 0;
 
+if (CON_SESION) {
+  cargarEntorno();
+  avisarSiFaltanDatos();
+}
+
 for (const ruta of RUTAS) {
   for (const ancho of ANCHOS) {
     const pagina = await navegador.newPage();
     await pagina.setViewport({ width: ancho, height: 900 });
+    if (CON_SESION) await pagina.setCookie(cookieDeSesion(BASE));
     await pagina.goto(`${BASE}${ruta}`, { waitUntil: "networkidle0" });
     const r = await pagina.evaluate(auditar);
 

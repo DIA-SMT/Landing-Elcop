@@ -45,10 +45,13 @@ cambia.
   página, sin saltos de nivel, nada por debajo de 10px, ningún control por
   debajo de 44px.
 - El formulario público probado de punta a punta, y el menú móvil con teclado.
-- **Las tres pantallas del portal, con sesión, en 360, 768 y 1440:** sin fallas
-  de contraste, sin desborde, un solo `h1`, sin saltos de nivel y sin objetivos
-  táctiles chicos. El estado de error del formulario de Mentorías se midió
-  aparte, porque la auditoría recorre la página en reposo y nunca lo ve.
+- **Las tres pantallas del portal, con sesión, en 360, 768 y 1440**, y en los dos
+  estados —con datos de ejemplo y vacías—: sin fallas de contraste, sin desborde,
+  un solo `h1`, sin saltos de nivel y sin objetivos táctiles chicos. El estado de
+  error del formulario de Mentorías se midió aparte, porque la auditoría recorre
+  la página en reposo y nunca lo ve.
+- La sesión de desarrollo probada contra el servidor: **con** cookie renderiza el
+  panel, **sin** cookie las rutas internas devuelven 307 a `/portal`.
 - El envío de una consulta probado de punta a punta con datos de ejemplo.
 
 **Lo que todavía no se midió:** Lighthouse no corrió sobre las pantallas del
@@ -235,27 +238,36 @@ Para ver el portal con datos de ejemplo hace falta `PORTAL_DATOS_DEMO=true` en
 `.env.local`. Sin eso, las listas vienen vacías —que es el estado correcto
 mientras no haya base— y las pantallas se ven pero no muestran nada.
 
-### Auditar el portal, que la herramienta no alcanza
+### Ver y auditar el portal, que exige sesión
 
-`auditar.mjs` recorre `/`, `/publicaciones` y `/portal`, y **no sabe
-autenticarse**: en `/portal` mide la pantalla de ingreso, no el panel. Las
-pantallas con sesión quedan fuera de su alcance.
+Mientras DITEC no registre ELCOP, **nadie puede ver el portal en el navegador**:
+la cookie la emite el callback de CIDITUC, y sin ella `/portal` muestra
+"Próximamente". Encender `CIDITUC_INGRESO_HABILITADO` no ayuda — el botón lleva
+a CIDITUC, que todavía no reconoce ELCOP, y la persona queda en su derivador.
 
-La sesión es un JWT propio firmado con `ELCOP_SESSION_SECRET` —CIDITUC no
-participa de esa parte—, así que para auditarlas alcanza con emitir una cookie
-de prueba. Lo que se hizo para Mentorías, y conviene repetir en cada pantalla
-nueva del portal:
+Eso está resuelto con dos herramientas:
 
-1. Una ruta temporal de desarrollo que llame a `firmarSesion` y fije la cookie
-   `elcop_sesion` con los mismos flags que el callback, más un `404` si
-   `NODE_ENV` es producción.
-2. Una copia de `auditar.mjs` con las rutas del portal en `RUTAS`, que pase por
-   esa ruta una vez antes del recorrido: las páginas del mismo navegador
-   comparten cookies.
-3. Borrar las dos cosas antes de commitear.
+```bash
+node herramientas/ver-portal.mjs portal
+```
 
-**El estado de error de los formularios no lo ve nadie de eso**, porque la
-auditoría mide la página en reposo. Hay que provocarlo y medirlo aparte.
+```bash
+node herramientas/auditar.mjs --portal
+```
+
+La primera abre un navegador con la sesión puesta; la segunda audita las tres
+pantallas de adentro. Las dos firman la cookie con `ELCOP_SESSION_SECRET` desde
+`herramientas/sesion-dev.mjs`.
+
+**Por qué no hay una ruta de la aplicación que emita sesiones de prueba.** Sería
+una puerta de servicio en un sistema que va a custodiar datos personales, y su
+seguridad dependería de acertarle al `NODE_ENV` en cada despliegue. Firmando la
+cookie desde afuera, la aplicación no cambia y no queda nada que apagar en
+producción.
+
+**El estado de error de los formularios no lo ve la auditoría**, porque recorre
+la página en reposo. Hay que provocarlo y medirlo aparte, como se hizo con
+`.form-error` en Mentorías.
 
 ---
 
@@ -271,6 +283,12 @@ un `npm run dev` corriendo sobre el mismo `.next`. Frenalo y volvé a compilar.
 
 **Los mensajes de commit largos rompen en PowerShell.** Los here-strings con
 acentos y barras se parsean mal. Escribilos a un archivo y usá `git commit -F`.
+
+**Git Bash convierte los argumentos que empiezan con `/`.** `ver-portal.mjs
+/portal` llega al script como `C:/Program Files/Git/portal`, y el error que se
+ve —"no pude abrir"— manda a revisar el servidor cuando el problema era el
+argumento. Por eso la ruta va sin barra: `ver-portal.mjs portal/mentorias`. El
+script detecta la conversión y lo explica, pero conviene saberlo antes.
 
 **`NEXT_PUBLIC_CIDITUC_LOGIN_URL` va entre comillas en el `.env`.** La URL
 termina en `#/login` y sin comillas el `#` abre un comentario: se pierde la ruta

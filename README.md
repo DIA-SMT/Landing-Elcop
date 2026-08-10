@@ -23,6 +23,50 @@ Otros comandos: `npm run build`, `npm run start`, `npm run typecheck`.
 > hay un `npm run dev` corriendo sobre el mismo `.next`. Frenalo y volvé a
 > compilar.
 
+### Ver el Portal del Becario
+
+Las pantallas del portal exigen sesión, y la sesión la emite el callback de
+CIDITUC. Mientras DITEC no registre ELCOP eso no pasa, así que `/portal` muestra
+"Próximamente" y no hay forma de llegar al panel desde el navegador.
+
+Con el servidor corriendo:
+
+```bash
+node herramientas/ver-portal.mjs portal
+```
+
+Abre una ventana con la cookie de sesión ya puesta. La ruta va **sin barra
+inicial** —Git Bash convierte `/portal` en una ruta de Windows— y acepta
+cualquier pantalla: `portal/clases`, `portal/mentorias`.
+
+Para ver datos en vez de pantallas vacías, `PORTAL_DATOS_DEMO=true` en
+`.env.local`. Vacío es el estado correcto mientras no haya base, y es lo que un
+becario ve el primer día.
+
+La cookie se firma desde afuera con `ELCOP_SESSION_SECRET`: **no hay ninguna
+ruta de la aplicación que emita sesiones de prueba**, para no dejar una puerta
+de servicio en un sistema que va a custodiar datos personales.
+
+### Verificar accesibilidad
+
+```bash
+node herramientas/auditar.mjs
+```
+
+```bash
+node herramientas/auditar.mjs --portal
+```
+
+El primero recorre las páginas públicas; el segundo, las de adentro del portal,
+con sesión. Los dos necesitan el servidor corriendo y
+`npm i --no-save puppeteer-core`, y devuelven código distinto de cero si algo
+falla, así que sirven en un hook o en integración continua.
+
+**El contraste se mide contra el fondo efectivo**, subiendo por el árbol hasta
+un color opaco. Dos cosas que la auditoría no ve: el texto sobre el video del
+hero, y los estados de error de los formularios, porque recorre la página en
+reposo. Ésos se miden a mano.
+
 ## Cómo se edita el contenido
 
 **Todo el contenido vive en [`content/elcop.ts`](content/elcop.ts).** Cambiar
@@ -63,26 +107,38 @@ app/
   layout.tsx              fuentes, header, footer, metadatos
   page.tsx                home: las 9 secciones en orden
   publicaciones/          listado de notas
-  portal/                 placeholder del Portal del Becario
+  portal/                 Portal del Becario: panel, clases y mentorías
+  auth/cidituc/           ingreso y salida con Ciudadano Digital
   api/postulacion/        recepción del formulario (hoy no persiste)
+  api/portal/consultas/   consultas de mentoría (hoy en memoria)
 components/
   layout/                 Header (con menú móvil) y Footer
   home/                   una sección de la home por archivo
+  portal/                 marco, panel y pantallas del portal
   ui/                     Reveal y ContadorAnimado
 content/elcop.ts          todo el contenido, tipado
+lib/
+  cidituc.ts              firma y verificación de la sesión
+  padron.ts               quién tiene derecho a entrar (provisorio)
+  portal/                 tipos, cálculos y datos del portal
+herramientas/             auditoría de accesibilidad y sesión de desarrollo
 ```
 
 ## Alcance
 
-Esta iteración cubre **sólo la web pública**. El Portal del Becario (login,
-dashboard, asistencia, repositorio de clases, carga del proyecto final) queda
-fuera: `/portal` es una página con "Próximamente" y no hay autenticación
-simulada.
+La web pública está terminada. El **Portal del Becario** está en construcción:
+el ingreso con Ciudadano Digital funciona, y de sus cinco secciones están
+hechas tres —panel, Mis clases y Mentorías—. Faltan Proyecto final y Mi beca,
+que se muestran en la navegación marcadas como "Pronto".
+
+Lo que el portal todavía no tiene es **persistencia**: no hay base de datos, así
+que las asistencias y los materiales salen de una capa provisoria y las
+consultas de mentoría se guardan en memoria del proceso. Está anotado en
+[`PENDIENTES.md`](PENDIENTES.md) §2.
 
 La segunda etapa —sitio auto-gestionable, formulario de inscripción real y
 entrega del trabajo final— está planificada en [`PLAN.md`](PLAN.md). Implica
-sumar CMS, base de datos y autenticación, que es justamente lo que esta
-iteración dejó afuera.
+sumar CMS y base de datos, que es lo que sigue pendiente.
 
 ## Convenciones
 
