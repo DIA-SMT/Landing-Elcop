@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { PUBLICACIONES, formatearFecha } from "@/content/elcop";
 import { Reveal } from "@/components/ui/Reveal";
+import { ChatDiferido } from "@/components/chat/ChatDiferido";
 
 export const metadata: Metadata = {
   title: "Publicaciones",
@@ -84,6 +85,8 @@ export default function PaginaPublicaciones() {
           </li>
         ))}
       </ul>
+      {/* Sólo en las páginas públicas, y diferido: ver ChatDiferido. */}
+      <ChatDiferido />
     </section>
   );
 }
