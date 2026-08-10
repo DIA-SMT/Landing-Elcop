@@ -174,7 +174,8 @@ inventado lo va a tomar por real.
 
 | Qué | De quién / de qué depende |
 |---|---|
-| **Que DITEC registre ELCOP en CIDITUC** | Sin eso el ingreso no funciona fuera de desarrollo, y por eso el botón sigue oculto. Pedido en [`docs/pedido-a-ditec.md`](docs/pedido-a-ditec.md). |
+| **Que DITEC registre ELCOP en CIDITUC** | Sin eso el ingreso no funciona fuera de desarrollo, y por eso el botón sigue oculto. **Rama ya pusheada; falta abrir el PR:** ver [`docs/pr-cidituc.md`](docs/pr-cidituc.md). |
+| ⚠️ **Que `estadisticas.smt.gob.ar:5000` mande la cadena completa de certificados** | **Segundo bloqueo, independiente del PR.** El servidor envía sólo el certificado final y Node falla con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (verificado el 10/8/2026). El código prohíbe desactivar la verificación en producción, así que el ingreso no va a funcionar aunque DITEC despliegue. Alternativa de nuestro lado: cargar el intermedio en `CIDITUC_CA_PEM`. |
 | **Persistencia real** de asistencias, materiales y consultas | La base de datos, que depende del ítem 21. Ver §2 b. |
 | **Calendario de encuentros** | ELCOP, ítem 28. Es lo que convierte el panel y Mis clases en algo con datos propios. |
 | ~~Medir las pantallas del portal~~ | **Hecho.** Lighthouse da 100 en Accesibilidad, Buenas prácticas y SEO en las tres, con Performance de 96 a 100. Encontró dos fallas que la auditoría propia no detecta: ver `CONTEXTO.md` §6. |

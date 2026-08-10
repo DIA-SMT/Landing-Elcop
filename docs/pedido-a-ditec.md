@@ -1,7 +1,13 @@
 # Pedido a DITEC — registrar ELCOP en el ingreso de CiDiTuc
 
-Texto listo para reenviar. El cambio está preparado en la rama local
-`elcop-portal-becario` del repositorio `ditec-desarrollo/cidituc`.
+> **El pedido ya no va por mail: va por PR.** La rama `elcop-portal-becario`
+> está pusheada a `ditec-desarrollo/cidituc`, y el texto para el pull request
+> está en [`pr-cidituc.md`](pr-cidituc.md).
+>
+> Este documento se conserva porque el razonamiento sigue valiendo, pero **la
+> vía correcta es el PR**: es como trabaja el equipo de DITEC —su `master` avanza
+> por pull requests, y `hub-ia` entró así— y es donde efectivamente miran. Un
+> pedido por mail queda esperando que alguien lo lea.
 
 ---
 
@@ -80,13 +86,23 @@ Vale tenerlo presente por dos motivos, ninguno bloqueante:
 Del lado nuestro sumar un dominio propio en Vercel es trivial y no rompe nada:
 el costo real de cambiar está en coordinar el segundo despliegue con DITEC.
 
-**No pushear a `ditec-desarrollo/cidituc` sin que ellos lo pidan.** Es un
-sistema del que dependen doce aplicaciones del municipio —turnos, catastro,
-presupuesto participativo— y un despliegue a destiempo ahí rompe cosas que no
-son nuestras.
+### Corregido: pushear la rama sí, mergear no
 
-El commit local está en la rama `elcop-portal-becario`. Si prefieren recibirlo
-como parche en vez de como rama, se genera con:
+Este documento decía **"no pushear a `ditec-desarrollo/cidituc` sin que ellos lo
+pidan"**, por ser un sistema del que dependen doce aplicaciones del municipio
+—turnos, catastro, presupuesto participativo—. La precaución era correcta pero
+estaba mal apuntada, y nos costó tiempo:
+
+**Lo riesgoso es el merge y el despliegue, no la rama.** Pushear una rama no
+despliega nada, y el merge lo deciden ellos igual. Al frenarnos un paso antes, el
+pedido quedó como un texto en un `.md` esperando que alguien leyera un mail, en
+vez de estar en su cola de pull requests. Su `master` avanza por PRs y las ramas
+de feature conviven en el remoto sin molestar a nadie.
+
+Lo que sigue valiendo: **no mergear ni desplegar nada nuestro en sus repos.**
+
+El commit es `394bd46`, en la rama `elcop-portal-becario`, ya pusheada. Si
+alguna vez prefieren recibirlo como parche en vez de como rama:
 
 ```bash
 git format-patch origin/master

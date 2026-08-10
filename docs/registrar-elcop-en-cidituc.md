@@ -61,15 +61,36 @@ producción y se descomenta la de `localhost`.
 3. En el `.env.local` de este proyecto, apuntar
    `NEXT_PUBLIC_CIDITUC_LOGIN_URL` al CIDITUC local. Ojo con el puerto: Vite
    usa 5173, pero si está ocupado salta a 5174.
-4. Poner en `CIDITUC_JWT_SECRET` el mismo `JWT_SECRET_KEY` del backend local.
+4. Apuntar `CIDITUC_BACKEND_URL` al backend local. Con `http://` alcanza en
+   desarrollo; en producción el código lo rechaza, porque el token viajaría sin
+   cifrar.
 5. Agregar el documento de prueba a `ELCOP_PADRON_PROVISORIO`.
+
+> **No hace falta ninguna clave de firma de CiDiTuc.** Este paso pedía poner su
+> `JWT_SECRET_KEY` en `CIDITUC_JWT_SECRET`, una variable que ya no existe: se
+> quitó al ver que la consulta del perfil valida el token de todos modos —el
+> backend verifica la firma antes de responder—. Guardar una clave compartida por
+> las doce aplicaciones del municipio, para una comprobación que ya se hacía, era
+> ampliar el daño de una filtración a cambio de nada.
 
 ## Lo que este proyecto ya tiene resuelto
 
-- La verificación de la firma del token, sin llamada de red.
-- La consulta del perfil al backend de CIDITUC.
+- La consulta del perfil al backend de CIDITUC, que trae el documento **y valida
+  el token de paso**: ellos verifican la firma antes de responder, así que uno
+  falso o vencido no devuelve una persona.
 - La comprobación contra el padrón de becarios, que es lo que impide que
   cualquier vecino con cuenta entre al portal.
-- La sesión propia, en una cookie firmada aparte.
+- La sesión propia, en una cookie firmada aparte con `ELCOP_SESSION_SECRET`.
+- El callback, publicado en producción desde `main`.
 
-Lo único que falta es que CIDITUC sepa a dónde devolver.
+## Lo que falta
+
+1. **Que CIDITUC sepa a dónde devolver.** Es el PR: ver
+   [`pr-cidituc.md`](pr-cidituc.md).
+2. **Que `estadisticas.smt.gob.ar:5000` mande la cadena completa de
+   certificados.** Hoy envía sólo el certificado final y Node falla con
+   `UNABLE_TO_VERIFY_LEAF_SIGNATURE`. **Es un segundo bloqueo, independiente del
+   PR:** con la cadena incompleta el ingreso no funciona en producción aunque
+   DITEC despliegue, porque el código prohíbe desactivar la verificación fuera de
+   desarrollo. La alternativa de nuestro lado es cargar el intermedio en
+   `CIDITUC_CA_PEM`.

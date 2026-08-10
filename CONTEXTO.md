@@ -177,18 +177,30 @@ En orden de urgencia.
 1. **⚠️ El prototipo de Replit guarda contraseñas en texto plano** y tiene
    credenciales de prueba versionadas. *Verificar si está publicado.* Ítem 31.
 2. **DITEC tiene que registrar ELCOP en CIDITUC.** Bloquea que el ingreso al
-   portal funcione fuera de desarrollo, y por eso el botón sigue oculto.
-3. **Dominio de envío de correo** con SPF, DKIM y DMARC. Es el trámite más
+   portal funcione fuera de desarrollo, y por eso el botón sigue oculto. La rama
+   `elcop-portal-becario` **ya está pusheada** a `ditec-desarrollo/cidituc`;
+   falta abrir el PR, con el texto listo en
+   [`docs/pr-cidituc.md`](docs/pr-cidituc.md).
+3. **⚠️ La cadena de certificados de `estadisticas.smt.gob.ar:5000`.** Es un
+   **segundo bloqueo independiente del PR**, y estaba archivado como no urgente:
+   era cierto mientras el botón estuviera oculto, y deja de serlo justo cuando
+   DITEC despliega. El servidor manda sólo el certificado final, sin el
+   intermedio de Sectigo, y Node falla con `UNABLE_TO_VERIFY_LEAF_SIGNATURE`
+   —verificado el 10 de agosto de 2026—. Como el código prohíbe desactivar la
+   verificación en producción, el ingreso no va a funcionar aunque el PR se
+   mergee. Lo resuelve infraestructura instalando la cadena, o nosotros cargando
+   el intermedio en `CIDITUC_CA_PEM`.
+4. **Dominio de envío de correo** con SPF, DKIM y DMARC. Es el trámite más
    lento y no arrancó. Depende de sistemas del municipio.
-4. **Fecha de apertura de la convocatoria.** Es lo único que le pone calendario
+5. **Fecha de apertura de la convocatoria.** Es lo único que le pone calendario
    real a la Fase 2, que es la única con fecha externa.
-5. **Aval para alojar datos personales en la nube.** Bloquea la Fase 1 — y con
+6. **Aval para alojar datos personales en la nube.** Bloquea la Fase 1 — y con
    ella, la persistencia real de las consultas de mentoría.
-6. **Consulta a Legales** sobre la validez exigida al Acta Compromiso. Define
+7. **Consulta a Legales** sobre la validez exigida al Acta Compromiso. Define
    el tamaño de la Fase 4C.
-7. **Calendario de encuentros de la cohorte.** Sin fechas de clase, el panel y
+8. **Calendario de encuentros de la cohorte.** Sin fechas de clase, el panel y
    Mis clases sólo pueden mostrar datos de ejemplo.
-8. **Cómo procesa hoy la coordinación las postulaciones.** No bloquea, pero
+9. **Cómo procesa hoy la coordinación las postulaciones.** No bloquea, pero
    define si el panel les sirve o les estorba.
 
 ---
