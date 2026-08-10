@@ -17,7 +17,11 @@
  * porque es una sesión legítima; lo que se saltea es CIDITUC y el padrón.
  *
  * Uso directo, para pegar la cookie a mano en el navegador:
- *   node herramientas/sesion-dev.mjs
+ *   npm run sesion
+ *   node herramientas/sesion-dev.mjs 31999888   → como esa persona
+ *
+ * El documento importa: si está en ELCOP_COMITE_PROVISORIO, la sesión llega a
+ * /comite; si sólo está en el padrón, no. Es la forma de probar los permisos.
  *
  * Lo usan `ver-portal.mjs` y `auditar.mjs --portal`.
  */
@@ -94,6 +98,17 @@ export function primerDocumentoDelPadron() {
   return primero;
 }
 
+/** El primer documento con rol de comité, para auditar `/comite`. */
+export function primerDocumentoDelComite() {
+  const primero = (process.env.ELCOP_COMITE_PROVISORIO ?? "").split(",")[0]?.replace(/\D/g, "");
+  if (!primero) {
+    throw new Error(
+      "Falta ELCOP_COMITE_PROVISORIO en .env.local: sin rol de comité, /comite responde 404."
+    );
+  }
+  return primero;
+}
+
 /** La cookie lista para `page.setCookie` de puppeteer. */
 export function cookieDeSesion(base, opciones) {
   const { hostname } = new URL(base);
@@ -127,10 +142,13 @@ export function avisarSiFaltanDatos() {
 // Ejecutado directamente: imprime la cookie para pegarla a mano.
 if (import.meta.filename === process.argv[1]) {
   cargarEntorno();
-  const documento = primerDocumentoDelPadron();
-  console.log(`Becario: documento ${documento} (primero del padrón provisorio)`);
+  const pedido = process.argv.slice(2).find((a) => /^\d[\d.\s]*$/.test(a));
+  const documento = pedido ? pedido.replace(/\D/g, "") : primerDocumentoDelPadron();
+  console.log(
+    `Documento ${documento}${pedido ? "" : " (primero del padrón provisorio)"}`
+  );
   console.log(`Vence: en ${DURACION_SESION_SEGUNDOS / 3600} horas\n`);
-  console.log(`${COOKIE_SESION}=${firmarSesionDev()}\n`);
+  console.log(`${COOKIE_SESION}=${firmarSesionDev({ documento })}\n`);
   console.log(
     "Para usarla: DevTools → Application → Cookies → http://localhost:3000,\n" +
       "y pegá ese nombre y valor. O corré `node herramientas/ver-portal.mjs`,\n" +

@@ -46,8 +46,10 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 | 19 | **Dominio definitivo y acceso al DNS** | Municipalidad | El deploy. |
 | 20 | **Dominio de envío de emails verificado** (SPF, DKIM, DMARC) | Sistemas del municipio | Confirmaciones e invitaciones. **Es el trámite más lento: conviene arrancarlo primero.** |
 | 21 | **Aval para alojar datos personales en la nube** | Municipalidad | La elección de infraestructura. |
-| 22 | **Formato, tamaño y fecha límite del trabajo final** | ELCOP | La pantalla de entrega. |
-| 23 | **Si el trabajo final tiene jurado y puntaje** | ELCOP | La vista del comité académico: no es lo mismo descargar archivos que evaluarlos. |
+| 22 | **Fecha límite del trabajo final**, y formato y tamaño del adjunto | ELCOP | **Ya no bloquea la pantalla**, que está construida. La fecha se configura con `PORTAL_FECHA_LIMITE_ENTREGA` y hoy está vacía: la pantalla muestra "A confirmar" y no rechaza nada por vencimiento. El formato y el tamaño son del adjunto opcional, que además espera almacenamiento (Fase 1). |
+| 23 | **Si el trabajo final tiene jurado y puntaje** | ELCOP | **Ya no bloquea la vista del comité**, que está construida: lista, lee y devuelve con observaciones. Lo que falta es **aprobar**, porque de esta respuesta depende si aprueba una persona sola o hace falta un jurado. El estado `aprobado` ya existe en el modelo. |
+| 33 | **Quiénes integran el comité académico** | ELCOP | Hoy salen de `ELCOP_COMITE_PROVISORIO`, una lista de documentos en el entorno. Hace falta saber quiénes son de verdad. |
+| 32 | **Confirmar las cinco secciones del proyecto y su largo** | ELCOP | Los campos —problema, diagnóstico, propuesta, recursos, viabilidad— salen del prototipo, donde parecen venir de la rúbrica real, y las preguntas de ayuda las escribimos nosotros. Los mínimos y máximos son nuestros: 200 a 4.000 caracteres por sección. |
 | 31 | ⚠️ **URGENTE — el prototipo de Replit guarda las contraseñas en texto plano** | Félix Agustín Paz / Dirección de IA | En `artifacts/api-server/src/routes/auth.ts`, `checkPassword` compara con `===`. La columna se llama `passwordHash`, lo que hace parecer que estuvieran hasheadas. Además `replit.md` trae credenciales de prueba versionadas (`ana.gomez@elcop.edu.ar` / `becario123`). **Hay que verificar si ese Repl está publicado**: si lo está, cualquiera con el enlace entra como becario. El propio `replit.md` lo reconoce como pendiente, pero no puede sobrevivir a la mudanza. |
 | 25 | ~~Acceso al prototipo del Portal en Replit~~ | Félix Agustín Paz | El documento trae un enlace de invitación (`replit.com/join#…`), que sirve para sumar a una persona a la cuenta, no para mirar el proyecto. Hace falta la URL de la app publicada o el código exportado en zip. |
 | 26 | **Tres frases oficiales que hoy están parafraseadas** | — | El documento dice: *"Con el objetivo de promover el talento y la excelencia en la función pública, la Municipalidad de SMT y la UNSTA otorgan una Beca del 100%…"*; *"…permitiendo un aprendizaje flexible pero con fuerte anclaje en el networking presencial"*; y encadena cupos con proceso: *"Debido a que los cupos son limitados, el proceso de selección consta de dos etapas obligatorias"*. Falta decidir si se reemplazan por el texto textual. |
@@ -158,7 +160,8 @@ autentica contra CIDITUC, el identity provider del municipio.
 | Panel — termómetro de regularidad, estado académico, próximo encuentro | `/portal` | ✅ Hecho |
 | Mis clases — repositorio por módulo | `/portal/clases` | ✅ Hecho |
 | Mentorías — consultas y sesiones | `/portal/mentorias` | ✅ Hecho |
-| Proyecto final — carga de la entrega | — | ⬜ Sin empezar |
+| Proyecto final — formulario estructurado | `/portal/proyecto` | ✅ Hecho, sin el adjunto |
+| Comité académico — leer y devolver proyectos | `/comite` | ✅ Hecho, sin aprobar (ítem 23) |
 | Mi beca — Contrato y Acta Compromiso | — | ⬜ Sin empezar |
 
 Las dos secciones sin empezar se muestran igual en la navegación, marcadas como
@@ -174,7 +177,7 @@ inventado lo va a tomar por real.
 
 | Qué | De quién / de qué depende |
 |---|---|
-| **Que DITEC despliegue el ingreso de ELCOP en Derivador** | Sin eso el ingreso no funciona fuera de desarrollo, y por eso el botón sigue oculto. **Decidido el camino y rama pusheada; falta abrir el PR:** [`docs/ingreso-por-derivador.md`](docs/ingreso-por-derivador.md). El PR #96 de Agustín está mergeado en `dev` pero **no desplegado**, así que lo que destraba es el despliegue, no el merge. |
+| **Que DITEC despliegue el ingreso de ELCOP en Derivador** | Sin eso el ingreso no funciona fuera de desarrollo, y por eso el botón sigue oculto. **Decidido el camino y rama pusheada; falta abrir el PR:** [`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md). El PR #96 de Agustín está mergeado en `dev` pero **no desplegado**, así que lo que destraba es el despliegue, no el merge. |
 | ⚠️ **Que `estadisticas.smt.gob.ar:5000` mande la cadena completa de certificados** | **Segundo bloqueo, independiente del PR.** El servidor envía sólo el certificado final y Node falla con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (verificado el 10/8/2026). El código prohíbe desactivar la verificación en producción, así que el ingreso no va a funcionar aunque DITEC despliegue. Alternativa de nuestro lado: cargar el intermedio en `CIDITUC_CA_PEM`. |
 | **Persistencia real** de asistencias, materiales y consultas | La base de datos, que depende del ítem 21. Ver §2 b. |
 | **Calendario de encuentros** | ELCOP, ítem 28. Es lo que convierte el panel y Mis clases en algo con datos propios. |

@@ -5,11 +5,10 @@
  * ELCOP. Sin esto, `/portal` muestra "Próximamente" y no hay manera de llegar al
  * panel: la cookie la emite el callback, y el callback necesita a CIDITUC.
  *
- * Uso:
- *   node herramientas/ver-portal.mjs [ruta] [base]
+ * Uso, con `npm run dev` corriendo en otra terminal:
  *
- *   node herramientas/ver-portal.mjs                    → /portal
- *   node herramientas/ver-portal.mjs portal/mentorias   → esa pantalla
+ *   npm run portal                                      → /portal
+ *   node herramientas/ver-portal.mjs portal/proyecto    → esa pantalla
  *
  * **La ruta va sin barra inicial.** En Git Bash sobre Windows, un argumento que
  * empieza con `/` se convierte en una ruta del sistema —`/portal` termina como
@@ -51,6 +50,10 @@ function normalizarRuta(valor) {
 const RUTA = normalizarRuta(argumentos[0]);
 const BASE = argumentos[1] ?? "http://localhost:3000";
 
+// `--como=31999888` abre como esa persona, para ver el portal con otro rol.
+const como = process.argv.find((a) => a.startsWith("--como="))?.slice("--como=".length);
+const DOCUMENTO = como ? como.replace(/\D/g, "") : undefined;
+
 const CANDIDATOS_CHROME = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
@@ -75,12 +78,16 @@ const navegador = await puppeteer.launch({
 });
 
 const [pagina] = await navegador.pages();
-await pagina.setCookie(cookieDeSesion(BASE));
+await pagina.setCookie(cookieDeSesion(BASE, DOCUMENTO ? { documento: DOCUMENTO } : undefined));
 
 try {
   await pagina.goto(`${BASE}${RUTA}`, { waitUntil: "domcontentloaded" });
 } catch {
-  console.error(`No pude abrir ${BASE}${RUTA}. ¿Está corriendo npm run dev?`);
+  console.error(
+    `No pude abrir ${BASE}${RUTA}.\n` +
+      "Casi siempre es que no hay servidor: abrí otra terminal y dejá corriendo\n" +
+      "  npm run dev"
+  );
   await navegador.close();
   process.exit(1);
 }

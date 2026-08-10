@@ -7,6 +7,7 @@ import { Referentes } from "@/components/home/Referentes";
 import { Inscripciones } from "@/components/home/Inscripciones";
 import { FormularioPostulacion } from "@/components/home/FormularioPostulacion";
 import { Faq } from "@/components/home/Faq";
+import { ChatDiferido } from "@/components/chat/ChatDiferido";
 
 export default function PaginaInicio() {
   return (
@@ -20,6 +21,8 @@ export default function PaginaInicio() {
       <Inscripciones />
       <FormularioPostulacion />
       <Faq />
+      {/* Sólo en las páginas públicas, y diferido: ver ChatDiferido. */}
+      <ChatDiferido />
     </>
   );
 }

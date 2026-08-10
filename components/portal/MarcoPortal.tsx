@@ -1,14 +1,16 @@
 import Link from "next/link";
 
 import { ESCUELA } from "@/content/elcop";
+import { esComite } from "@/lib/portal/roles";
+import { obtenerSesion } from "@/lib/sesion";
 
 /**
  * Armazón del Portal del Becario: la navegación lateral y el encabezado.
  *
- * Las cinco secciones son las del prototipo. Sólo el panel existe todavía; las
- * demás se muestran igual, marcadas como pendientes, porque esconderlas dejaría
- * a la persona sin saber qué va a poder hacer acá. Lo que no se hace es
- * enlazarlas a rutas que no existen.
+ * Las cinco secciones son las del prototipo. Las que todavía no existen se
+ * muestran igual, marcadas como pendientes, porque esconderlas dejaría a la
+ * persona sin saber qué va a poder hacer acá. Lo que no se hace es enlazarlas a
+ * rutas que no existen: para eso el `href` es `null`.
  */
 
 export type SeccionPortal = "panel" | "clases" | "mentorias" | "proyecto" | "beca";
@@ -17,7 +19,7 @@ const SECCIONES: { id: SeccionPortal; etiqueta: string; href: string | null }[] 
   { id: "panel", etiqueta: "Panel", href: "/portal" },
   { id: "clases", etiqueta: "Mis clases", href: "/portal/clases" },
   { id: "mentorias", etiqueta: "Mentorías", href: "/portal/mentorias" },
-  { id: "proyecto", etiqueta: "Proyecto final", href: null },
+  { id: "proyecto", etiqueta: "Proyecto final", href: "/portal/proyecto" },
   { id: "beca", etiqueta: "Mi beca", href: null }
 ];
 
@@ -27,7 +29,13 @@ type Props = {
   children: React.ReactNode;
 };
 
-export function MarcoPortal({ activa, nombre, children }: Props) {
+export async function MarcoPortal({ activa, nombre, children }: Props) {
+  // El rol se lee acá y no se pasa por props para no tocar las cuatro páginas
+  // del portal por un enlace. Sin esto, alguien del comité que entre a /portal
+  // ve un portal de becario vacío y ninguna pista de que su vista existe.
+  const sesion = await obtenerSesion();
+  const muestraComite = sesion ? esComite(sesion.documento) : false;
+
   return (
     <div className="page-shell py-10 md:py-14">
       <div className="grid gap-8 lg:grid-cols-[220px_1fr] lg:gap-12">
@@ -69,6 +77,18 @@ export function MarcoPortal({ activa, nombre, children }: Props) {
               );
             })}
           </ul>
+
+          {muestraComite && (
+            <div className="mt-6 border-t border-slate-100 pt-4">
+              <p className="micro-label">Comité académico</p>
+              <Link
+                href="/comite"
+                className="mt-2 flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-municipal-900 transition ease-out hover:bg-municipal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-municipal-500 focus-visible:ring-offset-2"
+              >
+                Proyectos de la cohorte
+              </Link>
+            </div>
+          )}
 
           <form action="/auth/cidituc/salir" method="post" className="mt-8">
             {/* Sin `compact`: baja el alto a 40px y se cae del objetivo táctil. */}

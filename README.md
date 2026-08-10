@@ -25,19 +25,44 @@ Otros comandos: `npm run build`, `npm run start`, `npm run typecheck`.
 
 ### Ver el Portal del Becario
 
-Las pantallas del portal exigen sesión, y la sesión la emite el callback de
-CIDITUC. Mientras DITEC no registre ELCOP eso no pasa, así que `/portal` muestra
-"Próximamente" y no hay forma de llegar al panel desde el navegador.
+**Si entrás a `/portal` en el navegador vas a ver "Próximamente", y está bien.**
+Las pantallas del portal exigen una cookie de sesión que emite el callback de
+CIDITUC, y eso no va a pasar hasta que DITEC despliegue el ingreso. Lo mismo vale
+para el sitio publicado: ahí "Próximamente" es el estado correcto hasta entonces.
 
-Con el servidor corriendo:
+Para verlo en desarrollo, con `npm run dev` corriendo en otra terminal:
 
 ```bash
-node herramientas/ver-portal.mjs portal
+npm run portal
 ```
 
-Abre una ventana con la cookie de sesión ya puesta. La ruta va **sin barra
-inicial** —Git Bash convierte `/portal` en una ruta de Windows— y acepta
-cualquier pantalla: `portal/clases`, `portal/mentorias`.
+Abre una ventana con la cookie ya puesta. Para una pantalla puntual:
+
+```bash
+node herramientas/ver-portal.mjs portal/proyecto
+```
+
+La ruta va **sin barra inicial**: Git Bash convierte `/portal` en una ruta de
+Windows. Acepta `portal/clases`, `portal/mentorias`, `portal/proyecto`.
+
+Si preferís usar tu navegador de siempre, `npm run sesion` imprime la cookie para
+pegarla en DevTools → Application → Cookies.
+
+### Ver la vista del comité académico
+
+`/comite` muestra los proyectos de toda la cohorte, así que **exige rol**: hay que
+estar en `ELCOP_COMITE_PROVISORIO`. Sin ese rol la ruta responde **404 y no 403**,
+para no confirmarle a nadie que existe algo del otro lado.
+
+Para abrirla en desarrollo hay que emitir la sesión de alguien con ese rol:
+
+```bash
+node herramientas/ver-portal.mjs comite --como=31999888
+```
+
+`npm run sesion 31999888` hace lo mismo pero imprimiendo la cookie. Cambiar el
+documento es la forma de probar los permisos: con uno del padrón, `/comite` tiene
+que dar 404.
 
 Para ver datos en vez de pantallas vacías, `PORTAL_DATOS_DEMO=true` en
 `.env.local`. Vacío es el estado correcto mientras no haya base, y es lo que un
@@ -50,11 +75,15 @@ de servicio en un sistema que va a custodiar datos personales.
 ### Verificar accesibilidad
 
 ```bash
-node herramientas/auditar.mjs
+npm run auditar
 ```
 
 ```bash
-node herramientas/auditar.mjs --portal
+npm run auditar:portal
+```
+
+```bash
+npm run auditar:comite
 ```
 
 El primero recorre las páginas públicas; el segundo, las de adentro del portal,
@@ -107,29 +136,34 @@ app/
   layout.tsx              fuentes, header, footer, metadatos
   page.tsx                home: las 9 secciones en orden
   publicaciones/          listado de notas
-  portal/                 Portal del Becario: panel, clases y mentorías
+  portal/                 Portal del Becario: panel, clases, mentorías, proyecto
+  comite/                 vista del comité académico (exige rol)
   auth/cidituc/           ingreso y salida con Ciudadano Digital
   api/postulacion/        recepción del formulario (hoy no persiste)
   api/portal/consultas/   consultas de mentoría (hoy en memoria)
+  api/portal/entrega/     proyecto final (hoy en memoria)
+  api/comite/             devolución con observaciones (exige rol)
 components/
   layout/                 Header (con menú móvil) y Footer
   home/                   una sección de la home por archivo
   portal/                 marco, panel y pantallas del portal
+  comite/                 listado y lectura de proyectos
   ui/                     Reveal y ContadorAnimado
 content/elcop.ts          todo el contenido, tipado
 lib/
   cidituc.ts              firma y verificación de la sesión
   padron.ts               quién tiene derecho a entrar (provisorio)
-  portal/                 tipos, cálculos y datos del portal
+  portal/                 tipos, cálculos, datos y roles del portal
 herramientas/             auditoría de accesibilidad y sesión de desarrollo
 ```
 
 ## Alcance
 
 La web pública está terminada. El **Portal del Becario** está en construcción:
-el ingreso con Ciudadano Digital funciona, y de sus cinco secciones están
-hechas tres —panel, Mis clases y Mentorías—. Faltan Proyecto final y Mi beca,
-que se muestran en la navegación marcadas como "Pronto".
+el ingreso con Ciudadano Digital funciona, y de sus cinco secciones están hechas
+cuatro —panel, Mis clases, Mentorías y Proyecto final—. Falta Mi beca, que se
+muestra en la navegación marcada como "Pronto" y depende de una definición de
+Legales.
 
 Lo que el portal todavía no tiene es **persistencia**: no hay base de datos, así
 que las asistencias y los materiales salen de una capa provisoria y las
