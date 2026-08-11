@@ -11,26 +11,29 @@
  * es un becario nuestro necesitamos su documento, y eso obliga a preguntarle a
  * su backend. No es opcional: sin esta llamada no hay forma de autorizar.
  *
- * ## El problema del certificado
+ * ## El problema del certificado, resuelto el 10/8/2026
  *
- * `estadisticas.smt.gob.ar:5000` presenta un certificado válido de Sectigo para
- * `*.smt.gob.ar`, **pero envía sólo el certificado final y no el intermedio de
- * la autoridad**. Los navegadores lo disimulan porque suelen tener el
- * intermedio cacheado; Node no, y falla con `UNABLE_TO_VERIFY_LEAF_SIGNATURE`.
+ * Durante un tiempo `estadisticas.smt.gob.ar:5000` envió sólo el certificado
+ * final, sin el intermedio de Sectigo. Los navegadores lo disimulaban porque
+ * suelen tener el intermedio cacheado; Node no, y fallaba con
+ * `UNABLE_TO_VERIFY_LEAF_SIGNATURE`. **Ya no**: el servidor manda la cadena
+ * completa y la verificación pasa sin ayuda.
  *
- * Hay tres caminos, en orden de preferencia:
+ * Se arregló por donde correspondía —en el servidor, así sirve para las doce
+ * aplicaciones del municipio— y no con un parche nuestro. Queda anotado porque
+ * explica por qué el módulo tiene los dos escapes que siguen abajo, y qué hacer
+ * si el certificado se renueva mal y vuelve a pasar.
  *
- * 1. **Que infraestructura instale la cadena completa.** Es un cambio de
- *    configuración del servidor y arregla el problema para todos los que
- *    consuman ese backend, no sólo para nosotros.
- * 2. **Aportar el intermedio nosotros** con `CIDITUC_CA_PEM`. Se sigue
- *    verificando firma, dominio y vencimiento: sólo suplimos lo que el servidor
- *    no manda.
- * 3. **Desactivar la verificación**, que es lo que hace hoy educacivil.
+ * `CIDITUC_CA_PEM` aporta el intermedio desde nuestro lado. Es el escape bueno:
+ * se sigue verificando firma, dominio y vencimiento, sólo se suple lo que el
+ * servidor no manda.
  *
- * El tercero está disponible sólo fuera de producción, y a propósito: un parche
- * temporal que se puede dejar prendido en producción no es temporal. Acá, si
- * `NODE_ENV` es `production`, la bandera se ignora.
+ * `CIDITUC_TLS_INSEGURO` desactiva la verificación entera, que es lo que hace
+ * educacivil. Está disponible sólo fuera de producción, y a propósito: un parche
+ * temporal que se puede dejar prendido en producción no es temporal. En
+ * producción `revisarConfiguracion` rechaza el ingreso, y `agente` además ignora
+ * la bandera, para que el peor resultado posible sea que la consulta falle y no
+ * que el token viaje sin verificar.
  */
 import { request as pedidoHttp } from "node:http";
 import { Agent, request as pedidoHttps } from "node:https";
@@ -226,9 +229,10 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
  * - `detalle` sale **sólo en desarrollo**. Es lo que manda el otro lado, y ahí
  *   pueden venir datos de la persona.
  *
- * La partición importa por un caso puntual: el fallo de TLS sólo existe en
- * producción. En local hay que apuntar con `CIDITUC_TLS_INSEGURO=true`, que es
- * justamente lo que lo hace desaparecer, así que desarrollo nunca lo muestra.
+ * La partición existe porque hay fallas que sólo se dan en producción y que en
+ * desarrollo no hay forma de ver: un certificado que dejó de validar, o una
+ * variable de entorno cargada distinto en Vercel. Si el resumen no cruzara, esas
+ * fallas serían invisibles justo donde ocurren.
  *
  * Nunca imprime el token ni valores del perfil, en ningún nivel.
  */

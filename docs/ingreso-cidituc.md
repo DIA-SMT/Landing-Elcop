@@ -69,13 +69,15 @@ Necesitás una cuenta de CiDiTuc propia y tres cosas configuradas.
 CIDITUC_BACKEND_URL=https://estadisticas.smt.gob.ar:5000
 NEXT_PUBLIC_CIDITUC_LOGIN_URL="http://localhost:5173/#/login"
 CIDITUC_INGRESO_HABILITADO=true
-CIDITUC_TLS_INSEGURO=true
 ELCOP_PADRON_PROVISORIO=<tu documento, sin puntos>
 ```
 
-`CIDITUC_TLS_INSEGURO` hace falta por lo del certificado (§5) y **el código la
-rechaza si `NODE_ENV` es producción**, así que no puede filtrarse al deploy. Las
-comillas en la URL de login no son opcionales: en un `.env` el `#` abre un
+**`CIDITUC_TLS_INSEGURO` ya no va.** Hacía falta cuando el servidor mandaba el
+certificado sin la cadena; desde el 10/8/2026 la manda completa (§5) y la bandera
+no tiene ningún uso. Si te quedó de antes, sacala: en producción hace que el
+ingreso rechace a todo el mundo, a propósito.
+
+Las comillas en la URL de login no son opcionales: en un `.env` el `#` abre un
 comentario y sin ellas se pierde `#/login`.
 
 **En `.env.local` del Derivador:**
@@ -96,13 +98,21 @@ VITE_APP_ELCOP_CALLBACK_URL=http://localhost:3000/auth/cidituc/callback
 | En la URL | Qué significa |
 |---|---|
 | `no-es-becario` | El token es válido pero el documento no está en el padrón |
-| `sin-perfil` | No se pudo consultar el perfil: red, certificado, o forma inesperada |
+| `sin-perfil` | No se pudo consultar el perfil: red, certificado, configuración, o forma inesperada |
 | `documento-invalido` | Llegó un documento que no se pudo leer |
 | `token-invalido` | No tiene forma de token; suele ser que se cortó al copiarlo |
 
-Y en desarrollo el servidor imprime el detalle: estado HTTP, código de red, el
-tipo de `documento_persona` e `id_persona`, y las claves recibidas. Nunca el token
-ni valores del perfil.
+`sin-perfil` junta cuatro causas distintas, así que la URL sola no alcanza: hay que
+mirar los registros del servidor, que salen como `[cidituc] perfil no obtenido — …`.
+
+**En producción sale el resumen**, y es lo que se lee en Vercel: el estado HTTP, el
+código de error de red, el tipo de los campos que deciden, o el nombre de la
+variable de entorno mal configurada. Alcanza para saber de quién es el problema.
+
+**En desarrollo sale además el detalle**: el cuerpo que devolvió CIDITUC y las
+claves que trajo. Es lo que distingue un token vencido de un backend caído.
+
+Nunca, en ninguno de los dos niveles, el token ni valores del perfil.
 
 ## 5. Lo que falta para producción
 
@@ -120,18 +130,22 @@ Su PR #96 está mergeado en `dev` **pero no desplegado** —el bundle de producc
 trae la cadena de UrbanIA—, así que lo que destraba esto es el despliegue, no el
 merge.
 
-**b) ⚠️ La cadena de certificados**, y es un bloqueo independiente del PR.
-`estadisticas.smt.gob.ar:5000` envía sólo el certificado final, sin el intermedio
-de Sectigo, y Node falla con `UNABLE_TO_VERIFY_LEAF_SIGNATURE`. En desarrollo se
-esquiva con `CIDITUC_TLS_INSEGURO`; **en producción el código lo prohíbe a
-propósito**, así que el ingreso no va a funcionar aunque el PR se despliegue.
+**b) ~~La cadena de certificados~~. Resuelto el 10/8/2026.** Durante un tiempo
+`estadisticas.smt.gob.ar:5000` mandaba sólo el certificado final y Node fallaba con
+`UNABLE_TO_VERIFY_LEAF_SIGNATURE`. Ahora envía la cadena completa —el intermedio
+`Sectigo Public Server Authentication CA DV R36` y el raíz `Root R46`— y valida sin
+ayuda. Se arregló donde correspondía, en el servidor, así que sirve para las doce
+aplicaciones y no sólo para nosotros.
 
-Lo resuelve infraestructura instalando la cadena completa —arregla el problema para
-todos los que consuman ese backend— o nosotros cargando el intermedio en
-`CIDITUC_CA_PEM`.
+Queda como referencia por si reaparece: se comprueba con Node puro,
+`rejectUnauthorized: true` y sin CA extra, y si volviera a fallar la salida sería
+`FALLO UNABLE_TO_VERIFY_LEAF_SIGNATURE` en vez de un 401. `CIDITUC_CA_PEM` sigue
+existiendo como escape.
 
-**c) El padrón real.** Hoy sale de `ELCOP_PADRON_PROVISORIO`. Los becarios reales
-salen de las postulaciones marcadas como seleccionadas, que es la Fase 1.
+**c) El padrón real.** Hoy sale de `ELCOP_PADRON_PROVISORIO`, y **en Vercel está
+vacía**: hasta que se cargue, todo el que se autentique bien va a ver "no figurás
+entre los becarios". Los becarios reales salen de las postulaciones marcadas como
+seleccionadas, que es la Fase 1.
 
 ## 6. Dos cosas que vimos en su código, sin urgencia
 
