@@ -34,14 +34,22 @@ export function Hero() {
             el 58% del ancho, así que de ahí en adelante el video se muestra
             casi sin velar en vez de quedarse a mitad de camino en 52%.
 
-            Los números salen de medir, no de tantear. El piso que necesita cada
-            texto sobre el fotograma más oscuro es: 0,79 para "transforman" en
-            municipal-700, 0,78 para la bajada y la línea de postulantes en
-            slate-600, y apenas 0,38 para el título en ink. **El título grande
-            no es la restricción: lo son la palabra azul y el texto gris
-            chico.** Mientras esos dos colores no cambien, la mitad izquierda no
-            puede aclararse mucho más sin voltear el contraste. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.62] via-white/[0.58] to-white/[0.56] md:bg-gradient-to-r md:from-white/[0.86] md:via-white/[0.82] md:via-[58%] md:to-white/[0.24]" />
+            Los números salen de medir, no de tantear, y lo que se midió fue
+            que **la restricción nunca fue el título sino los colores chicos de
+            alrededor**. Sobre el fotograma más oscuro, el piso de sRGB que
+            necesita cada uno para cumplir su razón de contraste es:
+
+              municipal-700  0,79   ← la palabra "transforman", cuando era azul
+              slate-600      0,78   ← la bajada y la línea de postulantes
+              slate-800      0,56   ← esos mismos textos hoy
+              ink            0,38   ← el título, y hoy también "transforman"
+
+            El título en ink podía vivir con 38% desde el principio; el 82% que
+            había estaba puesto por la palabra azul y por un gris demasiado
+            claro. Al pasar los dos a ink y slate-800 la pared se corre a 0,56 y
+            el velo la sigue. Si algún día vuelve el azul a "transforman", hay
+            que volver a subir el velo a 0,79 o el contraste se cae. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.38] via-white/[0.35] to-white/[0.34] md:bg-gradient-to-r md:from-white/[0.63] md:via-white/[0.60] md:via-[58%] md:to-white/[0.16]" />
         {/* Difumina el corte de abajo contra el fondo de la página. */}
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#f8fbff]" />
       </div>
@@ -62,8 +70,11 @@ export function Hero() {
 
             <Reveal retardo={60}>
               <h1 className="mt-6 max-w-[15ch] font-display text-[2.15rem] font-extrabold leading-[1.06] tracking-tight text-ink sm:text-5xl lg:text-6xl xl:text-[4.15rem]">
+                {/* El acento de marca lo lleva el filete amarillo de abajo, no
+                    una palabra coloreada. El span queda para poder devolverle
+                    el color en una línea si se decide lo contrario. */}
                 Formando a los líderes que{" "}
-                <span className="text-municipal-700">transforman</span> San Miguel de Tucumán
+                <span className="text-ink">transforman</span> San Miguel de Tucumán
               </h1>
             </Reveal>
 
@@ -71,7 +82,7 @@ export function Hero() {
               {/* Filete amarillo: acento de marca en un elemento gráfico, nunca
                   como fondo de texto. */}
               <span aria-hidden="true" className="mt-8 block h-1.5 w-16 rounded-full bg-brandYellow" />
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-800 md:text-lg">
                 {HERO.bajada}
               </p>
             </Reveal>
@@ -89,9 +100,9 @@ export function Hero() {
             </Reveal>
 
             <Reveal retardo={240}>
-              {/* slate-600 y no slate-500: el 500 llega justo a 4,5:1 contra
-                  blanco puro, y acá abajo hay video. */}
-              <p className="mt-8 text-sm text-slate-600">
+              {/* slate-800 y no un gris más claro: acá abajo hay video, y cada
+                  paso que se aclara este texto obliga a subir el velo. */}
+              <p className="mt-8 text-sm text-slate-800">
                 <span className="font-bold text-ink">{formatearNumero(1091)} personas</span> se
                 postularon a la primera convocatoria.
               </p>
