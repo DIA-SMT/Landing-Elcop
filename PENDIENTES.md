@@ -45,7 +45,7 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 | 18 | **Responsable del tratamiento de datos y aviso de privacidad** | Municipalidad / Legales | Publicar el formulario. Pasamos a custodiar DNI, fecha de nacimiento y teléfono de más de mil personas. |
 | 19 | **Dominio definitivo y acceso al DNS** | Municipalidad | El deploy. |
 | 20 | **Dominio de envío de emails verificado** (SPF, DKIM, DMARC) | Sistemas del municipio | Confirmaciones e invitaciones. **Es el trámite más lento: conviene arrancarlo primero.** |
-| 21 | **Aval para alojar datos personales en la nube** | Municipalidad | La elección de infraestructura. |
+| 21 | **Aval para alojar datos personales en la nube** | Municipalidad | **Asumido por la Dirección de IA el 11/8/2026** para destrabar la base (Supabase, región São Paulo) — el portal ya guarda entregas y consultas ahí. Queda pendiente la formalización. |
 | 22 | **Fecha límite del trabajo final**, y formato y tamaño del adjunto | ELCOP | **Ya no bloquea la pantalla**, que está construida. La fecha se configura con `PORTAL_FECHA_LIMITE_ENTREGA` y hoy está vacía: la pantalla muestra "A confirmar" y no rechaza nada por vencimiento. El formato y el tamaño son del adjunto opcional, que además espera almacenamiento (Fase 1). |
 | 23 | **Si el trabajo final tiene jurado y puntaje** | ELCOP | **Ya no bloquea la vista del comité**, que está construida: lista, lee y devuelve con observaciones. Lo que falta es **aprobar**, porque de esta respuesta depende si aprueba una persona sola o hace falta un jurado. El estado `aprobado` ya existe en el modelo. |
 | 33 | **Quiénes integran el comité académico** | ELCOP | Hoy salen de `ELCOP_COMITE_PROVISORIO`, una lista de documentos en el entorno. Hace falta saber quiénes son de verdad. |
@@ -63,8 +63,9 @@ formulario de inscripción, entrega del trabajo final). El plan completo está e
 
 ## 2. Decisiones técnicas pendientes
 
-Las dos tienen la misma raíz: **todavía no hay base de datos.** Las dos están
-resueltas en cuanto a *qué* hay que hacer, y frenadas por el ítem 21.
+**La base existe desde el 11/8/2026** (Supabase; ver `db/migraciones` y
+CONTEXTO §1), así que estas dos ya no están frenadas por infraestructura: son
+trabajo de la Fase 2.
 
 ### 2 a. Destino real del formulario de postulación
 
@@ -180,6 +181,6 @@ inventado lo va a tomar por real.
 | **Que DITEC despliegue el ingreso de ELCOP en Derivador** | Sin eso el ingreso no funciona fuera de desarrollo, y por eso el botón sigue oculto. **Decidido el camino y rama pusheada; falta abrir el PR:** [`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md). El PR #96 de Agustín está mergeado en `dev` pero **no desplegado**, así que lo que destraba es el despliegue, no el merge. |
 | ⚠️ **Cargar `ELCOP_PADRON_PROVISORIO` en Vercel** | **Nuestro, y es el que se olvida.** Hoy está vacía, y con la lista vacía todo el que se autentique bien va a ver "no figurás entre los becarios" — el ingreso se ve roto sin estarlo. Hay que cargarla en el mismo momento en que se enciende `CIDITUC_INGRESO_HABILITADO`. |
 | ⚠️ **Que `estadisticas.smt.gob.ar:5000` mande la cadena completa desde TODOS sus nodos** | Se dio por resuelto el 10/8 y era sólo por algunas rutas de red: desde Vercel sigue llegando sin el intermedio y el primer ingreso real falló con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (11/8). **Nuestro lado ya está resuelto** con `CIDITUC_CA_PEM` en Vercel; el reclamo a infraestructura queda para que las demás aplicaciones no pisen la misma piedra. Detalle: [`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md) §5. |
-| **Persistencia real** de asistencias, materiales y consultas | La base de datos, que depende del ítem 21. Ver §2 b. |
+| ~~Persistencia real~~ de entregas, consultas y asistencias | **Hecho el 11/8/2026:** viven en Supabase y sobreviven reinicios y deploys. Falta sólo el almacenamiento de archivos para **materiales** (Supabase Storage), que es otro paso. |
 | **Registro de asistencia de la cohorte** | Coordinación. El calendario real ya está cargado (ítem 28); sin las asistencias el panel muestra "sin registro" y no puede calcular la regularidad de nadie. |
 | ~~Medir las pantallas del portal~~ | **Hecho.** Lighthouse da 100 en Accesibilidad, Buenas prácticas y SEO en las tres, con Performance de 96 a 100. Encontró dos fallas que la auditoría propia no detecta: ver `CONTEXTO.md` §6. |

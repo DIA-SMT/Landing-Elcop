@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, mensaje: "Iniciá sesión." }, { status: 401 });
   }
 
-  if (!esComite(sesion.documento)) {
+  if (!(await esComite(sesion.documento))) {
     return NextResponse.json({ ok: false, mensaje: "No encontrado." }, { status: 404 });
   }
 

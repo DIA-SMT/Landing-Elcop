@@ -28,7 +28,7 @@ export default async function PaginaEntregaDelComite({
 }) {
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/portal");
-  if (!esComite(sesion.documento)) notFound();
+  if (!(await esComite(sesion.documento))) notFound();
 
   const becarioId = decodeURIComponent(params.becarioId);
   const entregas = await entregasDeLaCohorte();

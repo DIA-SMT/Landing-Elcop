@@ -11,14 +11,14 @@
  * emitido, uno emitido para la app de la maratón es indistinguible del nuestro.
  * Sin esta comprobación, cualquier vecino con cuenta entraría al portal.
  *
- * ⚠️ **Implementación provisoria.** Todavía no hay base de datos, así que el
- * padrón sale de una variable de entorno. Sirve para probar el circuito
- * completo, no para producción. Cuando exista la base, se reemplaza el cuerpo
- * de `buscarBecarioPorDocumento` y nada más: el resto del ingreso no cambia.
+ * El padrón vive en la tabla `becarios`. Si la base no está configurada
+ * —desarrollo sin credenciales—, cae a `ELCOP_PADRON_PROVISORIO`, que sirve
+ * para probar el circuito sin depender de nada.
  */
+import { baseDeDatos, falloDeBase } from "@/lib/supabase";
 
 export type Becario = {
-  /** Id en nuestra base. Provisoriamente, el propio documento. */
+  /** Id en nuestra base. Hoy, el propio documento. */
   id: string;
   documento: string;
   nombre: string;
@@ -31,20 +31,37 @@ export type Becario = {
  * Devuelve `null` si esa persona no está en el padrón, y ese `null` es el que
  * deja afuera a quien no corresponde.
  *
- * TODO: reemplazar por la consulta real cuando exista la base. Va a ser el
- * equivalente a:
- *
- *   select id, documento, nombre, cohorte
- *     from becarios
- *    where documento = $1
- *      and estado = 'activo'
- *
- * derivado de las postulaciones marcadas como seleccionadas.
+ * **Si la base está configurada y no responde, tira.** Convertir esa falla en
+ * `null` le diría "no figurás entre los becarios" a alguien que sí figura, y lo
+ * mandaría a reclamar por un problema que es nuestro. Quien llama lo traduce a
+ * "el ingreso no está disponible".
  */
 export async function buscarBecarioPorDocumento(documento: string): Promise<Becario | null> {
   const normalizado = normalizarDocumento(documento);
   if (!normalizado) return null;
 
+  const base = baseDeDatos();
+  if (base) {
+    const { data, error } = await base
+      .from("becarios")
+      .select("documento, nombre, cohorte")
+      .eq("documento", normalizado)
+      .maybeSingle();
+
+    if (error) falloDeBase("consultar el padrón", error);
+    if (!data) return null;
+
+    return {
+      id: data.documento,
+      documento: data.documento,
+      // Puede faltar: el nombre del ingreso viene de CIDITUC y lo completa
+      // quien llama.
+      nombre: data.nombre ?? "",
+      cohorte: data.cohorte ?? "2026"
+    };
+  }
+
+  // Provisorio, para desarrollo sin base: documentos separados por coma.
   const habilitados = (process.env.ELCOP_PADRON_PROVISORIO ?? "")
     .split(",")
     .map((entrada) => normalizarDocumento(entrada))
@@ -55,8 +72,6 @@ export async function buscarBecarioPorDocumento(documento: string): Promise<Beca
   return {
     id: normalizado,
     documento: normalizado,
-    // Sin base todavía no tenemos el nombre nuestro; el del ingreso viene de
-    // CIDITUC y lo completa quien llama.
     nombre: "",
     cohorte: process.env.ELCOP_COHORTE_ACTIVA ?? "2026"
   };

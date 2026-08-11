@@ -53,8 +53,20 @@ export async function GET(request: Request) {
   // Dos puertas y no una: el padrón de becarios, y el comité académico. Quien
   // evalúa no es becario, así que con el padrón como única condición no podría
   // ni entrar.
-  const becario = await buscarBecarioPorDocumento(documento);
-  if (!becario && !esComite(documento)) return rechazar(origen, "no-es-becario");
+  //
+  // El try separa dos respuestas que no pueden confundirse: "no estás en el
+  // padrón" (decisión, no se arregla reintentando) y "no pudimos consultar el
+  // padrón" (la base no respondió; es nuestro y ya quedó en los registros).
+  let becario: Awaited<ReturnType<typeof buscarBecarioPorDocumento>>;
+  let autorizadoComite = false;
+  try {
+    becario = await buscarBecarioPorDocumento(documento);
+    if (!becario) autorizadoComite = await esComite(documento);
+  } catch (fallo) {
+    console.warn(`[cidituc] autorización no consultada — ${(fallo as Error)?.message}`);
+    return rechazar(origen, "ingreso-no-disponible");
+  }
+  if (!becario && !autorizadoComite) return rechazar(origen, "no-es-becario");
 
   // 3. Nuestra sesión. No se guarda el token de CIDITUC: ya cumplió su función
   // y conservarlo sólo ampliaría lo que se pierde si la cookie se filtra.

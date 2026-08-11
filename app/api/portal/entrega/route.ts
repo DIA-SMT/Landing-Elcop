@@ -110,7 +110,7 @@ export async function POST(request: Request) {
 
   // La entrega actual y la fecha límite: las dos hacen falta para saber si esta
   // persona todavía puede escribir.
-  const actual = entregaGuardada(sesion.becarioId) ?? entregaVacia();
+  const actual = (await entregaGuardada(sesion.becarioId)) ?? entregaVacia();
   const fechaLimite = await fechaLimiteEntrega();
 
   if (!entregaAbierta(actual, fechaLimite)) {
