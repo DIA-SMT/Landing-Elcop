@@ -53,16 +53,65 @@ function agente(): Agent {
     return new Agent({ ca, keepAlive: false });
   }
 
-  const permitirInseguro = process.env.CIDITUC_TLS_INSEGURO === "true";
-  const enProduccion = process.env.NODE_ENV === "production";
-
-  if (permitirInseguro && enProduccion) {
-    throw new Error(
-      "CIDITUC_TLS_INSEGURO no puede usarse en producción. Instalá la cadena completa en el servidor o cargá el intermedio en CIDITUC_CA_PEM."
-    );
-  }
+  // `revisarConfiguracion` ya rechazó este caso antes de llegar acá. Aun así la
+  // bandera se ignora en producción en lugar de obedecerse: si mañana alguien
+  // llama a esta función por otro camino, el peor resultado posible tiene que
+  // ser que la consulta falle, no que el token viaje sin verificar al otro lado.
+  const permitirInseguro =
+    process.env.CIDITUC_TLS_INSEGURO === "true" && process.env.NODE_ENV !== "production";
 
   return new Agent({ rejectUnauthorized: !permitirInseguro, keepAlive: false });
+}
+
+type Configuracion = { ok: true; url: URL; enClaro: boolean } | { ok: false; problema: string };
+
+/**
+ * Revisa la configuración antes de salir a la red.
+ *
+ * Los cuatro problemas que detecta son nuestros, no de CIDITUC, y los cuatro
+ * dejan el ingreso inutilizable. Antes cada uno tiraba una excepción que nadie
+ * atrapaba, y eso daba la peor combinación posible: la persona veía una pantalla
+ * de crash en vez del mensaje cuidado, y los registros quedaban vacíos. Ni ella
+ * entendía ni nosotros nos enterábamos.
+ *
+ * Ahora se rechaza igual, pero contando por qué. La protección no se afloja: con
+ * cualquiera de estos problemas no entra nadie, así que sigue sin poder dejarse
+ * un parche inseguro prendido y seguir trabajando como si nada.
+ *
+ * Ninguno de los mensajes incluye el valor de la variable, sólo su nombre: en un
+ * `CIDITUC_BACKEND_URL` mal pegado puede haber credenciales.
+ */
+function revisarConfiguracion(): Configuracion {
+  const base = process.env.CIDITUC_BACKEND_URL;
+  if (!base) return { ok: false, problema: "falta CIDITUC_BACKEND_URL" };
+
+  let url: URL;
+  try {
+    url = new URL(`${base.replace(/\/$/, "")}/usuarios/authStatus`);
+  } catch {
+    return { ok: false, problema: "CIDITUC_BACKEND_URL no es una URL válida" };
+  }
+
+  const enClaro = url.protocol === "http:";
+  const enProduccion = process.env.NODE_ENV === "production";
+
+  // Sin cifrar se permite sólo fuera de producción, para poder apuntar a un
+  // CIDITUC local. En producción, mandar el token en claro por la red sería
+  // regalarlo a cualquiera que mire el tráfico.
+  if (enClaro && enProduccion) {
+    return {
+      ok: false,
+      problema: "CIDITUC_BACKEND_URL es http:// en producción y el token viajaría sin cifrar"
+    };
+  }
+
+  // Con `CIDITUC_CA_PEM` la verificación es completa, así que la bandera
+  // insegura no tiene efecto y no hace falta rechazar nada.
+  if (enProduccion && !process.env.CIDITUC_CA_PEM && process.env.CIDITUC_TLS_INSEGURO === "true") {
+    return { ok: false, problema: "CIDITUC_TLS_INSEGURO está prendido en producción" };
+  }
+
+  return { ok: true, url, enClaro };
 }
 
 /**
@@ -74,20 +123,16 @@ function agente(): Agent {
  * agregaría ninguna comprobación que esta consulta no haga ya.
  */
 export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null> {
-  const base = process.env.CIDITUC_BACKEND_URL;
-  if (!base) throw new Error("Falta CIDITUC_BACKEND_URL.");
-
-  const url = new URL(`${base.replace(/\/$/, "")}/usuarios/authStatus`);
-  const enClaro = url.protocol === "http:";
-
-  // Sin cifrar se permite sólo fuera de producción, para poder apuntar a un
-  // CIDITUC local. En producción, mandar el token en claro por la red sería
-  // regalarlo a cualquiera que mire el tráfico.
-  if (enClaro && process.env.NODE_ENV === "production") {
-    throw new Error(
-      "CIDITUC_BACKEND_URL no puede ser http:// en producción: el token viajaría sin cifrar."
-    );
+  const configuracion = revisarConfiguracion();
+  if (!configuracion.ok) {
+    // Se rechaza como cualquier otro fallo, pero el registro lo marca como lo
+    // que es: esto no se arregla reintentando, se arregla en las variables de
+    // entorno. Sale también en producción, que es donde puede pasar.
+    diagnosticar(`configuración inválida — ${configuracion.problema}`);
+    return null;
   }
+
+  const { url, enClaro } = configuracion;
 
   const cuerpo = await new Promise<string | null>((resolver) => {
     const hacerPeticion = enClaro ? pedidoHttp : pedidoHttps;
@@ -108,7 +153,9 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
         respuesta.on("data", (parte) => (datos += parte));
         respuesta.on("end", () => {
           if (respuesta.statusCode !== 200) {
-            diagnosticar(`CIDITUC respondió ${respuesta.statusCode}: ${datos.slice(0, 200)}`);
+            // El estado alcanza para orientarse —401 es el token, 5xx son ellos—
+            // y no dice nada de la persona. El cuerpo sí puede.
+            diagnosticar(`CIDITUC respondió ${respuesta.statusCode}`, datos.slice(0, 200));
             resolver(null);
             return;
           }
@@ -123,7 +170,11 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
       resolver(null);
     });
     peticion.on("error", (fallo) => {
-      diagnosticar(`fallo de red o TLS: ${(fallo as NodeJS.ErrnoException).code ?? fallo.message}`);
+      // El más importante de los cinco: acá aparece UNABLE_TO_VERIFY_LEAF_SIGNATURE
+      // si el servidor sigue mandando el certificado sin la cadena. Es un código
+      // de error de Node, no lleva datos de nadie, y va entero a producción.
+      const codigo = (fallo as NodeJS.ErrnoException).code;
+      diagnosticar(`fallo de red o TLS: ${codigo ?? "sin código"}`, codigo ? undefined : fallo.message);
       resolver(null);
     });
     peticion.end();
@@ -135,7 +186,9 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
   try {
     crudo = JSON.parse(cuerpo);
   } catch {
-    diagnosticar(`la respuesta no es JSON: ${cuerpo.slice(0, 120)}`);
+    // Casi siempre es una pantalla de error de un proxy delante de CIDITUC. Que
+    // pasó eso se dice siempre; qué decía la pantalla, sólo en desarrollo.
+    diagnosticar("la respuesta no es JSON", cuerpo.slice(0, 120));
     return null;
   }
 
@@ -156,26 +209,32 @@ export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null
     const claves = persona && typeof persona === "object" ? Object.keys(persona) : [];
     diagnosticar(
       `200 pero no se pudo armar el perfil. documento_persona: ${typeof persona?.documento_persona}, ` +
-        `id_persona: ${typeof persona?.id_persona}. Claves: ${claves.join(", ") || "(ninguna)"}`
+        `id_persona: ${typeof persona?.id_persona}`,
+      `claves recibidas: ${claves.join(", ") || "(ninguna)"}`
     );
   }
   return perfil;
 }
 
 /**
- * Cuenta por qué falló la consulta, **sólo en desarrollo**.
+ * Cuenta por qué falló la consulta, en dos niveles.
  *
- * En producción no se registra nada: el detalle de un fallo de autenticación
- * puede arrastrar el token o datos de la persona a un log, y un log es un lugar
- * más donde después hay que cuidarlos. Pero sin esto, depurar el ingreso es
- * adivinar — nos pasó, y de ahí salió esta función.
+ * - `resumen` sale **siempre**, también en producción. Nombra el problema y nada
+ *   más: un código de estado, un código de error de red, un tipo. Sin esto, el
+ *   día que el ingreso falle en producción los registros no van a tener ni una
+ *   línea y no se va a poder distinguir el certificado del padrón vacío.
+ * - `detalle` sale **sólo en desarrollo**. Es lo que manda el otro lado, y ahí
+ *   pueden venir datos de la persona.
  *
- * Nunca imprime el token ni valores del perfil: sólo el estado HTTP, el código de
- * error de red y los nombres de las claves que llegaron.
+ * La partición importa por un caso puntual: el fallo de TLS sólo existe en
+ * producción. En local hay que apuntar con `CIDITUC_TLS_INSEGURO=true`, que es
+ * justamente lo que lo hace desaparecer, así que desarrollo nunca lo muestra.
+ *
+ * Nunca imprime el token ni valores del perfil, en ningún nivel.
  */
-function diagnosticar(detalle: string): void {
-  if (process.env.NODE_ENV === "production") return;
-  console.warn(`[cidituc] perfil no obtenido — ${detalle}`);
+function diagnosticar(resumen: string, detalle?: string): void {
+  const enDesarrollo = process.env.NODE_ENV !== "production";
+  console.warn(`[cidituc] perfil no obtenido — ${resumen}${enDesarrollo && detalle ? `: ${detalle}` : ""}`);
 }
 
 /**
