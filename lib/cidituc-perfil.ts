@@ -53,16 +53,65 @@ function agente(): Agent {
     return new Agent({ ca, keepAlive: false });
   }
 
-  const permitirInseguro = process.env.CIDITUC_TLS_INSEGURO === "true";
-  const enProduccion = process.env.NODE_ENV === "production";
-
-  if (permitirInseguro && enProduccion) {
-    throw new Error(
-      "CIDITUC_TLS_INSEGURO no puede usarse en producción. Instalá la cadena completa en el servidor o cargá el intermedio en CIDITUC_CA_PEM."
-    );
-  }
+  // `revisarConfiguracion` ya rechazó este caso antes de llegar acá. Aun así la
+  // bandera se ignora en producción en lugar de obedecerse: si mañana alguien
+  // llama a esta función por otro camino, el peor resultado posible tiene que
+  // ser que la consulta falle, no que el token viaje sin verificar al otro lado.
+  const permitirInseguro =
+    process.env.CIDITUC_TLS_INSEGURO === "true" && process.env.NODE_ENV !== "production";
 
   return new Agent({ rejectUnauthorized: !permitirInseguro, keepAlive: false });
+}
+
+type Configuracion = { ok: true; url: URL; enClaro: boolean } | { ok: false; problema: string };
+
+/**
+ * Revisa la configuración antes de salir a la red.
+ *
+ * Los cuatro problemas que detecta son nuestros, no de CIDITUC, y los cuatro
+ * dejan el ingreso inutilizable. Antes cada uno tiraba una excepción que nadie
+ * atrapaba, y eso daba la peor combinación posible: la persona veía una pantalla
+ * de crash en vez del mensaje cuidado, y los registros quedaban vacíos. Ni ella
+ * entendía ni nosotros nos enterábamos.
+ *
+ * Ahora se rechaza igual, pero contando por qué. La protección no se afloja: con
+ * cualquiera de estos problemas no entra nadie, así que sigue sin poder dejarse
+ * un parche inseguro prendido y seguir trabajando como si nada.
+ *
+ * Ninguno de los mensajes incluye el valor de la variable, sólo su nombre: en un
+ * `CIDITUC_BACKEND_URL` mal pegado puede haber credenciales.
+ */
+function revisarConfiguracion(): Configuracion {
+  const base = process.env.CIDITUC_BACKEND_URL;
+  if (!base) return { ok: false, problema: "falta CIDITUC_BACKEND_URL" };
+
+  let url: URL;
+  try {
+    url = new URL(`${base.replace(/\/$/, "")}/usuarios/authStatus`);
+  } catch {
+    return { ok: false, problema: "CIDITUC_BACKEND_URL no es una URL válida" };
+  }
+
+  const enClaro = url.protocol === "http:";
+  const enProduccion = process.env.NODE_ENV === "production";
+
+  // Sin cifrar se permite sólo fuera de producción, para poder apuntar a un
+  // CIDITUC local. En producción, mandar el token en claro por la red sería
+  // regalarlo a cualquiera que mire el tráfico.
+  if (enClaro && enProduccion) {
+    return {
+      ok: false,
+      problema: "CIDITUC_BACKEND_URL es http:// en producción y el token viajaría sin cifrar"
+    };
+  }
+
+  // Con `CIDITUC_CA_PEM` la verificación es completa, así que la bandera
+  // insegura no tiene efecto y no hace falta rechazar nada.
+  if (enProduccion && !process.env.CIDITUC_CA_PEM && process.env.CIDITUC_TLS_INSEGURO === "true") {
+    return { ok: false, problema: "CIDITUC_TLS_INSEGURO está prendido en producción" };
+  }
+
+  return { ok: true, url, enClaro };
 }
 
 /**
@@ -74,20 +123,16 @@ function agente(): Agent {
  * agregaría ninguna comprobación que esta consulta no haga ya.
  */
 export async function obtenerPerfil(token: string): Promise<PerfilCidituc | null> {
-  const base = process.env.CIDITUC_BACKEND_URL;
-  if (!base) throw new Error("Falta CIDITUC_BACKEND_URL.");
-
-  const url = new URL(`${base.replace(/\/$/, "")}/usuarios/authStatus`);
-  const enClaro = url.protocol === "http:";
-
-  // Sin cifrar se permite sólo fuera de producción, para poder apuntar a un
-  // CIDITUC local. En producción, mandar el token en claro por la red sería
-  // regalarlo a cualquiera que mire el tráfico.
-  if (enClaro && process.env.NODE_ENV === "production") {
-    throw new Error(
-      "CIDITUC_BACKEND_URL no puede ser http:// en producción: el token viajaría sin cifrar."
-    );
+  const configuracion = revisarConfiguracion();
+  if (!configuracion.ok) {
+    // Se rechaza como cualquier otro fallo, pero el registro lo marca como lo
+    // que es: esto no se arregla reintentando, se arregla en las variables de
+    // entorno. Sale también en producción, que es donde puede pasar.
+    diagnosticar(`configuración inválida — ${configuracion.problema}`);
+    return null;
   }
+
+  const { url, enClaro } = configuracion;
 
   const cuerpo = await new Promise<string | null>((resolver) => {
     const hacerPeticion = enClaro ? pedidoHttp : pedidoHttps;
