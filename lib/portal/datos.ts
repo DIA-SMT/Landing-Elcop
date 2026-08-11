@@ -7,15 +7,19 @@
  *
  * ## Dos modos, y la diferencia importa
  *
- * Por defecto el portal aparece **vacío**, que es lo que un becario va a ver de
- * verdad el primer día: todavía no hay clases cargadas ni asistencia tomada.
- * Los estados vacíos no son un descuido, son la primera pantalla real.
+ * Por defecto se muestra **lo real que existe**: el calendario dictado de la
+ * cohorte 2026 —ver [`calendario.ts`](./calendario.ts)— sin asistencias, sin
+ * materiales y sin mentorías, porque nada de eso se cargó todavía. Los estados
+ * vacíos no son un descuido: son la verdad de lo que hay.
  *
  * Con `PORTAL_DATOS_DEMO=true` se muestran datos de ejemplo, para poder enseñar
- * cómo va a verse. En ese caso la interfaz lo dice en pantalla: mostrarle a un
- * becario un 89% de asistencia inventado sería peor que no mostrarle nada.
+ * cómo va a verse todo funcionando. En ese caso la interfaz lo dice en
+ * pantalla: mostrarle a un becario un 89% de asistencia inventado sería peor
+ * que no mostrarle nada. El ejemplo conserva su propio calendario, porque sus
+ * asistencias apuntan a esas clases y mezclarlas con las reales las rompería.
  */
 import { almacen } from "@/lib/almacen";
+import { CALENDARIO_2026 } from "./calendario";
 import type {
   Acta,
   Asistencia,
@@ -51,7 +55,9 @@ export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal>
   }
 
   return {
-    encuentros: [],
+    encuentros: CALENDARIO_2026,
+    // Vacío a propósito: el registro de asistencia todavía no se cargó, y eso
+    // NO es lo mismo que "faltó a todas". `calcularRegularidad` lo distingue.
     asistencias: [],
     materiales: [],
     consultas: enviadas,
@@ -339,7 +345,8 @@ function datosDeEjemplo(): DatosDelPortal {
       enlace: esVirtual ? "https://meet.example/elcop" : null,
       // Una masterclass es un encuentro con referente, no una lista aparte.
       esMasterclass: "referente" in clase,
-      referente: "referente" in clase ? clase.referente : null
+      referente: "referente" in clase ? clase.referente : null,
+      docente: null
     };
   });
 

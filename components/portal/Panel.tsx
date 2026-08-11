@@ -1,4 +1,4 @@
-import { formatearFecha } from "@/content/elcop";
+import { formatearRangoDeFechas } from "@/content/elcop";
 import {
   MINIMO_ASISTENCIA,
   calcularRegularidad,
@@ -37,7 +37,7 @@ export function Panel({ datos }: { datos: DatosDelPortal }) {
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <div className="flex flex-col gap-6">
           <Termometro datos={datos} />
-          <ProximoEncuentro encuentro={proxima} />
+          <ProximoEncuentro encuentro={proxima} hayClasesCargadas={datos.encuentros.length > 0} />
           <ClasesRecientes encuentros={recientes} />
         </div>
 
@@ -50,10 +50,8 @@ export function Panel({ datos }: { datos: DatosDelPortal }) {
 /* -------------------------------------------------------------------------- */
 
 function Termometro({ datos }: { datos: DatosDelPortal }) {
-  const { porcentaje, presentes, computables, justificadas, esRegular } = calcularRegularidad(
-    datos.encuentros,
-    datos.asistencias
-  );
+  const { porcentaje, presentes, computables, justificadas, esRegular, sinRegistro } =
+    calcularRegularidad(datos.encuentros, datos.asistencias);
 
   return (
     <section
@@ -67,7 +65,7 @@ function Termometro({ datos }: { datos: DatosDelPortal }) {
           </h2>
           {porcentaje === null ? (
             <p className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">
-              Sin encuentros computados
+              {sinRegistro ? "Sin registro todavía" : "Sin encuentros computados"}
             </p>
           ) : (
             <p className="mt-2 font-display text-5xl font-extrabold leading-none tracking-tight text-municipal-700 md:text-6xl">
@@ -83,7 +81,10 @@ function Termometro({ datos }: { datos: DatosDelPortal }) {
 
       {porcentaje === null ? (
         <p className="mt-4 text-sm leading-relaxed text-slate-600">
-          Todavía no se dictaron encuentros presenciales, así que no hay asistencia que calcular.
+          {sinRegistro
+            ? // Es la falta de un dato, no un dato: por eso no se muestra 0%.
+              "Las clases dictadas ya figuran en el portal, pero la coordinación todavía no cargó el registro de asistencia. Cuando lo cargue, tu porcentaje va a aparecer acá."
+            : "Todavía no se dictaron encuentros presenciales, así que no hay asistencia que calcular."}
         </p>
       ) : (
         <>
@@ -130,7 +131,13 @@ function Termometro({ datos }: { datos: DatosDelPortal }) {
 
 /* -------------------------------------------------------------------------- */
 
-function ProximoEncuentro({ encuentro }: { encuentro: Encuentro | null }) {
+function ProximoEncuentro({
+  encuentro,
+  hayClasesCargadas
+}: {
+  encuentro: Encuentro | null;
+  hayClasesCargadas: boolean;
+}) {
   return (
     <section
       aria-labelledby="proximo-titulo"
@@ -142,8 +149,11 @@ function ProximoEncuentro({ encuentro }: { encuentro: Encuentro | null }) {
 
       {!encuentro ? (
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          No hay encuentros programados por ahora. Cuando la coordinación cargue el calendario, van
-          a aparecer acá.
+          {hayClasesCargadas
+            ? // Con el calendario cargado y nada por delante, decir "cuando se
+              // cargue el calendario" sería negar lo que la persona tiene a la vista.
+              "La cursada no tiene más encuentros programados. Podés repasar las clases dictadas en Mis clases."
+            : "No hay encuentros programados por ahora. Cuando la coordinación cargue el calendario, van a aparecer acá."}
         </p>
       ) : (
         <>
@@ -154,7 +164,10 @@ function ProximoEncuentro({ encuentro }: { encuentro: Encuentro | null }) {
             {encuentro.eje} · {encuentro.modulo}
           </p>
           <dl className="mt-5 divide-y divide-slate-100 border-t border-slate-100">
-            <Fila termino="Cuándo" definicion={formatearFecha(encuentro.comienza.slice(0, 10))} />
+            <Fila
+              termino="Cuándo"
+              definicion={formatearRangoDeFechas(encuentro.comienza, encuentro.termina)}
+            />
             <Fila
               termino="Modalidad"
               definicion={encuentro.modalidad === "presencial" ? "Presencial" : "Virtual"}
@@ -211,7 +224,7 @@ function ClasesRecientes({ encuentros }: { encuentros: Encuentro[] }) {
                 <p className="mt-0.5 text-tiny text-slate-500">{encuentro.eje}</p>
               </div>
               <time dateTime={encuentro.comienza} className="text-tiny font-semibold text-slate-600">
-                {formatearFecha(encuentro.comienza.slice(0, 10))}
+                {formatearRangoDeFechas(encuentro.comienza, encuentro.termina)}
               </time>
             </li>
           ))}
@@ -247,10 +260,19 @@ function EstadoAcademico({ estado }: { estado: ReturnType<typeof estadoAcademico
         <div className="py-3">
           <dt className="text-sm text-slate-600">Condición</dt>
           <dd className="mt-1">
-            <span className="badge-soft">
-              <i className={regularidad.esRegular ? "bg-municipal-700" : "bg-red-600"} />
-              {regularidad.esRegular ? "Regular" : "No regular"}
-            </span>
+            {/* Sin registro de asistencia, afirmar "Regular" sería inventar un
+                dato. Se dice que falta el registro, en gris y sin alarma. */}
+            {regularidad.sinRegistro ? (
+              <span className="badge-soft">
+                <i className="bg-slate-400" />
+                Sin registro de asistencia
+              </span>
+            ) : (
+              <span className="badge-soft">
+                <i className={regularidad.esRegular ? "bg-municipal-700" : "bg-red-600"} />
+                {regularidad.esRegular ? "Regular" : "No regular"}
+              </span>
+            )}
           </dd>
         </div>
 
