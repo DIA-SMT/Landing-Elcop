@@ -3,6 +3,10 @@
 Único documento del ingreso. Reemplaza a cuatro anteriores que se contradecían
 entre sí.
 
+> Si lo que buscás es conectar **otra** aplicación a CIDITUC, andá a
+> [`integrar-cidituc.md`](integrar-cidituc.md): es la versión general de lo que
+> acá está aplicado a ELCOP, escrita para dársela a un asistente de IA.
+
 **Estado: funciona de punta a punta en desarrollo**, probado el 10 de agosto de
 2026 con una cuenta real contra el backend de producción. Falta que DITEC
 despliegue para que funcione fuera de la máquina de desarrollo.
@@ -130,17 +134,29 @@ Su PR #96 está mergeado en `dev` **pero no desplegado** —el bundle de producc
 trae la cadena de UrbanIA—, así que lo que destraba esto es el despliegue, no el
 merge.
 
-**b) ~~La cadena de certificados~~. Resuelto el 10/8/2026.** Durante un tiempo
-`estadisticas.smt.gob.ar:5000` mandaba sólo el certificado final y Node fallaba con
-`UNABLE_TO_VERIFY_LEAF_SIGNATURE`. Ahora envía la cadena completa —el intermedio
-`Sectigo Public Server Authentication CA DV R36` y el raíz `Root R46`— y valida sin
-ayuda. Se arregló donde correspondía, en el servidor, así que sirve para las doce
-aplicaciones y no sólo para nosotros.
+**b) ⚠️ La cadena de certificados depende de por dónde llegues, así que en
+Vercel va `CIDITUC_CA_PEM`.** La historia completa, porque engañó dos veces:
 
-Queda como referencia por si reaparece: se comprueba con Node puro,
-`rejectUnauthorized: true` y sin CA extra, y si volviera a fallar la salida sería
-`FALLO UNABLE_TO_VERIFY_LEAF_SIGNATURE` en vez de un 401. `CIDITUC_CA_PEM` sigue
-existiendo como escape.
+- 10/8: `estadisticas.smt.gob.ar:5000` mandaba sólo el certificado final y Node
+  fallaba con `UNABLE_TO_VERIFY_LEAF_SIGNATURE`.
+- 11/8 a la mañana: desde la máquina de desarrollo y desde una tercera red la
+  cadena llegó completa, seis intentos de seis, siempre la misma IP. Se dio por
+  arreglado en el servidor.
+- 11/8 al mediodía: el primer ingreso real en producción falló, y el registro de
+  Vercel mostró el mismo `UNABLE_TO_VERIFY_LEAF_SIGNATURE`. **Desde la red de
+  Vercel el servidor sigue mandando sólo la hoja.** Un balanceador con un nodo
+  mal configurado, o algo dependiente de la ruta: no lo controlamos.
+
+La salida es el escape que se diseñó para esto: `CIDITUC_CA_PEM` en Vercel con el
+intermedio `Sectigo Public Server Authentication CA DV R36` y el raíz `Root R46`
+concatenados. La verificación sigue completa —firma, dominio y vencimiento—; sólo
+se suple lo que el servidor no manda. Verificado de punta a punta: con ese PEM
+como única confianza, el callback llega al backend y recibe el 401 esperado para
+un token falso.
+
+El PEM se extrae de la propia conexión (los certificados son públicos), y el
+reclamo a infraestructura sigue en pie: que instalen la cadena completa en
+**todos** los nodos, no en uno.
 
 **c) El padrón real.** Hoy sale de `ELCOP_PADRON_PROVISORIO`, y **en Vercel está
 vacía**: hasta que se cargue, todo el que se autentique bien va a ver "no figurás

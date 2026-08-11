@@ -684,6 +684,38 @@ export function formatearFecha(iso: string): string {
   }).format(fecha);
 }
 
+/**
+ * Un rango de fechas legible: "14 y 15 de mayo de 2026".
+ *
+ * Existe por las clases de comisión de ELCOP, que se dictaron jueves y viernes
+ * como un solo encuentro. Si los días coinciden se muestra uno solo, y si
+ * cruzan de mes se escriben completos los dos.
+ *
+ * El día se resuelve en la zona de Tucumán, no recortando el ISO: una clase
+ * que termina a las 21:00 locales ya es "mañana" en UTC, y recortar el texto
+ * mostraba dos días para una clase de uno.
+ */
+export function formatearRangoDeFechas(desdeIso: string, hastaIso: string): string {
+  // en-CA formatea YYYY-MM-DD, que es lo que formatearFecha espera.
+  const aDiaLocal = (iso: string) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Argentina/Tucuman",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date(iso));
+
+  const desde = aDiaLocal(desdeIso);
+  const hasta = aDiaLocal(hastaIso);
+  if (desde === hasta) return formatearFecha(desde);
+
+  const mismoMes = desde.slice(0, 7) === hasta.slice(0, 7);
+  if (!mismoMes) return `${formatearFecha(desde)} y ${formatearFecha(hasta)}`;
+
+  const diaDesde = Number(desde.slice(8, 10));
+  return `${diaDesde} y ${formatearFecha(hasta)}`;
+}
+
 /** Iniciales para el avatar del equipo mientras no haya foto real. */
 export function iniciales(nombre: string): string {
   return nombre

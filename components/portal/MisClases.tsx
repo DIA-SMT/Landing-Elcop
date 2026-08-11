@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-import { formatearFecha } from "@/content/elcop";
+import { formatearRangoDeFechas } from "@/content/elcop";
 import { asistenciaDe } from "@/lib/portal/calculos";
 import type { ModuloAgrupado } from "@/lib/portal/calculos";
 import type { Asistencia, Encuentro, Material } from "@/lib/portal/tipos";
@@ -163,12 +163,15 @@ function FilaEncuentro({
             {encuentro.titulo}
           </h3>
           <p className="mt-1 text-tiny text-slate-600">
+            {/* Las clases de comisión se dictaron jueves y viernes: el rango
+                muestra los dos días como el documento oficial los lista. */}
             <time dateTime={encuentro.comienza}>
-              {formatearFecha(encuentro.comienza.slice(0, 10))}
+              {formatearRangoDeFechas(encuentro.comienza, encuentro.termina)}
             </time>
             {" · "}
             {encuentro.modalidad === "presencial" ? "Presencial" : "Virtual"}
             {encuentro.lugar ? ` · ${encuentro.lugar}` : ""}
+            {encuentro.docente ? ` · ${encuentro.docente}` : ""}
           </p>
         </div>
         <EtiquetaAsistencia encuentro={encuentro} asistencia={asistencia} />

@@ -22,6 +22,8 @@ export type Encuentro = {
   enlace: string | null;
   esMasterclass: boolean;
   referente: string | null;
+  /** Quién dictó la clase. Los plenarios con invitados usan `referente`. */
+  docente: string | null;
 };
 
 export type EstadoAsistencia = "presente" | "ausente" | "justificada";

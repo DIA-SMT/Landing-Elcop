@@ -50,6 +50,14 @@ const MENSAJES: Record<string, { titulo: string; detalle: string }> = {
     titulo: "Tu cuenta es válida, pero no figurás entre los becarios",
     detalle:
       "El portal es sólo para las personas seleccionadas. Si creés que es un error, puede ser que el documento de tu postulación no coincida con el de Ciudadano Digital."
+  },
+  // A diferencia del resto, acá NO se invita a reintentar: es una falla de
+  // configuración nuestra y reintentar no la arregla. Decir "probá de nuevo"
+  // mandaría a la persona a autenticarse otra vez para chocar con lo mismo.
+  "ingreso-no-disponible": {
+    titulo: "El ingreso no está disponible en este momento",
+    detalle:
+      "Tu cuenta está bien: es un problema nuestro y ya quedó registrado. Volvé a intentar más tarde."
   }
 };
 

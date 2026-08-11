@@ -132,8 +132,10 @@ En orden de urgencia.
    ella toda la persistencia. **Aplica también al asistente**, que manda los
    mensajes de los visitantes a OpenRouter.
 7. **Consulta a Legales** sobre la validez del Acta Compromiso. Define Mi beca.
-8. **Calendario de encuentros.** Sin fechas de clase, el panel y Mis clases sólo
-   muestran ejemplos.
+8. **Registro de asistencia de la cohorte.** El calendario real ya está cargado
+   (11/8/2026, `lib/portal/calendario.ts`); sin las asistencias el panel dice
+   "sin registro" en vez de calcular la regularidad. También faltan horarios,
+   aulas y materiales, que el documento de ELCOP no trae.
 9. **Cómo procesa hoy la coordinación las postulaciones.** No bloquea, pero
    define si el panel les sirve o les estorba.
 

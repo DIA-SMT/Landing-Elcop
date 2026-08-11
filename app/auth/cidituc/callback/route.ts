@@ -58,17 +58,33 @@ export async function GET(request: Request) {
 
   // 3. Nuestra sesión. No se guarda el token de CIDITUC: ya cumplió su función
   // y conservarlo sólo ampliaría lo que se pierde si la cookie se filtra.
+  //
+  // Este paso es el único de los tres que puede fallar por configuración
+  // nuestra: sin ELCOP_SESSION_SECRET, firmar tira una excepción. Sin este
+  // try, esa excepción era un 500 pelado con la persona YA autenticada y YA
+  // autorizada — el peor momento — y los registros quedaban vacíos. Ninguna
+  // prueba con token falso lo detecta, porque muere en el paso 1: sólo lo
+  // alcanza un token real de alguien del padrón, o sea, el primer becario.
   const nombreCompleto = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ").trim();
-  const sesion = await firmarSesion({
-    idPersona: perfil.idPersona,
-    documento,
-    nombre: nombreCompleto || becario?.nombre || "",
-    // Quien no es becario no tiene entrega propia: su documento sirve de
-    // identificador y el portal del becario le va a aparecer vacío, que es la
-    // verdad. El rol no se guarda acá; se resuelve en cada pedido (ver
-    // `lib/portal/roles.ts`).
-    becarioId: becario?.id ?? documento
-  });
+  let sesion: string;
+  try {
+    sesion = await firmarSesion({
+      idPersona: perfil.idPersona,
+      documento,
+      nombre: nombreCompleto || becario?.nombre || "",
+      // Quien no es becario no tiene entrega propia: su documento sirve de
+      // identificador y el portal del becario le va a aparecer vacío, que es la
+      // verdad. El rol no se guarda acá; se resuelve en cada pedido (ver
+      // `lib/portal/roles.ts`).
+      becarioId: becario?.id ?? documento
+    });
+  } catch (fallo) {
+    // El motivo va a los registros —también en producción, es donde pasa— y a
+    // la persona se le dice la verdad: es nuestro, y reintentar no lo arregla.
+    // El mensaje del error nombra la variable, nunca valores ni el token.
+    console.warn(`[cidituc] sesión no firmada — ${(fallo as Error)?.message}`);
+    return rechazar(origen, "ingreso-no-disponible");
+  }
 
   const respuesta = NextResponse.redirect(`${origen}/portal`);
   respuesta.cookies.set(COOKIE_SESION, sesion, {

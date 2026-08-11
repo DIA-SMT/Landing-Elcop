@@ -18,12 +18,19 @@ import type {
 export const MINIMO_ASISTENCIA = 75;
 
 export type Regularidad = {
-  /** Porcentaje sobre los encuentros que computan. `null` si todavía no hubo. */
+  /** Porcentaje sobre los encuentros que computan. `null` si no se puede calcular. */
   porcentaje: number | null;
   presentes: number;
   computables: number;
   justificadas: number;
   esRegular: boolean;
+  /**
+   * `true` cuando hay clases dictadas pero NINGUNA asistencia cargada: el
+   * calendario real llegó antes que el registro de asistencia. Calcular con
+   * eso daría 0% para todo el mundo, que no es un dato sino la falta de uno,
+   * así que el porcentaje queda en `null` y la pantalla lo dice.
+   */
+  sinRegistro: boolean;
 };
 
 /**
@@ -55,6 +62,10 @@ export function calcularRegularidad(
   const computables = encuentros.filter(computaParaAsistencia);
   const porEncuentro = new Map(asistencias.map((a) => [a.encuentroId, a]));
 
+  // Clases dictadas sin ni una asistencia cargada: el registro no existe
+  // todavía. Distinto de "faltó a todas", que sería un registro con ausencias.
+  const sinRegistro = computables.length > 0 && asistencias.length === 0;
+
   let presentes = 0;
   let justificadas = 0;
 
@@ -65,15 +76,16 @@ export function calcularRegularidad(
   }
 
   const base = computables.length - justificadas;
-  const porcentaje = base > 0 ? Math.round((presentes / base) * 100) : null;
+  const porcentaje = base > 0 && !sinRegistro ? Math.round((presentes / base) * 100) : null;
 
   return {
     porcentaje,
     presentes,
     computables: base,
     justificadas,
-    // Sin encuentros dictados todavía nadie perdió la regularidad.
-    esRegular: porcentaje === null || porcentaje >= MINIMO_ASISTENCIA
+    // Sin datos —ni encuentros dictados ni registro— nadie perdió la regularidad.
+    esRegular: porcentaje === null || porcentaje >= MINIMO_ASISTENCIA,
+    sinRegistro
   };
 }
 
