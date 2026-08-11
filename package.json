@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "cargar-padron": "node herramientas/cargar-padron.mjs",
     "portal": "node herramientas/ver-portal.mjs portal",
     "sesion": "node herramientas/sesion-dev.mjs",
     "auditar": "node herramientas/auditar.mjs",
