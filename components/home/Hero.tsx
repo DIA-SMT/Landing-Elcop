@@ -17,18 +17,31 @@ export function Hero() {
           queda en 11,7:1. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
         <VideoFondoHero />
-        {/* En móvil el velo baja en vertical, porque no hay dos columnas y el
-            texto ocupa todo el ancho. De 768px para arriba se vuelve
-            horizontal: se mantiene al 82% hasta el 60% del ancho, que es hasta
-            donde llega el texto, y después se abre al 52% del lado de la
-            tarjeta, que es blanca y opaca.
+        {/* Dos velos distintos, porque debajo hay dos cosas distintas.
 
-            El 82% no es un número elegido a ojo. Midiendo los fotogramas
-            reales, el bloque más oscuro que cae detrás del texto es
-            prácticamente negro, y ahí "transforman" en municipal-700 queda en
-            3,18:1 — apenas por encima del 3:1 que pide el texto grande. Bajar
-            a 75% lo dejaría en 2,64 y también voltearía la bajada. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.88] via-white/[0.84] to-white/[0.82] md:bg-gradient-to-r md:from-white/[0.85] md:via-white/[0.82] md:via-[60%] md:to-white/[0.52]" />
+            **Móvil (hasta 768px): 60%.** Acá el video no se descarga nunca
+            —ver `VideoFondoHero`—, así que lo único que hay debajo es la
+            portada, y la portada no tiene negros: midiendo el recorte que cae
+            detrás del texto, su percentil 1 está en 0,58 de sRGB. El velo que
+            de verdad hace falta es 0,49; estaba en 0,88, unos cuarenta puntos
+            de más heredados de dimensionarlo contra el video. De ahí que se
+            viera blanco justo en el tamaño donde entra la mayoría.
+
+            **De 768px para arriba: 86% a la izquierda, 24% a la derecha.** Acá
+            sí hay video y sí llega a negro (percentil 1 en 0,055), así que la
+            zona del texto se mantiene densa. Lo que cambia es a dónde va
+            después: la tarjeta es blanca y opaca y no hay texto suelto pasando
+            el 58% del ancho, así que de ahí en adelante el video se muestra
+            casi sin velar en vez de quedarse a mitad de camino en 52%.
+
+            Los números salen de medir, no de tantear. El piso que necesita cada
+            texto sobre el fotograma más oscuro es: 0,79 para "transforman" en
+            municipal-700, 0,78 para la bajada y la línea de postulantes en
+            slate-600, y apenas 0,38 para el título en ink. **El título grande
+            no es la restricción: lo son la palabra azul y el texto gris
+            chico.** Mientras esos dos colores no cambien, la mitad izquierda no
+            puede aclararse mucho más sin voltear el contraste. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.62] via-white/[0.58] to-white/[0.56] md:bg-gradient-to-r md:from-white/[0.86] md:via-white/[0.82] md:via-[58%] md:to-white/[0.24]" />
         {/* Difumina el corte de abajo contra el fondo de la página. */}
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#f8fbff]" />
       </div>
