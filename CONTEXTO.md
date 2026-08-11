@@ -116,14 +116,14 @@ En orden de urgencia.
 
 1. **⚠️ El prototipo de Replit guarda contraseñas en texto plano** y tiene
    credenciales de prueba versionadas. *Verificar si está publicado.* Ítem 31.
-2. **DITEC tiene que desplegar el ingreso en Derivador.** Rama pusheada, falta
-   abrir el PR. Ojo: el PR #96 de Agustín está mergeado en `dev` **pero no
-   desplegado**, así que lo que destraba es el despliegue, no el merge.
-3. **⚠️ La cadena de certificados de `estadisticas.smt.gob.ar:5000`.** Bloqueo
-   independiente del PR: el servidor manda sólo el certificado final y el código
-   prohíbe saltear la verificación en producción, así que el ingreso no va a
-   funcionar aunque el PR se despliegue. Detalle en
-   [`docs/ingreso-cidituc.md`](docs/ingreso-cidituc.md) §5.
+2. **DITEC tiene que desplegar el ingreso en Derivador.** El merge ya está hecho
+   (10/8/2026); falta el despliegue, previsto para el 11/8. Ojo con confundir una
+   cosa con la otra: el PR #96 de Agustín también estaba mergeado en `dev` y sin
+   desplegar, y lo que destraba es siempre el despliegue.
+3. **El padrón real de becarios.** Sin `ELCOP_PADRON_PROVISORIO` cargada en
+   Vercel, todo el que se autentique bien va a ver "no figurás entre los
+   becarios". Es nuestro y es rápido, pero hay que acordarse antes de encender
+   el ingreso.
 4. **Dominio de envío de correo** con SPF, DKIM y DMARC. El trámite más lento y
    no arrancó.
 5. **Fecha de apertura de la convocatoria.** Lo único que le pone calendario a la
@@ -141,11 +141,17 @@ En orden de urgencia.
 
 ## 4. Lo primero que haría mañana
 
-**Del portal no queda nada construible sin destrabar a un tercero.** Las dos cosas
-que siguen son de gestión:
+**Encender el ingreso, cuando DITEC despliegue.** Son dos variables en Vercel y
+van juntas, en el mismo movimiento:
 
-**Abrir el PR del Derivador y avisarle a Agustín**, porque toca código que él
-acaba de mergear. Es lo que destraba el ingreso.
+- `CIDITUC_INGRESO_HABILITADO=true`
+- `ELCOP_PADRON_PROVISORIO` con los documentos reales
+
+Encender la primera sin la segunda deja el ingreso funcionando y rechazando a
+todo el mundo con "no figurás entre los becarios", que se ve idéntico a estar
+roto. Después de desplegar, probar con una cuenta propia y mirar los registros de
+Vercel: cualquier falla deja una línea `[cidituc] perfil no obtenido — …` que dice
+de quién es el problema.
 
 **Sentarse con la Coordinación Administrativa.** Lo único de alto valor que no
 depende de terceros, y alimenta la Fase 2, que es la única con fecha externa dura.
