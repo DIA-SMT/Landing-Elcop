@@ -3,6 +3,10 @@
 Único documento del ingreso. Reemplaza a cuatro anteriores que se contradecían
 entre sí.
 
+> Si lo que buscás es conectar **otra** aplicación a CIDITUC, andá a
+> [`integrar-cidituc.md`](integrar-cidituc.md): es la versión general de lo que
+> acá está aplicado a ELCOP, escrita para dársela a un asistente de IA.
+
 **Estado: funciona de punta a punta en desarrollo**, probado el 10 de agosto de
 2026 con una cuenta real contra el backend de producción. Falta que DITEC
 despliegue para que funcione fuera de la máquina de desarrollo.
