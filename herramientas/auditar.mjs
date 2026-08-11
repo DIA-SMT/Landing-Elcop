@@ -175,7 +175,19 @@ for (const ruta of RUTAS) {
         cookieDeSesion(BASE, documentoDeLaSesion ? { documento: documentoDeLaSesion } : undefined)
       );
     }
-    await pagina.goto(`${BASE}${ruta}`, { waitUntil: "networkidle0" });
+    const respuesta = await pagina.goto(`${BASE}${ruta}`, { waitUntil: "networkidle0" });
+
+    // Sin esto, un 404 se auditaba igual: la página de "no encontrado" pasa
+    // todos los chequeos y la ruta rota se reportaba OK. Nos pasó con /comite
+    // cuando el rol dejó de existir — el instrumento decía 27 de 27 sobre una
+    // pantalla que ningún usuario podía ver.
+    if (!respuesta || respuesta.status() !== 200) {
+      fallaron += 1;
+      console.log(`FALLA ${ruta} @${ancho}  HTTP ${respuesta ? respuesta.status() : "sin respuesta"}`);
+      await pagina.close();
+      continue;
+    }
+
     const r = await pagina.evaluate(auditar);
 
     const problemas =

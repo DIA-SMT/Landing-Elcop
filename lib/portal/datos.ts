@@ -1,9 +1,12 @@
 /**
  * De dónde salen los datos del portal.
  *
- * Mismo patrón que `lib/padron.ts`: una función con la forma final, cuyo cuerpo
- * hoy es provisorio. Cuando exista la base, se reemplaza lo de adentro y ni el
- * cálculo ni las pantallas se enteran.
+ * Con la base configurada (`SUPABASE_URL` + `SUPABASE_SECRET_KEY`), las
+ * entregas, las consultas y las asistencias viven en sus tablas — ver
+ * [`db/migraciones`](../../db/migraciones). Sin base, cada función cae a su
+ * implementación provisoria en memoria, para que el proyecto ande en un
+ * entorno de desarrollo sin credenciales. Las pantallas no distinguen una cosa
+ * de la otra, que era la promesa de este módulo desde el principio.
  *
  * ## Dos modos, y la diferencia importa
  *
@@ -18,8 +21,12 @@
  * que no mostrarle nada. El ejemplo conserva su propio calendario, porque sus
  * asistencias apuntan a esas clases y mezclarlas con las reales las rompería.
  */
+import { randomUUID } from "node:crypto";
+
 import { almacen } from "@/lib/almacen";
+import { baseDeDatos, falloDeBase } from "@/lib/supabase";
 import { CALENDARIO_2026 } from "./calendario";
+import { SECCIONES_PROYECTO } from "./tipos";
 import type {
   Acta,
   Asistencia,
@@ -40,8 +47,8 @@ import type {
  * visibles, sesiones de mentoría, sus consultas y su entrega— más las actas.
  */
 export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal> {
-  const enviadas = consultasEnviadas(becarioId);
-  const propia = entregaGuardada(becarioId);
+  const enviadas = await consultasEnviadas(becarioId);
+  const propia = await entregaGuardada(becarioId);
 
   if (process.env.PORTAL_DATOS_DEMO === "true") {
     const datos = datosDeEjemplo();
@@ -56,9 +63,7 @@ export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal>
 
   return {
     encuentros: CALENDARIO_2026,
-    // Vacío a propósito: el registro de asistencia todavía no se cargó, y eso
-    // NO es lo mismo que "faltó a todas". `calcularRegularidad` lo distingue.
-    asistencias: [],
+    asistencias: await asistenciasDe(becarioId),
     materiales: [],
     consultas: enviadas,
     sesionesMentoria: [],
@@ -66,6 +71,30 @@ export async function datosDelPortal(becarioId: string): Promise<DatosDelPortal>
     actas: [],
     esDemostracion: false
   };
+}
+
+/**
+ * Las asistencias del becario. Hasta que la coordinación cargue el registro,
+ * la tabla está vacía y eso NO es lo mismo que "faltó a todas":
+ * `calcularRegularidad` lo distingue y el panel dice "sin registro".
+ */
+async function asistenciasDe(becarioId: string): Promise<Asistencia[]> {
+  const base = baseDeDatos();
+  if (!base) return [];
+
+  const { data, error } = await base
+    .from("asistencias")
+    .select("encuentro_id, estado, origen, registrada_en")
+    .eq("becario_id", becarioId);
+
+  if (error) falloDeBase("leer las asistencias", error);
+
+  return (data ?? []).map((fila) => ({
+    encuentroId: fila.encuentro_id,
+    estado: fila.estado,
+    origen: fila.origen,
+    registradaEn: fila.registrada_en
+  }));
 }
 
 /**
@@ -96,21 +125,41 @@ export async function fechaLimiteEntrega(): Promise<string | null> {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Almacén provisorio de consultas                                            */
+/* Consultas                                                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Lo que se escribe desde el portal, hasta que exista la base.
- *
- * No es persistencia y la advertencia completa está en
- * [`lib/almacen.ts`](../almacen.ts): un reinicio los vacía y en serverless cada
- * instancia lleva el suyo.
+ * Con la base configurada, las consultas y las entregas viven en sus tablas.
+ * Sin base —desarrollo sin credenciales— caen a estos Maps en memoria, con la
+ * advertencia de siempre ([`lib/almacen.ts`](../almacen.ts)): un reinicio los
+ * vacía y en serverless cada instancia lleva el suyo.
  */
 const consultasPorBecario = almacen<Consulta[]>("consultas");
 const entregasPorBecario = almacen<Entrega>("entregas");
 
-function consultasEnviadas(becarioId: string): Consulta[] {
-  return consultasPorBecario.get(becarioId) ?? [];
+async function consultasEnviadas(becarioId: string): Promise<Consulta[]> {
+  const base = baseDeDatos();
+  if (!base) return consultasPorBecario.get(becarioId) ?? [];
+
+  const { data, error } = await base
+    .from("consultas")
+    .select("*")
+    .eq("becario_id", becarioId)
+    .order("creada_en", { ascending: false });
+
+  if (error) falloDeBase("leer las consultas", error);
+
+  return (data ?? []).map((fila) => ({
+    id: fila.id,
+    asunto: fila.asunto,
+    texto: fila.texto,
+    estado: fila.estado,
+    creadaEn: fila.creada_en,
+    sesionId: fila.sesion_id,
+    sesion: fila.sesion,
+    respuesta: fila.respuesta,
+    respondidaEn: fila.respondida_en
+  }));
 }
 
 /** Registra una consulta enviada desde el portal. Devuelve la consulta creada. */
@@ -119,7 +168,7 @@ export async function registrarConsulta(
   datos: { asunto: string; texto: string; sesionId: string | null; sesion: string | null }
 ): Promise<Consulta> {
   const consulta: Consulta = {
-    id: `enviada-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: randomUUID(),
     asunto: datos.asunto,
     texto: datos.texto,
     estado: "pendiente",
@@ -129,6 +178,22 @@ export async function registrarConsulta(
     respuesta: null,
     respondidaEn: null
   };
+
+  const base = baseDeDatos();
+  if (base) {
+    const { error } = await base.from("consultas").insert({
+      id: consulta.id,
+      becario_id: becarioId,
+      asunto: consulta.asunto,
+      texto: consulta.texto,
+      estado: consulta.estado,
+      creada_en: consulta.creadaEn,
+      sesion_id: consulta.sesionId,
+      sesion: consulta.sesion
+    });
+    if (error) falloDeBase("guardar la consulta", error);
+    return consulta;
+  }
 
   const propias = consultasPorBecario.get(becarioId) ?? [];
   consultasPorBecario.set(becarioId, [consulta, ...propias]);
@@ -153,9 +218,62 @@ export function entregaVacia(): Entrega {
   };
 }
 
+/** La forma de la tabla `entregas`: las cinco secciones son columnas. */
+type FilaEntrega = {
+  becario_id: string;
+  estado: EstadoEntrega;
+  titulo: string | null;
+  resumen: string | null;
+  problema: string;
+  diagnostico: string;
+  propuesta: string;
+  presupuesto: string;
+  viabilidad: string;
+  presentado_en: string | null;
+  guardada_en: string | null;
+  observaciones: string | null;
+};
+
+function desdeFilaEntrega(fila: FilaEntrega): Entrega {
+  return {
+    estado: fila.estado,
+    titulo: fila.titulo,
+    resumen: fila.resumen,
+    secciones: Object.fromEntries(
+      SECCIONES_PROYECTO.map((seccion) => [seccion, fila[seccion] ?? ""])
+    ) as Entrega["secciones"],
+    presentadoEn: fila.presentado_en,
+    guardadaEn: fila.guardada_en,
+    observaciones: fila.observaciones
+  };
+}
+
+function aFilaEntrega(becarioId: string, entrega: Entrega): FilaEntrega {
+  return {
+    becario_id: becarioId,
+    estado: entrega.estado,
+    titulo: entrega.titulo,
+    resumen: entrega.resumen,
+    ...entrega.secciones,
+    presentado_en: entrega.presentadoEn,
+    guardada_en: entrega.guardadaEn,
+    observaciones: entrega.observaciones
+  };
+}
+
 /** La entrega guardada del becario, o `null` si nunca guardó. */
-export function entregaGuardada(becarioId: string): Entrega | null {
-  return entregasPorBecario.get(becarioId) ?? null;
+export async function entregaGuardada(becarioId: string): Promise<Entrega | null> {
+  const base = baseDeDatos();
+  if (!base) return entregasPorBecario.get(becarioId) ?? null;
+
+  const { data, error } = await base
+    .from("entregas")
+    .select("*")
+    .eq("becario_id", becarioId)
+    .maybeSingle();
+
+  if (error) falloDeBase("leer la entrega", error);
+  return data ? desdeFilaEntrega(data) : null;
 }
 
 /**
@@ -191,7 +309,7 @@ export async function guardarEntrega(
     presentar: boolean;
   }
 ): Promise<Entrega> {
-  const anterior = entregaGuardada(becarioId);
+  const anterior = await entregaGuardada(becarioId);
   const ahora = new Date().toISOString();
 
   const entrega: Entrega = {
@@ -203,6 +321,15 @@ export async function guardarEntrega(
     guardadaEn: ahora,
     observaciones: anterior?.observaciones ?? null
   };
+
+  const base = baseDeDatos();
+  if (base) {
+    // Upsert: la tabla guarda la versión vigente, una fila por becario.
+    // El historial de versiones, si algún día hace falta, es otra tabla.
+    const { error } = await base.from("entregas").upsert(aFilaEntrega(becarioId, entrega));
+    if (error) falloDeBase("guardar la entrega", error);
+    return entrega;
+  }
 
   entregasPorBecario.set(becarioId, entrega);
 
@@ -239,12 +366,40 @@ export async function entregasDeLaCohorte(): Promise<EntregaDeCohorte[]> {
   }
 
   // Lo guardado de verdad gana sobre el ejemplo: si alguien escribió, es lo suyo.
-  for (const [becarioId, entrega] of entregasPorBecario) {
-    porBecario.set(becarioId, {
-      becarioId,
-      nombre: porBecario.get(becarioId)?.nombre ?? null,
-      entrega
-    });
+  const base = baseDeDatos();
+  if (base) {
+    // Dos lecturas y el join en memoria, a propósito: un join declarado exigiría
+    // una clave foránea de entregas a becarios, y una entrega de alguien que ya
+    // no está en el padrón debe seguir siendo legible, no un error.
+    const [entregas, nombres] = await Promise.all([
+      base.from("entregas").select("*"),
+      base.from("becarios").select("documento, nombre")
+    ]);
+    if (entregas.error) falloDeBase("leer las entregas de la cohorte", entregas.error);
+    if (nombres.error) falloDeBase("leer el padrón", nombres.error);
+
+    const nombrePorDocumento = new Map(
+      (nombres.data ?? []).map((becario) => [becario.documento, becario.nombre])
+    );
+
+    for (const fila of (entregas.data ?? []) as FilaEntrega[]) {
+      porBecario.set(fila.becario_id, {
+        becarioId: fila.becario_id,
+        nombre:
+          nombrePorDocumento.get(fila.becario_id) ??
+          porBecario.get(fila.becario_id)?.nombre ??
+          null,
+        entrega: desdeFilaEntrega(fila)
+      });
+    }
+  } else {
+    for (const [becarioId, entrega] of entregasPorBecario) {
+      porBecario.set(becarioId, {
+        becarioId,
+        nombre: porBecario.get(becarioId)?.nombre ?? null,
+        entrega
+      });
+    }
   }
 
   // Primero lo que espera respuesta del comité, que es a lo que vienen.
@@ -275,7 +430,7 @@ export async function registrarObservaciones(
   becarioId: string,
   observaciones: string
 ): Promise<Entrega | null> {
-  const actual = entregaGuardada(becarioId) ?? entregaDeEjemploDe(becarioId);
+  const actual = (await entregaGuardada(becarioId)) ?? entregaDeEjemploDe(becarioId);
   if (!actual || actual.estado !== "presentado") return null;
 
   const entrega: Entrega = {
@@ -283,6 +438,15 @@ export async function registrarObservaciones(
     estado: "observado",
     observaciones: observaciones.trim()
   };
+
+  const base = baseDeDatos();
+  if (base) {
+    // Upsert y no update: si lo observado era una entrega de ejemplo (modo
+    // demo), la fila todavía no existe y la observación tiene que sobrevivir.
+    const { error } = await base.from("entregas").upsert(aFilaEntrega(becarioId, entrega));
+    if (error) falloDeBase("guardar las observaciones", error);
+    return entrega;
+  }
 
   entregasPorBecario.set(becarioId, entrega);
 

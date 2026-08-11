@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export default async function PaginaComite() {
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/portal");
-  if (!esComite(sesion.documento)) notFound();
+  if (!(await esComite(sesion.documento))) notFound();
 
   const entregas = await entregasDeLaCohorte();
 

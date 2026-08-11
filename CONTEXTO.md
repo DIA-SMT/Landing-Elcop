@@ -55,19 +55,30 @@ sepa qué va a haber, sin enlazar a rutas que no existen.
   proyecto final (borrador y presentación), devolución del comité, y los permisos
   del comité con sesión de becario y de comité.
 
-### Los tres tapones, que son el mismo
+### La base de datos existe (11/8/2026)
 
-**No hay base de datos.** De ahí salen las tres limitaciones que hay que conocer:
+Supabase (Postgres, región São Paulo); las tablas están en
+[`db/migraciones`](db/migraciones) y el cliente en `lib/supabase.ts`. El
+navegador nunca habla con la base: todo pasa por el servidor con la clave
+secreta, y el RLS queda encendido sin políticas como cinturón. Sin
+`SUPABASE_URL` configurada, cada módulo cae a su implementación provisoria
+(memoria o variable de entorno), así el proyecto anda sin credenciales.
 
-- **Lo que se escribe vive en memoria del proceso** — consultas, proyectos y el
-  contador del chat, en tres `Map` colgados de `globalThis`. Un reinicio los
-  vacía y en serverless cada instancia lleva el suyo. Alcanza para probar los
-  circuitos; ninguna consulta ni proyecto real puede depender de esto.
-- **El proyecto final guarda una sola versión.** Editar y guardar después de
-  presentar reemplaza lo presentado y vuelve el estado a borrador: en la práctica
-  retira la entrega, y la pantalla lo dice así.
-- **El padrón y el comité salen de variables de entorno**, no de las
-  postulaciones seleccionadas.
+Lo que cambió y lo que no:
+
+- **Entregas, consultas y asistencias persisten** en sus tablas — verificado
+  guardando, reiniciando el servidor y releyendo. El único `Map` que queda en
+  memoria es el contador del chat, y para frenar abuso casero alcanza.
+- **El padrón y el comité viven en tablas** (`becarios`, `comite`): se agrega o
+  saca gente sin redeploy. `ELCOP_PADRON_PROVISORIO` y `ELCOP_COMITE_PROVISORIO`
+  quedan sólo como respaldo de desarrollo.
+- **El proyecto final sigue guardando una sola versión.** Editar y guardar
+  después de presentar retira la entrega, y la pantalla lo dice así.
+- **Los materiales todavía no tienen archivo real**: falta el almacenamiento
+  (Supabase Storage), que es otro paso.
+
+El aval para alojar datos personales en la nube (ítem 21) quedó **asumido por
+la Dirección el 11/8/2026, formalización pendiente**.
 
 ---
 
@@ -128,9 +139,10 @@ En orden de urgencia.
    no arrancó.
 5. **Fecha de apertura de la convocatoria.** Lo único que le pone calendario a la
    Fase 2.
-6. **Aval para alojar datos personales en la nube.** Bloquea la Fase 1, y con
-   ella toda la persistencia. **Aplica también al asistente**, que manda los
-   mensajes de los visitantes a OpenRouter.
+6. **Formalizar el aval para alojar datos personales en la nube.** La Dirección
+   lo asumió el 11/8/2026 y la base ya corre en Supabase; falta el papel que lo
+   respalde. **Aplica también al asistente**, que manda los mensajes de los
+   visitantes a OpenRouter.
 7. **Consulta a Legales** sobre la validez del Acta Compromiso. Define Mi beca.
 8. **Registro de asistencia de la cohorte.** El calendario real ya está cargado
    (11/8/2026, `lib/portal/calendario.ts`); sin las asistencias el panel dice
