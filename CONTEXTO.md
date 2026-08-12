@@ -125,8 +125,10 @@ porque se replican en cada proyecto nuevo:
 
 En orden de urgencia.
 
-1. **⚠️ El prototipo de Replit guarda contraseñas en texto plano** y tiene
-   credenciales de prueba versionadas. *Verificar si está publicado.* Ítem 31.
+1. **⚠️ El prototipo de Replit: decidido despublicarlo** (12/8/2026). Guarda
+   contraseñas en texto plano y el portal real ya lo reemplazó. Esperando que
+   Félix lo baje, diga si hubo datos reales y pase la URL para verificar.
+   Ítem 31.
 2. **DITEC tiene que desplegar el ingreso en Derivador.** El merge ya está hecho
    (10/8/2026); falta el despliegue, previsto para el 11/8. Ojo con confundir una
    cosa con la otra: el PR #96 de Agustín también estaba mergeado en `dev` y sin

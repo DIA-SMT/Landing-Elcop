@@ -174,16 +174,18 @@ export type VideoHero = {
  * Videos de fondo del hero.
  *
  * Son animaciones generadas a partir de fotos reales de la cohorte 2026. Van
- * debajo de un velo blanco al 88%: se leen como textura viva, no como imagen.
- * Se cruzan entre sí con una disolvencia de 1,4 segundos.
+ * debajo de un velo blanco y se cruzan entre sí con una disolvencia de 1,4
+ * segundos.
  *
  * No se descargan en celulares ni con movimiento reducido ni con el ahorro de
  * datos activado: en esos casos se ve sólo la portada del primero.
  *
- * ⚠ `hero-photocall` es el telón de logos, y el generador deformó el sello de
- * la UNSTA: donde va el lema se leen letras inventadas. Debajo del velo actual
- * no se distingue. **Si alguna vez se sube la opacidad del video, ese hay que
- * sacarlo de la lista.**
+ * ⚠ Acá había un tercer video, `hero-unsta.mp4` (el telón institucional), y se
+ * sacó el 12/8/2026: el generador deformó el sello de la UNSTA —donde va el
+ * lema se leen letras inventadas— y al bajar el velo del hero al 16% del lado
+ * derecho quedó a la vista. Los archivos siguen en `public/video/` por si se
+ * regenera bien; **no volver a listarlo sin verificar el sello con zoom**
+ * (ítem 24 de PENDIENTES.md).
  */
 export const VIDEOS_HERO: VideoHero[] = [
   {
@@ -197,12 +199,6 @@ export const VIDEOS_HERO: VideoHero[] = [
     mp4: "/video/hero-grupo.mp4",
     portada: "/video/hero-grupo.jpg",
     descripcion: "Foto grupal de la cohorte"
-  },
-  {
-    id: "hero-photocall",
-    mp4: "/video/hero-unsta.mp4",
-    portada: "/video/hero-unsta.jpg",
-    descripcion: "Telón institucional de UNSTA y Ciudad SMT"
   }
 ];
 
