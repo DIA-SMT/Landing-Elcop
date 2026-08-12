@@ -1,10 +1,11 @@
-import { DIPLOMATURA, EJES } from "@/content/elcop";
+import { DIPLOMATURA, EJES, ESCUELA } from "@/content/elcop";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
- * Los cuatro ejes como recorrido numerado, no como cuatro tarjetas iguales:
- * la progresión (sujeto → territorio → estado → impacto) es parte del
+ * El programa como recorrido numerado, no como tarjetas iguales: la progresión
+ * mensual (mensaje → institución → agendas → proyecto final) es parte del
  * argumento pedagógico, así que se lee de arriba hacia abajo sobre un riel.
+ * El contenido es el programa real dictado en 2026 — ver `EJES` en el content.
  */
 export function Formacion() {
   return (
@@ -22,22 +23,12 @@ export function Formacion() {
           </span>
           <span className="badge-soft">
             <i className="bg-municipal-700" />
-            {EJES.length} ejes
+            {ESCUELA.cohorte}
           </span>
         </div>
       </div>
 
-      {/* Los textos de los ejes todavía no son los oficiales: se avisa acá y no
-          sólo en el código, para no presentarlos como definitivos. */}
-      <p className="-mt-2 mb-10 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-        <span className="badge-soft">
-          <i className="bg-brandYellow" />
-          Programa provisorio
-        </span>
-        Las descripciones de cada eje son preliminares hasta que ELCOP confirme el programa.
-      </p>
-
-      <ol className="flex flex-col">
+      <ol className="mt-4 flex flex-col">
         {EJES.map((eje, indice) => {
           const ultimo = indice === EJES.length - 1;
           return (
@@ -45,7 +36,7 @@ export function Formacion() {
               <Reveal>
                 <div className="grid gap-4 md:grid-cols-[7rem_1fr] md:gap-10">
                   <div className="md:pt-1">
-                    <p className="micro-label">Eje {eje.numero}</p>
+                    <p className="micro-label">Mes {eje.numero}</p>
                     <p
                       aria-hidden="true"
                       className="mt-1 font-display text-[3.5rem] font-extrabold leading-none tracking-tight text-municipal-700 tabular-nums md:text-7xl"

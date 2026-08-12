@@ -84,69 +84,60 @@ export function Footer() {
               </a>
             </address>
 
-            {/* Un dato que todavía no tenemos se muestra como pendiente, no en
-                blanco: que se entienda que existe y falta cargarlo. */}
-            <dl className="mt-5 flex flex-col gap-3 text-sm">
-              <div>
-                <dt className="micro-label">Email</dt>
-                <dd className="mt-1">
-                  {CONTACTO.email ? (
-                    <a
-                      href={`mailto:${CONTACTO.email}`}
-                      className="font-semibold text-municipal-700 hover:underline"
-                    >
-                      {CONTACTO.email}
-                    </a>
-                  ) : (
-                    <span className="badge-soft">
-                      <i className="bg-slate-400" />A confirmar
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="micro-label">Teléfono</dt>
-                <dd className="mt-1">
-                  {CONTACTO.telefono ? (
-                    <a
-                      href={`tel:${CONTACTO.telefono.replace(/\s/g, "")}`}
-                      className="font-semibold text-municipal-700 hover:underline"
-                    >
-                      {CONTACTO.telefono}
-                    </a>
-                  ) : (
-                    <span className="badge-soft">
-                      <i className="bg-slate-400" />A confirmar
-                    </span>
-                  )}
-                </dd>
-              </div>
-            </dl>
+            {/* Lo que todavía no existe no se muestra: un pie lleno de
+                "A confirmar" le dice al visitante que el sitio está a medio
+                hacer, y el dato aparece solo cuando ELCOP lo confirme en el
+                content. El asistente del chat sí sabe decir que faltan. */}
+            {(CONTACTO.email || CONTACTO.telefono) && (
+              <dl className="mt-5 flex flex-col gap-3 text-sm">
+                {CONTACTO.email && (
+                  <div>
+                    <dt className="micro-label">Email</dt>
+                    <dd className="mt-1">
+                      <a
+                        href={`mailto:${CONTACTO.email}`}
+                        className="font-semibold text-municipal-700 hover:underline"
+                      >
+                        {CONTACTO.email}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+                {CONTACTO.telefono && (
+                  <div>
+                    <dt className="micro-label">Teléfono</dt>
+                    <dd className="mt-1">
+                      <a
+                        href={`tel:${CONTACTO.telefono.replace(/\s/g, "")}`}
+                        className="font-semibold text-municipal-700 hover:underline"
+                      >
+                        {CONTACTO.telefono}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            )}
 
-            <h2 className="micro-label mt-6">Redes</h2>
-            <ul className="mt-2 flex flex-wrap items-center gap-2">
-              {REDES.map((red) =>
-                red.href ? (
-                  <li key={red.nombre}>
-                    <a
-                      href={red.href}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="secondary-button compact"
-                    >
-                      {red.nombre}
-                    </a>
-                  </li>
-                ) : (
-                  <li key={red.nombre}>
-                    <span className="badge-soft">
-                      <i className="bg-slate-400" />
-                      {red.nombre}: a confirmar
-                    </span>
-                  </li>
-                )
-              )}
-            </ul>
+            {REDES.some((red) => red.href) && (
+              <>
+                <h2 className="micro-label mt-6">Redes</h2>
+                <ul className="mt-2 flex flex-wrap items-center gap-2">
+                  {REDES.filter((red) => red.href).map((red) => (
+                    <li key={red.nombre}>
+                      <a
+                        href={red.href!}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="secondary-button compact"
+                      >
+                        {red.nombre}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         </div>
 
@@ -154,9 +145,6 @@ export function Footer() {
           <div>
             <p className="text-tiny text-slate-500">
               © {anio} {ESCUELA.nombre}. {ESCUELA.socios}.
-            </p>
-            <p className="mt-1 text-tiny text-slate-500">
-              Sitio en construcción: hay contenidos provisorios marcados como tales.
             </p>
           </div>
 
