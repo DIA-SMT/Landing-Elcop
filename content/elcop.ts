@@ -293,7 +293,7 @@ export const DIPLOMATURA = {
   kicker: "Formación",
   titulo: "Diplomatura en Liderazgo y Comunicación Política",
   bajada:
-    "Cuatro ejes que se recorren en orden: del liderazgo personal a la política pública que se implementa y se mide.",
+    "Cuatro meses que se recorren en orden: del mensaje y la identidad pública al proyecto de política pública que se presenta y se defiende.",
   // Fuente de verdad: documento oficial de ELCOP (4 meses, 4 ejes).
   // La prensa publicó 5 meses y 2 trayectos. Ver PENDIENTES.md.
   duracion: "4 meses",
@@ -303,46 +303,41 @@ export const DIPLOMATURA = {
 /**
  * Los cuatro ejes de la diplomatura.
  *
- * El documento oficial de ELCOP trae los títulos pero no las descripciones.
- * Los textos de abajo son provisorios, escritos para sostener la maqueta, y
- * hay que reemplazarlos por el programa real antes de publicar.
+ * El programa REAL de la cohorte 2026, del documento oficial "Calendarización
+ * para la web" que ELCOP entregó en agosto de 2026 (el mismo que alimenta
+ * `lib/portal/calendario.ts`). Los propósitos de los tres módulos son texto del
+ * documento; los temas salen de las clases efectivamente dictadas. El cuarto
+ * bloque es el mes de proyecto final, que el documento no detalla porque no
+ * tiene clases: su descripción sale del propio documento de la diplomatura.
  */
 export const EJES: EjeFormativo[] = [
   {
     numero: 1,
-    titulo: "El Sujeto Político",
-    // TODO: confirmar con ELCOP — descripción provisoria.
+    titulo: "El Sujeto Político y la Estrategia del Mensaje",
     descripcion:
-      "Quién lidera y desde dónde. El eje trabaja la construcción del perfil dirigente: ética pública, oratoria, manejo de la propia narrativa y las decisiones que se toman cuando no hay consenso.",
-    // TODO: confirmar con ELCOP — temario provisorio.
-    temas: ["Ética y vocación pública", "Oratoria y discurso", "Narrativa personal", "Toma de decisiones"]
+      "Construir la identidad pública. Antes de salir a la gestión o al territorio, el dirigente debe entender cómo se diagnostica una política pública, cómo se analiza el contexto de opinión y cómo se articula una narrativa convincente.",
+    temas: ["Políticas públicas", "Nuevos medios de comunicación", "Estrategia de comunicación política e institucional", "Storytelling", "Análisis de opinión pública"]
   },
   {
     numero: 2,
-    titulo: "El Territorio",
-    // TODO: confirmar con ELCOP — descripción provisoria.
+    titulo: "Herramientas Institucionales y Acción Comunitaria",
     descripcion:
-      "Dónde se juega la política. Lectura del territorio y de su gente: opinión pública, análisis del electorado, trabajo con organizaciones sociales y comunicación en escala barrial.",
-    // TODO: confirmar con ELCOP — temario provisorio.
-    temas: ["Opinión pública", "Análisis del electorado", "Organizaciones sociales", "Comunicación territorial"]
+      "Anclar al becario en la realidad social e institucional local. Del mensaje a la institución y al territorio: el marco normativo y económico, conectado con la capacidad técnica de hablar en público.",
+    temas: ["Gestión comunitaria y ONGs", "Derecho constitucional", "Economía local", "Práctica de oratoria", "Liderazgo parlamentario"]
   },
   {
     numero: 3,
-    titulo: "El Estado",
-    // TODO: confirmar con ELCOP — descripción provisoria.
+    titulo: "Agendas Complejas, Negociación y Exposición",
     descripcion:
-      "Cómo funciona la máquina. Arquitectura institucional del municipio, presupuesto, herramientas de gestión pública y el recorrido concreto de una política desde el expediente hasta la calle.",
-    // TODO: confirmar con ELCOP — temario provisorio.
-    temas: ["Arquitectura institucional", "Presupuesto municipal", "Gestión pública", "Ciclo de la política pública"]
+      "Ampliar la mirada hacia los grandes debates del presente: la ciudad sustentable, el liderazgo juvenil, la negociación internacional y la exposición ante los medios.",
+    temas: ["Construcción de comunidad", "Agenda verde", "Negociación y construcción democrática", "Entrenamiento de medios", "Transporte y logística"]
   },
   {
     numero: 4,
-    titulo: "El Impacto Final",
-    // TODO: confirmar con ELCOP — descripción provisoria.
+    titulo: "Proyecto de Política Pública Innovadora",
     descripcion:
-      "Qué queda después. Formulación, medición y comunicación de resultados: acá cada participante desarrolla y defiende su Proyecto de Política Pública Innovadora para San Miguel de Tucumán.",
-    // TODO: confirmar con ELCOP — temario provisorio.
-    temas: ["Formulación de proyectos", "Indicadores de impacto", "Comunicación de resultados", "Defensa del proyecto final"]
+      "El cuarto mes no tiene clases: cada becario elabora y defiende su Proyecto de Política Pública Innovadora para San Miguel de Tucumán, con el acompañamiento de las mentorías.",
+    temas: ["Formulación del proyecto", "Mentorías", "Defensa ante el comité académico"]
   }
 ];
 
@@ -352,38 +347,37 @@ export const REFERENTES: Referente[] = [
     credencial: "Estratega en comunicación social y política digital",
     tema: "Masterclass inaugural"
   },
+  // Los temas que siguen están confirmados por el calendario oficial de la
+  // cohorte 2026 ("Calendarización para la web"): son los plenarios dictados.
   {
     nombre: "Diego Reynoso",
     credencial: "Investigador CONICET · Dr. FLACSO-México",
-    tema: "Opinión pública y dinámica del electorado"
+    tema: "Análisis de opinión pública"
   },
   {
     nombre: "Elisabeth Möhle",
     credencial: "Fundar · Ciencias ambientales",
-    tema: "Desarrollo sostenible y cambio climático"
+    tema: "La agenda verde: ciudad sustentable y calidad de vida"
   },
   {
     nombre: "Julieta Daffonchio",
     credencial: "Politóloga · Movilidad urbana",
-    tema: "Logística y transporte en el desarrollo de las ciudades"
+    tema: "Transporte y logística"
   },
   {
     nombre: "Pablo Pérez Paladino",
     credencial: "Asociación Argentina de Consultores Políticos",
-    // TODO: confirmar con ELCOP — falta el tema de la masterclass.
-    tema: "Consultoría política"
+    tema: "Nuevos medios de comunicación en la política"
   },
   {
     nombre: "Malena Dip",
     credencial: "Comunicación digital",
-    // TODO: confirmar con ELCOP — falta el tema de la masterclass.
-    tema: "Comunicación digital"
+    tema: "Nuevos medios de comunicación en la política"
   },
   {
     nombre: "Laureano Bielsa",
     credencial: "Abogado especializado en finanzas",
-    // TODO: confirmar con ELCOP — falta el tema de la masterclass.
-    tema: "Finanzas públicas"
+    tema: "Nuevos medios de comunicación en la política"
   }
 ];
 
@@ -549,57 +543,52 @@ export const FAQ: PreguntaFrecuente[] = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * Notas de ejemplo armadas sobre masterclass efectivamente dictadas en la
- * cohorte 2026. Los títulos y bajadas los redactamos nosotros para poder
- * maquetar el listado: NO son textos publicados por ELCOP.
+ * Crónicas de los plenarios dictados en la cohorte 2026. Fechas, temas e
+ * invitados salen del calendario oficial ("Calendarización para la web", el
+ * mismo documento que alimenta `lib/portal/calendario.ts`): nada está
+ * inventado, y por eso ya no llevan la marca de ejemplo.
  *
- * `esEjemplo: true` hace que la interfaz los muestre marcados como ejemplo,
- * para no presentarlos como contenido oficial.
+ * Las bajadas se limitan a lo que el documento respalda —quién dictó qué y
+ * cuándo— sin atribuir citas ni contenidos que no nos consten.
  *
- * Las portadas SÍ son fotos reales de la cohorte 2026. El texto alternativo
- * describe lo que se ve y nada más: no afirma de qué masterclass es cada una,
- * porque no lo sabemos.
- *
- * TODO: confirmar con ELCOP a qué encuentro corresponde cada foto, para poder
- * emparejarlas con la nota correcta y escribir un alt más preciso.
+ * Las portadas son fotos reales de la cohorte 2026, pero no sabemos a qué
+ * encuentro corresponde cada una: el texto alternativo describe lo que se ve
+ * y nada más, y la foto acompaña sin afirmar que sea de esa clase.
  */
 export const PUBLICACIONES: Publicacion[] = [
   {
-    slug: "masterclass-inaugural-de-ambrosio",
-    titulo: "La masterclass inaugural marcó el tono de la primera cohorte",
+    slug: "plenario-agenda-verde",
+    titulo: "La agenda verde: ciudad sustentable y calidad de vida",
     bajada:
-      "Marisol De Ambrosio abrió la Escuela con una lectura de la comunicación política digital y del rol de la estrategia en la construcción de agenda pública.",
-    // TODO: confirmar con ELCOP — fecha de ejemplo.
-    fecha: "2026-03-18",
-    categoria: "Masterclass",
-    imagen: "/fotos/masterclass-aula.jpg",
-    imagenAlt: "Encuentro de la cohorte 2026 en el aula magna de la UNSTA",
-    esEjemplo: true
+      "Elisabeth Möhle, de Fundar, encabezó el sexto plenario de la cohorte, dedicado a la sustentabilidad y la calidad de vida en la ciudad.",
+    fecha: "2026-07-04",
+    categoria: "Plenario",
+    imagen: "/fotos/cohorte-grupo.jpg",
+    imagenAlt: "Foto grupal de los becarios de la cohorte 2026 en la UNSTA",
+    esEjemplo: false
   },
   {
-    slug: "reynoso-opinion-publica",
-    titulo: "Diego Reynoso: cómo se mueve el electorado y qué mide la opinión pública",
+    slug: "plenario-analisis-opinion-publica",
+    titulo: "Análisis de opinión pública, con Diego Reynoso",
     bajada:
-      "El investigador del CONICET y doctor por FLACSO-México trabajó con los becarios la dinámica del electorado y los límites de las encuestas como herramienta de gestión.",
-    // TODO: confirmar con ELCOP — fecha de ejemplo.
-    fecha: "2026-04-22",
-    categoria: "Masterclass",
+      "El investigador del CONICET y doctor por FLACSO-México dictó el segundo plenario de la cohorte, dedicado al análisis de la opinión pública.",
+    fecha: "2026-05-30",
+    categoria: "Plenario",
     imagen: "/fotos/masterclass-datos.jpg",
     imagenAlt:
       "Clase de la cohorte 2026 con una presentación de datos de opinión pública proyectada",
-    esEjemplo: true
+    esEjemplo: false
   },
   {
-    slug: "daffonchio-movilidad-urbana",
-    titulo: "Movilidad urbana: la logística como política pública de la ciudad",
+    slug: "plenario-nuevos-medios",
+    titulo: "Nuevos medios de comunicación en la política",
     bajada:
-      "Julieta Daffonchio puso el foco en el transporte y la logística urbana como variables de desarrollo, con casos aplicables a San Miguel de Tucumán.",
-    // TODO: confirmar con ELCOP — fecha de ejemplo.
-    fecha: "2026-05-13",
-    categoria: "Masterclass",
-    imagen: "/fotos/cohorte-grupo.jpg",
-    imagenAlt: "Foto grupal de los becarios de la cohorte 2026 en la UNSTA",
-    esEjemplo: true
+      "Pablo Pérez Paladino, Malena Dip y Laureano Bielsa compartieron el primer plenario de la cohorte 2026, sobre los nuevos medios en la comunicación política.",
+    fecha: "2026-05-16",
+    categoria: "Plenario",
+    imagen: "/fotos/masterclass-aula.jpg",
+    imagenAlt: "Encuentro de la cohorte 2026 en el aula magna de la UNSTA",
+    esEjemplo: false
   }
 ];
 
@@ -611,8 +600,9 @@ export const PUBLICACIONES: Publicacion[] = [
  * Datos de contacto institucional.
  *
  * La dirección está confirmada. El resto todavía no: mientras `email` y
- * `telefono` sean `null`, el pie muestra el dato como pendiente en vez de
- * inventar uno o dejar un hueco vacío.
+ * `telefono` sean `null`, el pie directamente los omite — mostrar "A confirmar"
+ * en el sitio publicado sólo contaba que estaba incompleto. El asistente del
+ * chat sigue sabiendo que faltan (los detecta `datosQueFaltan`).
  */
 export const CONTACTO = {
   direccion: {

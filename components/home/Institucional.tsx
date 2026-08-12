@@ -60,33 +60,20 @@ export function Institucional() {
               </div>
             </Reveal>
 
-            <Reveal retardo={140}>
-              <div className="mt-10 flex flex-wrap items-center gap-3">
-                {INSTITUCIONAL.carpeta.disponible ? (
-                  <a
-                    href={INSTITUCIONAL.carpeta.href}
-                    className="secondary-button"
-                    download
-                  >
+            {/* El botón aparece recién cuando el PDF existe: un botón
+                deshabilitado con "a confirmar" al lado sólo cuenta que el sitio
+                está incompleto. Al subir el archivo y poner `disponible: true`
+                en el content, aparece solo. */}
+            {INSTITUCIONAL.carpeta.disponible && (
+              <Reveal retardo={140}>
+                <div className="mt-10 flex flex-wrap items-center gap-3">
+                  <a href={INSTITUCIONAL.carpeta.href} className="secondary-button" download>
                     {INSTITUCIONAL.carpeta.etiqueta}
                     <span aria-hidden="true">↓</span>
                   </a>
-                ) : (
-                  <>
-                    {/* El PDF todavía no existe: el botón queda deshabilitado en
-                        vez de llevar a un 404, y al lado se dice por qué. */}
-                    <button type="button" className="secondary-button cursor-not-allowed opacity-60" disabled>
-                      {INSTITUCIONAL.carpeta.etiqueta}
-                      <span aria-hidden="true">↓</span>
-                    </button>
-                    <span className="badge-soft">
-                      <i className="bg-slate-400" />
-                      PDF a confirmar
-                    </span>
-                  </>
-                )}
-              </div>
-            </Reveal>
+                </div>
+              </Reveal>
+            )}
           </div>
         </div>
       </div>
