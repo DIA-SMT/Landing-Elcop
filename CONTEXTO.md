@@ -57,6 +57,14 @@ sepa qué va a haber, sin enlazar a rutas que no existen.
 
 ### La base de datos existe (11/8/2026)
 
+> ⚠️ **La base se pausa sola si nadie la usa.** Supabase gratuito pausa el
+> proyecto tras ~7 días sin actividad; el 8/9/2026 apareció pausado tras un mes
+> quieto y el ingreso al portal estuvo caído semanas sin que nadie lo notara.
+> Desde entonces un cron de GitHub ([`latido.yml`](.github/workflows/latido.yml))
+> llama a `/api/latido` dos veces por día: mantiene la base despierta y, si
+> igual se cae, el workflow falla y GitHub avisa por email. El cron corre desde
+> `main`: si se toca, mergear para que siga vivo.
+
 Supabase (Postgres, región São Paulo); las tablas están en
 [`db/migraciones`](db/migraciones) y el cliente en `lib/supabase.ts`. El
 navegador nunca habla con la base: todo pasa por el servidor con la clave
