@@ -4,7 +4,10 @@
 [`PLAN.md`](../PLAN.md), aterrizada con las decisiones del 8/9/2026 y con lo
 que el proyecto ya tiene construido.
 
-**Estado: planificado, sin construir.** Se empieza por la Etapa A.
+**Estado: Etapa A construida y verificada (8/9/2026)** — publicaciones
+editables en `/admin/contenido`, con la migración `0002` aplicada y el circuito
+crear → publicar → landing → borrar probado contra la base real. La Etapa B
+sigue bloqueada por la reunión con coordinación (ítem 16).
 
 ---
 

@@ -109,6 +109,17 @@ export function primerDocumentoDelComite() {
   return primero;
 }
 
+/** El primer documento con permisos de staff, para auditar `/admin`. */
+export function primerDocumentoDelStaff() {
+  const primero = (process.env.ELCOP_STAFF_PROVISORIO ?? "").split(",")[0]?.replace(/\D/g, "");
+  if (!primero) {
+    throw new Error(
+      "Falta ELCOP_STAFF_PROVISORIO en .env.local: sin staff, /admin responde 404. Con base configurada, el documento tiene que estar ADEMÁS en la tabla staff."
+    );
+  }
+  return primero;
+}
+
 /** La cookie lista para `page.setCookie` de puppeteer. */
 export function cookieDeSesion(base, opciones) {
   const { hostname } = new URL(base);
