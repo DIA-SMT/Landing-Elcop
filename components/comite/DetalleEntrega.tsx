@@ -107,7 +107,7 @@ function Ficha({
       {entrega.observaciones && (
         <div className="mt-5 rounded-xl bg-municipal-50 p-4">
           <p className="micro-label text-municipal-900">Devolución que ya se le envió</p>
-          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink">
+          <p className="texto-de-usuario mt-2 whitespace-pre-line text-sm leading-relaxed text-ink">
             {entrega.observaciones}
           </p>
         </div>
@@ -126,7 +126,7 @@ function Proyecto({ entrega }: { entrega: Entrega }) {
     >
       <h2
         id="proyecto-titulo"
-        className="font-display text-2xl font-extrabold leading-tight tracking-tight text-ink"
+        className="texto-de-usuario font-display text-2xl font-extrabold leading-tight tracking-tight text-ink"
       >
         {entrega.titulo || "Sin título todavía"}
       </h2>
@@ -134,14 +134,14 @@ function Proyecto({ entrega }: { entrega: Entrega }) {
       <dl className="mt-6 flex flex-col gap-6">
         <div>
           <dt className="micro-label">Resumen</dt>
-          <dd className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+          <dd className="texto-de-usuario mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
             {entrega.resumen || <span className="text-slate-500">Sin completar.</span>}
           </dd>
         </div>
         {SECCIONES_PROYECTO.map((seccion) => (
           <div key={seccion}>
             <dt className="micro-label">{SECCIONES[seccion].titulo}</dt>
-            <dd className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+            <dd className="texto-de-usuario mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">
               {entrega.secciones[seccion] || <span className="text-slate-500">Sin completar.</span>}
             </dd>
           </div>

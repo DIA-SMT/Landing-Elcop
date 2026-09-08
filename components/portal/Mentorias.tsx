@@ -337,7 +337,7 @@ function ListaConsultas({ consultas }: { consultas: Consulta[] }) {
                 <article className="rounded-2xl border border-slate-100 p-4 md:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
                     <div className="min-w-0">
-                      <h3 className="font-display text-base font-bold leading-snug text-ink">
+                      <h3 className="texto-de-usuario font-display text-base font-bold leading-snug text-ink">
                         {consulta.asunto}
                       </h3>
                       <p className="mt-1 text-tiny text-slate-600">
@@ -352,12 +352,12 @@ function ListaConsultas({ consultas }: { consultas: Consulta[] }) {
                     </span>
                   </div>
 
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{consulta.texto}</p>
+                  <p className="texto-de-usuario mt-3 text-sm leading-relaxed text-slate-600">{consulta.texto}</p>
 
                   {consulta.respuesta && (
                     <div className="mt-4 rounded-xl bg-municipal-50 p-4">
                       <p className="micro-label text-municipal-900">Respuesta</p>
-                      <p className="mt-2 text-sm leading-relaxed text-ink">{consulta.respuesta}</p>
+                      <p className="texto-de-usuario mt-2 text-sm leading-relaxed text-ink">{consulta.respuesta}</p>
                       {consulta.respondidaEn && (
                         <p className="mt-2 text-tiny text-slate-600">
                           {formatearFechaHora(consulta.respondidaEn)}

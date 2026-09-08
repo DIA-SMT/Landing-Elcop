@@ -60,6 +60,15 @@ button { cursor: pointer; }
      llegan a 4.5:1). */
   .badge-soft { @apply inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-micro font-extrabold uppercase text-slate-700; }
   .badge-soft > i { @apply size-2 shrink-0 rounded-full; }
+
+  /* Texto escrito por una persona (título del proyecto, secciones, consultas,
+     observaciones): puede venir sin un solo espacio —una URL larga, una línea
+     pegada de una tabla, o un "ssssss" de prueba— y sin esto el párrafo se
+     desborda del card en vez de quebrarse. `anywhere` además deja que las cajas
+     flexibles se achiquen en lugar de heredar el ancho de la palabra. Va en
+     TODO elemento que muestre texto ajeno; el que escribimos nosotros no lo
+     necesita. */
+  .texto-de-usuario { overflow-wrap: anywhere; }
 }
 
 @media (max-width: 640px) {

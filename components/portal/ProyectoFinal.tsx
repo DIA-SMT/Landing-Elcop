@@ -157,7 +157,7 @@ function Encabezado({ entrega, fechaLimite }: { entrega: Entrega; fechaLimite: s
       {entrega.observaciones && (
         <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4">
           <p className="micro-label text-red-700">Observaciones del comité</p>
-          <p className="mt-2 text-sm leading-relaxed text-ink">{entrega.observaciones}</p>
+          <p className="texto-de-usuario mt-2 text-sm leading-relaxed text-ink">{entrega.observaciones}</p>
         </div>
       )}
     </section>
