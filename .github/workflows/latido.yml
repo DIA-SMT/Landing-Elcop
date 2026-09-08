@@ -1,0 +1,36 @@
+# Latido de la base, dos veces por día.
+#
+# Supabase (plan gratuito) pausa el proyecto tras ~7 días sin actividad. El
+# 8/9/2026 nos pasó: un mes sin uso, la base pausada, y el ingreso al portal
+# caído semanas sin que nadie lo notara. Este cron llama a /api/latido, que
+# hace una consulta mínima: con actividad diaria la pausa no llega nunca.
+#
+# El curl lleva --fail: si la base no responde, el paso falla, el workflow
+# queda en rojo y GitHub avisa por email. O sea que además de mantenerla viva,
+# esto es el monitoreo — la próxima caída se entera por correo, no por un
+# becario que no pudo entrar.
+#
+# Dos cosas que conviene saber de los crons de GitHub:
+# - Corren SOLO desde la rama por defecto (main): hasta que este archivo se
+#   mergee, no se ejecuta nada.
+# - El horario es "cuando GitHub puede", no exacto — por eso dos por día, que
+#   contra una pausa de 7 días sobra margen aunque alguno se saltee. Y en
+#   repos sin actividad por 60 días GitHub puede desactivar el cron (avisa
+#   por email antes): si el proyecto entra en pausa larga, ese aviso no se
+#   ignora.
+
+name: Latido de la base
+
+on:
+  schedule:
+    - cron: "23 3 * * *"
+    - cron: "23 15 * * *"
+  # Para probarlo a mano desde la pestaña Actions.
+  workflow_dispatch:
+
+jobs:
+  latido:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Despertar la base a través del sitio
+        run: curl --fail --silent --show-error --max-time 30 https://landing-elcop.vercel.app/api/latido
