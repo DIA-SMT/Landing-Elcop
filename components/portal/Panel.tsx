@@ -284,7 +284,7 @@ function EstadoAcademico({ estado }: { estado: ReturnType<typeof estadoAcademico
           <dd className="mt-1 text-sm font-bold text-ink">
             {TEXTO_ENTREGA[entrega.estado] ?? entrega.estado}
             {entrega.titulo && (
-              <p className="mt-0.5 text-tiny font-normal text-slate-500">{entrega.titulo}</p>
+              <p className="texto-de-usuario mt-0.5 text-tiny font-normal text-slate-500">{entrega.titulo}</p>
             )}
           </dd>
         </div>

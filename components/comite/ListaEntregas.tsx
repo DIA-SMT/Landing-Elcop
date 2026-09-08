@@ -80,7 +80,7 @@ export function ListaEntregas({
                   <article className="rounded-[24px] border border-black/5 bg-white p-5 shadow-card md:p-6">
                     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
                       <div className="min-w-0">
-                        <h3 className="font-display text-lg font-bold leading-snug text-ink">
+                        <h3 className="texto-de-usuario font-display text-lg font-bold leading-snug text-ink">
                           {entrega.titulo || "Sin título todavía"}
                         </h3>
                         <p className="mt-1 text-tiny text-slate-600">
@@ -99,7 +99,7 @@ export function ListaEntregas({
                     </div>
 
                     {entrega.resumen && (
-                      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">
+                      <p className="texto-de-usuario mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">
                         {entrega.resumen}
                       </p>
                     )}
