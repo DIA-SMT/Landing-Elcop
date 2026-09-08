@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
-import { PUBLICACIONES, formatearFecha } from "@/content/elcop";
+import { formatearFecha } from "@/content/elcop";
+import { publicacionesPublicadas } from "@/lib/publicaciones";
 import { Reveal } from "@/components/ui/Reveal";
 import { ChatDiferido } from "@/components/chat/ChatDiferido";
 
@@ -11,8 +12,14 @@ export const metadata: Metadata = {
     "Notas y crónicas de las masterclass y actividades de la Escuela de Liderazgo y Comunicación Política."
 };
 
-export default function PaginaPublicaciones() {
-  const hayEjemplos = PUBLICACIONES.some((publicacion) => publicacion.esEjemplo);
+// La página se regenera cuando el admin publica (revalidatePath) y, por las
+// dudas, sola cada hora: si alguien edita la base por afuera del admin, el
+// sitio no se queda con la versión vieja para siempre.
+export const revalidate = 3600;
+
+export default async function PaginaPublicaciones() {
+  const publicaciones = await publicacionesPublicadas();
+  const hayEjemplos = publicaciones.some((publicacion) => publicacion.esEjemplo);
 
   return (
     <section className="page-shell py-16 md:py-24">
@@ -39,8 +46,14 @@ export default function PaginaPublicaciones() {
         </p>
       )}
 
+      {publicaciones.length === 0 && (
+        <p className="mt-10 rounded-2xl border border-black/5 bg-white p-6 text-sm leading-relaxed text-slate-600 shadow-sm">
+          Todavía no hay publicaciones. Cuando la Escuela publique novedades, van a aparecer acá.
+        </p>
+      )}
+
       <ul className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {PUBLICACIONES.map((publicacion, indice) => (
+        {publicaciones.map((publicacion, indice) => (
           <li key={publicacion.slug}>
             <Reveal retardo={(indice % 3) * 90} className="h-full">
               <article className="flex h-full flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-card transition ease-out hover:-translate-y-1 hover:shadow-lg">
