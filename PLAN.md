@@ -151,6 +151,12 @@ fecha externa.
 
 Estimado orientativo: **1 a 2 semanas.**
 
+> **Actualización 8/9/2026:** las fases 2 y 3 se replanificaron sobre lo que el
+> proyecto ya tiene (Supabase + sesión CIDITUC + roles por tabla), **sin
+> Payload**, y con el contenido antes que las postulaciones. El plan vigente de
+> las dos está en [`docs/admin.md`](docs/admin.md); lo de abajo queda como
+> referencia del alcance original.
+
 ### Fase 2 — Postulaciones
 *Tiene fecha externa: la apertura de la convocatoria.*
 
