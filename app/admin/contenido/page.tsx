@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 
 import { formatearFecha } from "@/content/elcop";
 import { publicacionesParaAdmin } from "@/lib/publicaciones";
-import { permisosDeStaff } from "@/lib/staff";
-import { obtenerSesion } from "@/lib/sesion";
+import { exigirAdmin } from "@/lib/admin/sesion";
 import { MarcoAdmin } from "@/components/admin/MarcoAdmin";
 
 export const metadata: Metadata = {
@@ -26,9 +24,7 @@ const TEXTO_ESTADO: Record<string, { punto: string; texto: string }> = {
  * gente?" se responde acá, no entrando a cada nota.
  */
 export default async function PaginaContenido() {
-  const sesion = await obtenerSesion();
-  if (!sesion) redirect("/portal");
-  if (!(await permisosDeStaff(sesion.documento))?.contenido) notFound();
+  await exigirAdmin("contenido");
 
   const publicaciones = await publicacionesParaAdmin();
 

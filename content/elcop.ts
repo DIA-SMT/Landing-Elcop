@@ -58,6 +58,8 @@ export type Referente = {
   nombre: string;
   credencial: string;
   tema: string;
+  // Mismo criterio que `IntegranteEquipo`: sin foto se muestran las iniciales.
+  foto: string | null;
 };
 
 export type EtapaInscripcion = {
@@ -259,9 +261,8 @@ export const EQUIPO: GrupoEquipo[] = [
     titulo: "Dirección",
     descripcion: "Conducción institucional de la Escuela.",
     integrantes: [
-      // TODO: confirmar con ELCOP — faltan las fotos del equipo.
-      { tratamiento: "Dra.", nombre: "Rossana Chahla", foto: null },
-      { tratamiento: "Mg. Ing.", nombre: "José Federico Fanjul", foto: null }
+      { tratamiento: "Dra.", nombre: "Rossana Chahla", foto: "/fotos/personas/rossana-chahla.webp" },
+      { tratamiento: "Mg. Ing.", nombre: "José Federico Fanjul", foto: "/fotos/personas/jose-federico-fanjul.webp" }
     ]
   },
   {
@@ -269,9 +270,9 @@ export const EQUIPO: GrupoEquipo[] = [
     titulo: "Coordinación Académica",
     descripcion: "Diseño curricular y seguimiento pedagógico de la diplomatura.",
     integrantes: [
-      { tratamiento: "Mg.", nombre: "Camila Giuliano", foto: null },
-      { tratamiento: "Dr.", nombre: "Rodrigo Gómez Tortosa", foto: null },
-      { tratamiento: "Dr.", nombre: "Luigi Pisoni", foto: null }
+      { tratamiento: "Mg.", nombre: "Camila Giuliano", foto: "/fotos/personas/camila-giuliano.webp" },
+      { tratamiento: "Dr.", nombre: "Rodrigo Gómez Tortosa", foto: "/fotos/personas/rodrigo-gomez-tortosa.webp" },
+      { tratamiento: "Dr.", nombre: "Luigi Pisoni", foto: "/fotos/personas/luigi-pisoni.webp" }
     ]
   },
   {
@@ -279,8 +280,8 @@ export const EQUIPO: GrupoEquipo[] = [
     titulo: "Coordinación Administrativa",
     descripcion: "Gestión de la cursada, inscripciones y vínculo con los becarios.",
     integrantes: [
-      { tratamiento: "Srta.", nombre: "Candelaria Fonts", foto: null },
-      { tratamiento: "Sr.", nombre: "Félix Agustín Paz", foto: null }
+      { tratamiento: "Srta.", nombre: "Candelaria Fonts", foto: "/fotos/personas/candelaria-fonts.webp" },
+      { tratamiento: "Sr.", nombre: "Félix Agustín Paz", foto: "/fotos/personas/felix-agustin-paz.webp" }
     ]
   }
 ];
@@ -289,8 +290,23 @@ export const EQUIPO: GrupoEquipo[] = [
 /* Formación                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export const DIPLOMATURA = {
+/**
+ * El paraguas de la oferta académica.
+ *
+ * ELCOP pidió ("Observaciones Web ELCOP", 28/9/2026) que antes de la
+ * diplomatura haya un título más amplio, para que la sección pueda recibir
+ * futuros trayectos y cada uno lleve su certificación. Hoy hay un solo
+ * programa: el título general existe desde ahora, y la lista de programas se
+ * arma cuando haya un segundo, no antes.
+ */
+export const OFERTA = {
   kicker: "Formación",
+  titulo: "Conocé nuestra oferta de formación",
+  bajada:
+    "Los trayectos de formación política que la Municipalidad de SMT y la UNSTA dictan en la Escuela. Hoy la oferta es la Diplomatura en Liderazgo y Comunicación Política."
+} as const;
+
+export const DIPLOMATURA = {
   titulo: "Diplomatura en Liderazgo y Comunicación Política",
   bajada:
     "Cuatro meses que se recorren en orden: del mensaje y la identidad pública al proyecto de política pública que se presenta y se defiende.",
@@ -342,42 +358,100 @@ export const EJES: EjeFormativo[] = [
 ];
 
 export const REFERENTES: Referente[] = [
+  // Abre la masterclass inaugural; el resto son los plenarios dictados.
+  // Fuente de las credenciales y de las ocho últimas incorporaciones:
+  // "Observaciones Web ELCOP" (28/9/2026). Los temas de los primeros siete
+  // vienen del calendario oficial de la cohorte 2026.
   {
     nombre: "Marisol De Ambrosio",
     credencial: "Estratega en comunicación social y política digital",
-    tema: "Masterclass inaugural"
+    tema: "Masterclass inaugural",
+    foto: "/fotos/personas/marisol-de-ambrosio.webp"
   },
-  // Los temas que siguen están confirmados por el calendario oficial de la
-  // cohorte 2026 ("Calendarización para la web"): son los plenarios dictados.
   {
     nombre: "Diego Reynoso",
-    credencial: "Investigador CONICET · Dr. FLACSO-México",
-    tema: "Análisis de opinión pública"
+    credencial: "Investigador CONICET · Director ESPOP de la UDESA",
+    tema: "Análisis de opinión pública",
+    foto: "/fotos/personas/diego-reynoso.webp"
   },
   {
     nombre: "Elisabeth Möhle",
-    credencial: "Fundar · Ciencias ambientales",
-    tema: "La agenda verde: ciudad sustentable y calidad de vida"
+    credencial: "Investigadora Fundar · Ciencias ambientales",
+    tema: "La agenda verde: ciudad sustentable y calidad de vida",
+    foto: "/fotos/personas/elisabeth-mohle.webp"
   },
   {
     nombre: "Julieta Daffonchio",
-    credencial: "Politóloga · Movilidad urbana",
-    tema: "Transporte y logística"
+    credencial:
+      "Directora ejecutiva de la Federación Argentina de Entidades de Transporte y Logística",
+    tema: "Transporte y logística",
+    foto: "/fotos/personas/julieta-daffonchio.webp"
   },
   {
     nombre: "Pablo Pérez Paladino",
     credencial: "Asociación Argentina de Consultores Políticos",
-    tema: "Nuevos medios de comunicación en la política"
+    tema: "Nuevos medios de comunicación en la política",
+    foto: "/fotos/personas/pablo-perez-paladino.webp"
   },
   {
     nombre: "Malena Dip",
-    credencial: "Comunicación digital",
-    tema: "Nuevos medios de comunicación en la política"
+    credencial: "Asociación Argentina de Consultores Políticos",
+    tema: "Nuevos medios de comunicación en la política",
+    foto: "/fotos/personas/malena-dip.webp"
   },
   {
     nombre: "Laureano Bielsa",
-    credencial: "Abogado especializado en finanzas",
-    tema: "Nuevos medios de comunicación en la política"
+    credencial: "Director de relaciones institucionales de Potencia Argentina",
+    tema: "Nuevos medios de comunicación en la política",
+    foto: "/fotos/personas/laureano-bielsa.webp"
+  },
+  {
+    nombre: "Horacio Ravenna",
+    credencial: "Primer Director de Derechos Humanos de Cancillería",
+    tema: "Internacionales, negociación y construcción democrática",
+    foto: "/fotos/personas/horacio-ravenna.webp"
+  },
+  {
+    nombre: "Maximiliano Campos Ríos",
+    credencial: "Coordinador de la Maestría en Políticas Públicas · UBA",
+    tema: "Políticas Públicas",
+    foto: "/fotos/personas/maximiliano-campos-rios.webp"
+  },
+  {
+    nombre: "Rodrigo Karasik",
+    credencial: "Fundador de la ONG “Tejiendo en el barrio”",
+    tema: "Gestión comunitaria y ONGs",
+    foto: "/fotos/personas/rodrigo-karasik.webp"
+  },
+  {
+    nombre: "Shila Vilker",
+    credencial: "Analista de opinión pública",
+    tema: "Comunicación y análisis de opinión pública",
+    foto: "/fotos/personas/shila-vilker.webp"
+  },
+  {
+    nombre: "Julia Strada",
+    credencial: "Diputada Nacional por el PJ",
+    tema: "Panel plenario",
+    foto: "/fotos/personas/julia-strada.webp"
+  },
+  {
+    nombre: "María Migliore",
+    credencial: "Exministra de Desarrollo Humano y Hábitat de la CABA",
+    tema: "Integración Socio-Urbana",
+    foto: "/fotos/personas/maria-migliore.webp"
+  },
+  {
+    nombre: "Claudina Kutnowski",
+    credencial: "Psicóloga laboral",
+    tema: "El futuro del trabajo",
+    foto: "/fotos/personas/claudina-kutnowski.webp"
+  },
+  {
+    nombre: "Pablo Juliano",
+    credencial: "Diputado Nacional · UCR",
+    tema: "Plenario de formación política",
+    foto: "/fotos/personas/pablo-juliano.webp"
   }
 ];
 
@@ -423,10 +497,57 @@ export const INSCRIPCIONES = {
     descripcion:
       "La evaluación final no es un examen tradicional: es una competencia de impacto real. Cada participante presenta un Proyecto de Política Pública Innovadora para la ciudad de San Miguel de Tucumán."
   },
-  cupos: "Cupos limitados: la cohorte cierra al completar las vacantes disponibles.",
+  cupos:
+    "Cupos limitados: la admisión a cada cohorte se determina mediante un orden de mérito resultante del proceso de selección.",
   // TODO: confirmar con ELCOP — no hay fechas de la próxima cohorte.
   proximaCohorte: null as string | null
 } as const;
+
+/**
+ * Lo que se muestra entre convocatorias, en lugar del formulario de postulación.
+ *
+ * El texto del aviso es el sugerido por ELCOP, textual. Lo que se pide abajo es
+ * deliberadamente mínimo: para avisar que abrió la inscripción alcanza con un
+ * nombre y un mail, y pedir DNI o motivación para mandar una novedad sería
+ * juntar datos personales que no se van a usar.
+ */
+export const CONVOCATORIA_CERRADA = {
+  kicker: "Postulación",
+  titulo: "Todavía no hay una convocatoria abierta",
+  aviso:
+    "Actualmente no tenemos ninguna convocatoria abierta. Dejanos tus datos de contacto para recibir novedades sobre la apertura de las próximas oportunidades de formación.",
+  boton: "Avisame cuando abra",
+  gracias: "Listo: te escribimos apenas se abra la próxima convocatoria."
+} as const;
+
+export const NOVEDADES: { campos: CampoFormulario[] } = {
+  campos: [
+    {
+      id: "nombre",
+      etiqueta: "Nombre y apellido",
+      tipo: "text",
+      requerido: true,
+      placeholder: "Como querés que te escribamos",
+      autoComplete: "name"
+    },
+    {
+      id: "email",
+      etiqueta: "Email",
+      tipo: "email",
+      requerido: true,
+      placeholder: "nombre@ejemplo.com",
+      autoComplete: "email"
+    },
+    {
+      id: "telefono",
+      etiqueta: "Teléfono",
+      tipo: "tel",
+      requerido: false,
+      placeholder: "381 123 4567",
+      autoComplete: "tel"
+    }
+  ]
+};
 
 export const FORMULARIO: { campos: CampoFormulario[] } = {
   campos: [
@@ -612,17 +733,17 @@ export const CONTACTO = {
     // Enlace al mapa por búsqueda de dirección, sin datos personales en la URL.
     mapa: "https://www.google.com/maps/search/?api=1&query=UNSTA+9+de+Julio+165+San+Miguel+de+Tucum%C3%A1n"
   },
-  // TODO: confirmar con ELCOP — falta el mail institucional.
-  email: null as string | null,
+  email: "politicaspublicas@smt.gob.ar" as string | null,
   // TODO: confirmar con ELCOP — falta el teléfono institucional.
   telefono: null as string | null
 } as const;
 
 export type RedSocial = { nombre: string; href: string | null };
 
-// TODO: confirmar con ELCOP — faltan las cuentas oficiales de la Escuela.
+// TODO: confirmar con ELCOP — faltan LinkedIn y YouTube. Las que siguen en
+// `null` no se muestran: ver Footer.
 export const REDES: RedSocial[] = [
-  { nombre: "Instagram", href: null },
+  { nombre: "Instagram", href: "https://www.instagram.com/elcop.smt/" },
   { nombre: "LinkedIn", href: null },
   { nombre: "YouTube", href: null }
 ];

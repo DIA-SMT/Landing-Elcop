@@ -7,8 +7,7 @@ import {
   validarPublicacion,
   type DatosPublicacion
 } from "@/lib/admin/validacion-publicacion";
-import { permisosDeStaff } from "@/lib/staff";
-import { obtenerSesion } from "@/lib/sesion";
+import { sesionDeAdmin } from "@/lib/admin/sesion";
 import { baseDeDatos } from "@/lib/supabase";
 
 /**
@@ -22,11 +21,11 @@ import { baseDeDatos } from "@/lib/supabase";
  */
 
 async function autorizar(): Promise<NextResponse | null> {
-  const sesion = await obtenerSesion();
+  const sesion = await sesionDeAdmin().catch(() => null);
+  // Sin sesión es 401 —le decimos que entre—; con sesión pero sin el permiso es
+  // 404, el mismo criterio que las páginas: no se confirma que el recurso existe.
   if (!sesion) return NextResponse.json({ ok: false, mensaje: "Iniciá sesión." }, { status: 401 });
-
-  const permisos = await permisosDeStaff(sesion.documento).catch(() => null);
-  if (!permisos?.contenido) {
+  if (!sesion.permisos.contenido) {
     return NextResponse.json({ ok: false, mensaje: "No encontrado." }, { status: 404 });
   }
   return null;

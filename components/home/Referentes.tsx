@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { ESCUELA, REFERENTES, iniciales } from "@/content/elcop";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -21,13 +23,26 @@ export function Referentes() {
             <Reveal retardo={(indice % 3) * 80} className="h-full">
               <article className="flex h-full flex-col rounded-2xl border border-black/5 bg-white p-6 shadow-card transition ease-out hover:-translate-y-1 hover:shadow-lg">
                 <div className="flex items-center gap-3">
-                  <span
-                    aria-hidden="true"
-                    // municipal-900 y no 700: sobre `sand`, el 700 se queda en 4,39:1.
-                    className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand font-display text-sm font-extrabold tracking-tight text-municipal-900"
-                  >
-                    {iniciales(referente.nombre)}
-                  </span>
+                  {/* Mismo criterio que `Equipo`: la foto ocupa exactamente el
+                      lugar de las iniciales, así que sumarla no mueve la grilla. */}
+                  {referente.foto ? (
+                    <Image
+                      src={referente.foto}
+                      alt={referente.nombre}
+                      width={44}
+                      height={44}
+                      sizes="44px"
+                      className="size-11 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      // municipal-900 y no 700: sobre `sand`, el 700 se queda en 4,39:1.
+                      className="grid size-11 shrink-0 place-items-center rounded-xl bg-sand font-display text-sm font-extrabold tracking-tight text-municipal-900"
+                    >
+                      {iniciales(referente.nombre)}
+                    </span>
+                  )}
                   <h3 className="font-display text-base font-bold leading-snug text-ink">
                     {referente.nombre}
                   </h3>

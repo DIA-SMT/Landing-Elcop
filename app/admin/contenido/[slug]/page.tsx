@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { publicacionesParaAdmin } from "@/lib/publicaciones";
-import { permisosDeStaff } from "@/lib/staff";
-import { obtenerSesion } from "@/lib/sesion";
+import { exigirAdmin } from "@/lib/admin/sesion";
 import { MarcoAdmin } from "@/components/admin/MarcoAdmin";
 import { FormularioPublicacion } from "@/components/admin/FormularioPublicacion";
 
@@ -15,9 +14,7 @@ export default async function PaginaEditarPublicacion({
 }: {
   params: { slug: string };
 }) {
-  const sesion = await obtenerSesion();
-  if (!sesion) redirect("/portal");
-  if (!(await permisosDeStaff(sesion.documento))?.contenido) notFound();
+  await exigirAdmin("contenido");
 
   const slug = decodeURIComponent(params.slug);
   const publicacion = (await publicacionesParaAdmin()).find((p) => p.slug === slug);

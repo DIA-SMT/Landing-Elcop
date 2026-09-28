@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
-import { permisosDeStaff } from "@/lib/staff";
-import { obtenerSesion } from "@/lib/sesion";
+import { RUTA_INGRESO, hayUsuario, sesionDeAdmin } from "@/lib/admin/sesion";
 
 // La sesión vive en una cookie: nada de esto se prerenderiza.
 export const dynamic = "force-dynamic";
@@ -14,12 +13,14 @@ export const dynamic = "force-dynamic";
  * no corresponde, la ruta ni le confirma que existe.
  */
 export default async function PaginaAdmin() {
-  const sesion = await obtenerSesion();
-  if (!sesion) redirect("/portal");
+  const sesion = await sesionDeAdmin();
+  if (!sesion) {
+    // Con usuario pero sin fila en `staff` es un 404; sin usuario, al ingreso.
+    if (await hayUsuario()) notFound();
+    redirect(RUTA_INGRESO);
+  }
 
-  const permisos = await permisosDeStaff(sesion.documento);
-  if (!permisos) notFound();
-  if (permisos.contenido) redirect("/admin/contenido");
+  if (sesion.permisos.contenido) redirect("/admin/contenido");
 
   // Staff sin permiso de contenido: cuando exista postulaciones irá ahí.
   notFound();

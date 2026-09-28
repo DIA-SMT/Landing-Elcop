@@ -2,87 +2,31 @@
 
 import { useId, useRef, useState } from "react";
 
-import { FORMULARIO, type CampoFormulario } from "@/content/elcop";
+import { CONVOCATORIA_CERRADA, FORMULARIO, type CampoFormulario } from "@/content/elcop";
+import {
+  MINIMO_MOTIVACION,
+  validarCampo,
+  type ErroresPostulacion as Errores,
+  type ValoresPostulacion as Valores
+} from "@/lib/postulacion-validacion";
+import { FormularioNovedades } from "@/components/home/FormularioNovedades";
 
-type Valores = Record<string, string>;
-type Errores = Record<string, string>;
-type Estado = "editando" | "enviando" | "enviado" | "error";
+type Estado = "editando" | "enviando" | "enviado" | "error" | "duplicada";
 
 const VALORES_INICIALES: Valores = Object.fromEntries(
   FORMULARIO.campos.map((campo) => [campo.id, ""])
 );
 
-const MINIMO_MOTIVACION = 100;
-
-/** Reglas de validación por campo. Devuelve el mensaje de error o `null`. */
-function validarCampo(campo: CampoFormulario, valor: string): string | null {
-  const limpio = valor.trim();
-
-  if (campo.requerido && limpio === "") {
-    return campo.tipo === "select"
-      ? `Elegí una opción en «${campo.etiqueta}».`
-      : `Completá el campo «${campo.etiqueta}».`;
-  }
-  if (limpio === "") return null;
-
-  switch (campo.id) {
-    case "nombre":
-      if (limpio.length < 3) return "Escribí tu nombre y apellido completos.";
-      return null;
-
-    case "dni":
-      if (!/^\d{7,8}$/.test(limpio.replace(/\./g, ""))) {
-        return "El DNI se escribe sin puntos, con 7 u 8 dígitos.";
-      }
-      return null;
-
-    case "nacimiento": {
-      const fecha = new Date(`${limpio}T00:00:00`);
-      if (Number.isNaN(fecha.getTime())) return "Ingresá una fecha válida.";
-      const hoy = new Date();
-      if (fecha > hoy) return "La fecha de nacimiento no puede ser futura.";
-      // Edad cumplida a la fecha de hoy.
-      let edad = hoy.getFullYear() - fecha.getFullYear();
-      const mes = hoy.getMonth() - fecha.getMonth();
-      if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) edad -= 1;
-      if (edad < 16) return "Tenés que tener al menos 16 años para postularte.";
-      if (edad > 110) return "Revisá el año: la fecha parece incorrecta.";
-      return null;
-    }
-
-    case "email":
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(limpio)) {
-        return "Revisá el email: falta el @ o el dominio.";
-      }
-      return null;
-
-    case "telefono": {
-      const digitos = limpio.replace(/\D/g, "");
-      if (digitos.length < 8) return "Ingresá el teléfono con característica, sin el 0 ni el 15.";
-      return null;
-    }
-
-    case "localidad":
-    case "ocupacion":
-      if (limpio.length < 2) return "Este dato es muy corto, escribilo completo.";
-      return null;
-
-    case "motivacion": {
-      if (limpio.length < MINIMO_MOTIVACION) {
-        return `Contanos un poco más: faltan ${MINIMO_MOTIVACION - limpio.length} caracteres.`;
-      }
-      if (campo.maximoCaracteres && limpio.length > campo.maximoCaracteres) {
-        return `Te pasaste del máximo de ${campo.maximoCaracteres} caracteres.`;
-      }
-      return null;
-    }
-
-    default:
-      return null;
-  }
-}
-
-export function FormularioPostulacion() {
+/**
+ * La sección de postulación, en sus dos estados.
+ *
+ * Entre convocatorias no se muestra el formulario de admisión: se muestra el
+ * aviso y se pide un contacto para avisar cuando abra (pedido de ELCOP,
+ * 28/9/2026). Quién decide el estado es el servidor —`convocatoriaAbierta()`
+ * en `app/page.tsx`—, así que el interruptor es una variable de entorno y no
+ * algo que se pueda tocar desde el navegador.
+ */
+export function FormularioPostulacion({ abierta }: { abierta: boolean }) {
   const idBase = useId();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -90,6 +34,9 @@ export function FormularioPostulacion() {
   const [errores, setErrores] = useState<Errores>({});
   const [intentado, setIntentado] = useState(false);
   const [estado, setEstado] = useState<Estado>("editando");
+  // El endpoint avisa si el envío se guardó de verdad: en un entorno sin base
+  // configurada no se puede decir "recibimos tu postulación" y quedarse ahí.
+  const [persistida, setPersistida] = useState(true);
 
   const idCampo = (id: string) => `${idBase}-${id}`;
   const idError = (id: string) => `${idBase}-${id}-error`;
@@ -139,13 +86,68 @@ export function FormularioPostulacion() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(valores)
       });
-      setEstado(respuesta.ok ? "enviado" : "error");
+      const cuerpo = (await respuesta.json().catch(() => null)) as
+        | { persistida?: boolean; duplicada?: boolean }
+        | null;
+
+      if (respuesta.ok) {
+        setPersistida(cuerpo?.persistida !== false);
+        setEstado("enviado");
+      } else {
+        // "Ya te teníamos" no es un error de la persona ni una falla nuestra.
+        setEstado(cuerpo?.duplicada ? "duplicada" : "error");
+      }
     } catch {
       setEstado("error");
     }
   };
 
   const cantidadErrores = Object.values(errores).filter(Boolean).length;
+
+  if (!abierta) {
+    return (
+      <section id="postulacion" className="section-block">
+        <div className="section-heading">
+          <div className="max-w-2xl">
+            <p className="section-kicker">{CONVOCATORIA_CERRADA.kicker}</p>
+            <h2>{CONVOCATORIA_CERRADA.titulo}</h2>
+          </div>
+        </div>
+
+        <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-card md:p-10">
+          <p className="max-w-2xl text-base leading-relaxed text-slate-600">
+            {CONVOCATORIA_CERRADA.aviso}
+          </p>
+          <FormularioNovedades />
+        </div>
+      </section>
+    );
+  }
+
+  if (estado === "duplicada") {
+    return (
+      <section id="postulacion" className="section-block">
+        <div
+          role="status"
+          className="mx-auto max-w-2xl rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-card md:p-12"
+        >
+          <span
+            aria-hidden="true"
+            className="mx-auto grid size-14 place-items-center rounded-2xl bg-sand font-display text-2xl font-extrabold text-municipal-900"
+          >
+            !
+          </span>
+          <h2 className="mt-6 font-display text-2xl font-extrabold tracking-tight text-ink md:text-3xl">
+            Ya teníamos tu postulación
+          </h2>
+          <p className="mt-3 text-base leading-relaxed text-slate-600">
+            Figura una postulación con ese DNI para esta convocatoria, así que no hace falta que
+            la cargues de nuevo. Si necesitás corregir algo, escribinos y lo vemos.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   if (estado === "enviado") {
     return (
@@ -167,14 +169,16 @@ export function FormularioPostulacion() {
             Te vamos a escribir por email para coordinar la entrevista de admisión, que es la
             segunda etapa obligatoria del proceso.
           </p>
-          {/* Mientras el formulario no tenga destino real, se dice: no podemos
-              dar por presentada una postulación que todavía no se guarda. */}
-          <p className="mt-6 inline-flex">
-            <span className="badge-soft">
-              <i className="bg-brandYellow" />
-              Formulario en pruebas: el envío todavía no queda registrado
-            </span>
-          </p>
+          {/* Sólo cuando no hay base: una postulación que no se guardó no se
+              puede dar por presentada. Con base configurada, el cartel no va. */}
+          {!persistida && (
+            <p className="mt-6 inline-flex">
+              <span className="badge-soft">
+                <i className="bg-brandYellow" />
+                Formulario en pruebas: el envío todavía no queda registrado
+              </span>
+            </p>
+          )}
         </div>
       </section>
     );

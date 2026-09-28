@@ -35,7 +35,9 @@ export function MarcoAdmin({
           <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-ink md:text-4xl">
             {titulo}
           </h1>
-          <form action="/auth/cidituc/salir" method="post">
+          {/* El admin tiene su propia salida: la sesión es de Supabase, no la
+              de Ciudadano Digital que usan el portal y el comité. */}
+          <form action="/api/admin/salir" method="post">
             <button type="submit" className="secondary-button">
               Cerrar sesión
             </button>

@@ -34,18 +34,57 @@ necesita ver DNIs. La tabla `staff` lleva las dos capacidades por separado.
 Ciudadano Digital, igual que los becarios y el comité. El sistema no guarda ni
 una contraseña propia, y esa propiedad no se negocia.
 
+> ⚠ **Revertido para `/admin` el 28/9/2026.** Ver §1.b. El portal y `/comite`
+> siguen exactamente como dice este párrafo.
+
+### 1.b Decisión del 28/9/2026: el admin pasa a usuarios de Supabase
+
+`/admin` dejó de entrar con Ciudadano Digital y entra con usuario y contraseña
+de Supabase Auth. **Sólo el admin**: el Portal del Becario y `/comite` no se
+tocaron.
+
+El argumento que sostenía la regla original era que no queríamos administrar
+identidades. Para mil postulantes y ochenta becarios sigue siendo cierto: la
+identidad la pone el Estado y nosotros no queremos esa responsabilidad. Para las
+cinco o seis personas de coordinación no se sostiene igual, porque cada alta
+depende de un trámite con DITEC y eso convierte "sumemos a alguien al panel" en
+una gestión de días.
+
+Lo que se pierde, dicho sin maquillar: el proyecto ahora **sí** guarda
+contraseñas —las guarda Supabase, con su hash, no nosotros— y hay un segundo
+sistema de ingreso que mantener. Lo que se conserva:
+
+- **Los dos permisos siguen separados** y siguen en la tabla `staff`.
+- **El rol no viaja en el token.** Se resuelve contra `staff` en cada pedido, así
+  que sacar la fila corta el acceso en el clic siguiente. No cambió nada acá.
+- **El navegador sigue sin hablar con Supabase.** La contraseña va a una ruta
+  nuestra (`/api/admin/ingreso`) y es el servidor el que habla con Supabase. Por
+  eso `SUPABASE_PUBLISHABLE_KEY` no lleva el prefijo `NEXT_PUBLIC_`.
+- **Sin permiso sigue siendo 404 y no 403.** Un 403 confirmaría que el panel
+  existe y que sólo falta el permiso.
+
+El registro abierto tiene que quedar **deshabilitado** en Supabase: las cuentas
+se crean por invitación desde el panel, nunca desde el sitio.
+
 ## 2. Arquitectura
 
 ```
-/admin                      sesión CIDITUC + tabla staff (sin rol → 404, como /comite)
+/admin/ingreso              mail + contraseña (Supabase Auth). Única pantalla sin sesión.
+/admin                      sesión Supabase + tabla staff (sin fila → 404, como /comite)
   /admin/contenido          quien tenga puede_contenido      ← Etapa A
   /admin/postulaciones      quien tenga puede_postulaciones  ← Etapa B
 ```
 
-Tabla `staff`: `documento` (pk), `nombre`, `puede_postulaciones`,
-`puede_contenido`, `creado_en`. Misma mecánica que `comite`: el permiso se
-resuelve en cada pedido, sacar la fila corta el acceso en el clic siguiente, y
-nada del rol viaja en la cookie.
+Tabla `staff`: `id` (pk), `usuario_id` (uuid, único, → `auth.users`), `nombre`,
+`documento` (opcional, informativo), `puede_postulaciones`, `puede_contenido`,
+`creado_en`. Misma mecánica que `comite`: el permiso se resuelve en cada pedido,
+sacar la fila corta el acceso en el clic siguiente, y nada del rol viaja en la
+cookie. La clave pasó de `documento` a `usuario_id` en la migración `0004`.
+
+Las piezas: [`lib/admin/sesion.ts`](../lib/admin/sesion.ts) resuelve quién entró
+y qué puede; [`middleware.ts`](../middleware.ts) renueva el token —sólo bajo
+`/admin`, para no gastar un pedido a Supabase en cada visita de un becario—; y
+`/api/admin/ingreso` y `/api/admin/salir` abren y cierran la sesión.
 
 ## 3. Etapa A — Contenido autogestionable
 
