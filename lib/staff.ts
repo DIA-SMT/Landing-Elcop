@@ -2,16 +2,19 @@
  * Quién puede usar el admin, y para qué.
  *
  * Dos permisos separados a propósito —ver postulaciones es ver datos personales
- * de más de mil personas; cargar una crónica no— y la misma mecánica que el
- * comité: el permiso se resuelve en cada pedido a partir del documento de la
- * sesión firmada, así que sacar la fila de `staff` corta el acceso en el clic
- * siguiente. Nada del rol viaja en la cookie.
+ * de más de mil personas; cargar una crónica no— y una mecánica que no cambió
+ * al pasar a usuarios de Supabase: el permiso se resuelve en cada pedido a
+ * partir de la sesión, así que sacar la fila de `staff` corta el acceso en el
+ * clic siguiente. Nada del rol viaja en el token.
  *
- * Sin base configurada cae a `ELCOP_STAFF_PROVISORIO` (documentos separados
- * por coma, con los dos permisos), que existe para desarrollo y para poder
- * auditar las pantallas sin credenciales.
+ * **La clave es el usuario de Supabase, no el documento** (migración 0004). El
+ * admin dejó de entrar con Ciudadano Digital; el portal y `/comite` siguen con
+ * CIDITUC y siguen usando documentos.
+ *
+ * Sin base configurada cae a `ELCOP_STAFF_PROVISORIO`, que ahora lista ids de
+ * usuario separados por coma. Existe para desarrollo y para poder auditar las
+ * pantallas sin una base detrás.
  */
-import { normalizarDocumento } from "@/lib/padron";
 import { baseDeDatos, falloDeBase } from "@/lib/supabase";
 
 export type PermisosDeStaff = {
@@ -26,16 +29,16 @@ export type PermisosDeStaff = {
  * padrón: "no tenés permiso" y "no pudimos comprobarlo" son respuestas
  * distintas, y quien llama decide cómo contarlo.
  */
-export async function permisosDeStaff(documento: string): Promise<PermisosDeStaff | null> {
-  const normalizado = normalizarDocumento(documento);
-  if (!normalizado) return null;
+export async function permisosDeStaff(usuarioId: string): Promise<PermisosDeStaff | null> {
+  const id = usuarioId?.trim();
+  if (!id) return null;
 
   const base = baseDeDatos();
   if (base) {
     const { data, error } = await base
       .from("staff")
       .select("puede_contenido, puede_postulaciones")
-      .eq("documento", normalizado)
+      .eq("usuario_id", id)
       .maybeSingle();
 
     if (error) falloDeBase("consultar el staff", error);
@@ -47,8 +50,8 @@ export async function permisosDeStaff(documento: string): Promise<PermisosDeStaf
   // Provisorio para desarrollo: quien figura acá tiene los dos permisos.
   const habilitados = (process.env.ELCOP_STAFF_PROVISORIO ?? "")
     .split(",")
-    .map((entrada) => normalizarDocumento(entrada))
-    .filter((entrada): entrada is string => entrada !== null);
+    .map((entrada) => entrada.trim())
+    .filter(Boolean);
 
-  return habilitados.includes(normalizado) ? { contenido: true, postulaciones: true } : null;
+  return habilitados.includes(id) ? { contenido: true, postulaciones: true } : null;
 }

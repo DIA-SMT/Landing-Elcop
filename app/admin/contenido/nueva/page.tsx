@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
 
-import { permisosDeStaff } from "@/lib/staff";
-import { obtenerSesion } from "@/lib/sesion";
+import { exigirAdmin } from "@/lib/admin/sesion";
 import { MarcoAdmin } from "@/components/admin/MarcoAdmin";
 import { FormularioPublicacion } from "@/components/admin/FormularioPublicacion";
 
@@ -10,9 +8,7 @@ export const metadata: Metadata = { title: "Nueva publicación — Administraci�
 export const dynamic = "force-dynamic";
 
 export default async function PaginaNuevaPublicacion() {
-  const sesion = await obtenerSesion();
-  if (!sesion) redirect("/portal");
-  if (!(await permisosDeStaff(sesion.documento))?.contenido) notFound();
+  await exigirAdmin("contenido");
 
   return (
     <MarcoAdmin
