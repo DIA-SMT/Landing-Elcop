@@ -1,34 +1,35 @@
 import { NextResponse } from "next/server";
 
+import { convocatoriaAbierta } from "@/lib/convocatoria";
+import { guardar } from "@/lib/postulaciones";
+import { validarPostulacion, type ValoresPostulacion } from "@/lib/postulacion-validacion";
+
 /**
  * Recepción de postulaciones.
  *
- * ESTADO ACTUAL: no persiste nada. Valida que el cuerpo sea un objeto, loguea
- * en el servidor y devuelve 200. Es un tapón deliberado para poder maquetar y
- * probar el formulario sin comprometerse todavía con un destino.
+ * Hasta la migración 0003 esto era un tapón: validaba que el cuerpo fuera un
+ * objeto, logueaba y devolvía 200 sin guardar nada. Ahora persiste en la tabla
+ * `postulaciones`.
  *
- * TODO: confirmar con ELCOP cuál es el destino real de las postulaciones
- * (Google Sheets, un mail institucional, una base propia o el sistema de la
- * UNSTA). Cuando se defina, reemplazar el cuerpo de `guardarPostulacion` y
- * dejar el resto del handler como está.
+ * Tres cosas que conviene defender:
+ *
+ * 1. **Se valida de nuevo acá.** Nada obliga a pasar por el formulario para
+ *    postear, y las reglas son las mismas del cliente porque salen del mismo
+ *    módulo (`lib/postulacion-validacion.ts`).
+ * 2. **Con la convocatoria cerrada se rechaza.** Si no, el endpoint queda
+ *    abierto recibiendo postulaciones que nadie va a mirar.
+ * 3. **`persistida` viaja en la respuesta.** En un entorno sin base el envío no
+ *    queda registrado, y el formulario tiene que poder decirlo en vez de
+ *    mostrar un "listo" que no es cierto.
  */
-
-type Postulacion = Record<string, unknown>;
-
-/**
- * Único punto de contacto con el destino final. Está aislado a propósito:
- * enchufar el destino real debería ser cambiar sólo esta función.
- */
-async function guardarPostulacion(datos: Postulacion): Promise<void> {
-  // No logueamos el cuerpo completo: son datos personales (DNI, teléfono,
-  // fecha de nacimiento) y no tienen por qué quedar en los logs del servidor.
-  console.info("[postulacion] recibida", {
-    campos: Object.keys(datos).length,
-    recibidaEn: new Date().toISOString()
-  });
-}
-
 export async function POST(request: Request) {
+  if (!convocatoriaAbierta()) {
+    return NextResponse.json(
+      { ok: false, mensaje: "En este momento no hay una convocatoria abierta." },
+      { status: 409 }
+    );
+  }
+
   let datos: unknown;
 
   try {
@@ -47,7 +48,44 @@ export async function POST(request: Request) {
     );
   }
 
-  await guardarPostulacion(datos as Postulacion);
+  // Todo lo que llega se trata como texto: un número o un objeto en un campo
+  // de texto es un cliente que no es el nuestro.
+  const valores: ValoresPostulacion = {};
+  for (const [clave, valor] of Object.entries(datos as Record<string, unknown>)) {
+    valores[clave] = typeof valor === "string" ? valor : "";
+  }
 
-  return NextResponse.json({ ok: true, mensaje: "Postulación recibida." }, { status: 200 });
+  const errores = validarPostulacion(valores);
+  if (Object.keys(errores).length > 0) {
+    return NextResponse.json(
+      { ok: false, mensaje: "Hay datos que no pasan la validación.", errores },
+      { status: 400 }
+    );
+  }
+
+  const resultado = await guardar(valores);
+
+  if (resultado === "falla") {
+    return NextResponse.json(
+      { ok: false, mensaje: "No pudimos guardar la postulación. Probá de nuevo en unos minutos." },
+      { status: 503 }
+    );
+  }
+
+  if (resultado === "duplicada") {
+    return NextResponse.json(
+      {
+        ok: false,
+        duplicada: true,
+        mensaje:
+          "Ya recibimos una postulación con ese DNI para esta convocatoria. Si necesitás corregir algo, escribinos."
+      },
+      { status: 409 }
+    );
+  }
+
+  return NextResponse.json(
+    { ok: true, persistida: resultado === "guardada", mensaje: "Postulación recibida." },
+    { status: 200 }
+  );
 }
